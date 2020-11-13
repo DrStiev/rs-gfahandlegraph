@@ -97,6 +97,7 @@ pub enum ParseError {
     /// Wrapper for an IO error.
     IOError(std::io::Error),
     ExtensionError(),
+    ConversionGFAToGraph(String),
     Unknown,
 }
 
@@ -112,6 +113,7 @@ impl fmt::Display for ParseError {
             PE::InvalidField(field_err) => write!(f, "Failed to parse field: {}", field_err),
             PE::IOError(err) => write!(f, "IO error: {}", err),
             PE::ExtensionError() => write!(f, "Extension not correct!"),
+            PE::ConversionGFAToGraph(why) => write!(f, "{}", why),
             PE::Unknown => write!(f, "Unknown error when parsing a line"),
         }
     }

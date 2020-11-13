@@ -115,20 +115,24 @@ impl<'a> HandleGraphRef for &'a HashGraph {
 }
 
 impl ModdableHandleGraph for HashGraph {
-    fn modify_handle<T: Into<NodeId>>(&mut self, node_id: T, seq: &[u8]) -> bool {
+    fn modify_handle<T: Into<NodeId>>(
+        &mut self,
+        node_id: T,
+        seq: &[u8],
+    ) -> Result<bool, GraphError> {
         let node_id: NodeId = node_id.into();
         let seq: BString = BString::from(seq);
         if self.graph.get_mut(&node_id).is_some() {
             if self.graph.get_mut(&node_id).unwrap().sequence == seq {
                 // no need to update
-                true
+                Ok(true)
             } else {
                 // update the sequence value of node
                 *self.graph.get_mut(&node_id).unwrap().sequence = seq.to_vec();
-                true
+                Ok(true)
             }
         } else {
-            false
+            Err(GraphError::NodeNotExist(node_id.to_string()))
         }
     }
 
@@ -137,29 +141,38 @@ impl ModdableHandleGraph for HashGraph {
         old_edge: Edge,
         left_node: Option<Handle>,
         right_node: Option<Handle>,
-    ) -> bool {
+    ) -> Result<bool, GraphError> {
         let Edge(left, right) = old_edge;
         let left_node = left_node.unwrap_or(left);
         let right_node = right_node.unwrap_or(right);
         if self.has_edge(left, right) {
             if old_edge == Edge(left_node, right_node) {
                 // no need to update
-                return true;
+                Ok(true)
             } else {
                 // update Edge
-                self.remove_edge(old_edge);
-                self.create_edge(Edge(left_node, right_node));
+                self.remove_edge(old_edge)?;
+                self.create_edge(Edge(left_node, right_node))?;
+                Ok(true)
             }
-            true
         } else {
-            false
+            Err(GraphError::EdgeNotExist(
+                left.id().to_string(),
+                right.id().to_string(),
+            ))
         }
     }
 
-    fn modify_path(&mut self, path_name: &[u8], sequence_of_id: Vec<Handle>) -> bool {
+    fn modify_path(
+        &mut self,
+        path_name: &[u8],
+        sequence_of_id: Vec<Handle>,
+    ) -> Result<bool, GraphError> {
+        use bstr::ByteSlice;
+
         if self.has_path(path_name) {
             // update occurrencies in path
-            self.remove_path(path_name);
+            self.remove_path(path_name)?;
             let len: usize = sequence_of_id.len();
             let mut x: usize = 0;
             let path = self.create_path_handle(path_name, false);
@@ -167,15 +180,17 @@ impl ModdableHandleGraph for HashGraph {
                 self.append_step(&path, sequence_of_id[x]);
                 x += 1;
             }
-            true
+            Ok(true)
         } else {
-            false
+            Err(GraphError::PathNotExist(
+                path_name.to_str().unwrap().to_string(),
+            ))
         }
     }
 }
 
 impl SubtractiveHandleGraph for HashGraph {
-    fn remove_handle<T: Into<NodeId>>(&mut self, node: T) -> bool {
+    fn remove_handle<T: Into<NodeId>>(&mut self, node: T) -> Result<bool, GraphError> {
         let node_id: NodeId = node.into();
         if self.graph.get(&node_id).is_some() {
             self.graph.remove(&node_id);
@@ -198,16 +213,17 @@ impl SubtractiveHandleGraph for HashGraph {
                 let nodes = &self.paths.get_mut(&x).unwrap().nodes;
                 if nodes.iter().any(|x| x.id() == node_id) {
                     self.paths.remove(&x);
+                    //self.destroy_path(&x);
                 }
                 x += 1;
             }
-            true
+            Ok(true)
         } else {
-            false
+            Err(GraphError::NodeNotExist(node_id.to_string()))
         }
     }
 
-    fn remove_edge(&mut self, edge: Edge) -> bool {
+    fn remove_edge(&mut self, edge: Edge) -> Result<bool, GraphError> {
         let Edge(left, right) = edge;
         if self.has_edge(left, right) {
             // delete all the occurrencies of edge found in graph
@@ -221,13 +237,31 @@ impl SubtractiveHandleGraph for HashGraph {
                     if left.is_reverse() {
                         let pos = match left_node.left_edges.iter().position(|&h| h == right) {
                             Some(p) => p,
-                            None => panic!("Error position not found"),
+                            None => {
+                                return Err(GraphError::PositionNotFound(
+                                    right.id().to_string(),
+                                    format!(
+                                        "{}{}",
+                                        left.id().to_string(),
+                                        "left nodes".to_string()
+                                    ),
+                                ))
+                            } //panic!("Error position not found"),
                         };
                         self.graph.get_mut(&l.id()).unwrap().left_edges.remove(pos);
                     } else {
                         let pos = match left_node.right_edges.iter().position(|&h| h == right) {
                             Some(p) => p,
-                            None => panic!("Error position not found"),
+                            None => {
+                                return Err(GraphError::PositionNotFound(
+                                    right.id().to_string(),
+                                    format!(
+                                        "{}{}",
+                                        left.id().to_string(),
+                                        "right nodes".to_string()
+                                    ),
+                                ))
+                            } //panic!("Error position not found"),
                         };
                         self.graph.get_mut(&l.id()).unwrap().right_edges.remove(pos);
                     }
@@ -242,25 +276,32 @@ impl SubtractiveHandleGraph for HashGraph {
                         let lr = l + 1;
                         if lr == r {
                             self.paths.remove(&x);
+                            //self.destroy_path(&x);
                         }
                     }
                 }
                 x += 1;
             }
-            true
+            Ok(true)
         } else {
-            false
+            Err(GraphError::EdgeNotExist(
+                left.id().to_string(),
+                right.id().to_string(),
+            ))
         }
     }
 
-    fn remove_path(&mut self, name: &[u8]) -> bool {
+    fn remove_path(&mut self, name: &[u8]) -> Result<bool, GraphError> {
+        use bstr::ByteSlice;
+
         if self.has_path(name) {
             // delete occurrencies in path leaves "holes"
             let path_handle = self.name_to_path_handle(name).unwrap();
             self.paths.remove(&path_handle);
-            true
+            //self.destroy_path(&path_handle);
+            Ok(true)
         } else {
-            false
+            Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
         }
     }
 
@@ -275,27 +316,32 @@ impl SubtractiveHandleGraph for HashGraph {
 }
 
 impl AdditiveHandleGraph for HashGraph {
-    fn append_handle(&mut self, sequence: &[u8]) -> Handle {
-        self.create_handle(sequence, self.max_id + 1)
+    fn append_handle(&mut self, sequence: &[u8]) -> Result<Handle, GraphError> {
+        Ok(self.create_handle(sequence, self.max_id + 1))?
     }
 
-    fn create_handle<T: Into<NodeId>>(&mut self, seq: &[u8], node_id: T) -> Handle {
+    fn create_handle<T: Into<NodeId>>(
+        &mut self,
+        seq: &[u8],
+        node_id: T,
+    ) -> Result<Handle, GraphError> {
         let id: NodeId = node_id.into();
 
         if seq.is_empty() {
-            panic!("Tried to add empty handle");
+            return Err(GraphError::EmptySequence);
         }
         if self.get_node(&id).is_some() {
-            panic!("Node already exists!");
+            Err(GraphError::IdAlreadyExist(id.to_string()))
         } else {
+            //println!("add_node: {}", id);
             self.graph.insert(id, Node::new(seq));
             self.max_id = std::cmp::max(self.max_id, id);
             self.min_id = std::cmp::min(self.min_id, id);
-            Handle::pack(id, false)
+            Ok(Handle::pack(id, false))
         }
     }
 
-    fn create_edge(&mut self, Edge(left, right): Edge) -> bool {
+    fn create_edge(&mut self, Edge(left, right): Edge) -> Result<bool, GraphError> {
         let add_edge = {
             let left_node = self
                 .graph
@@ -326,10 +372,8 @@ impl AdditiveHandleGraph for HashGraph {
                     right_node.left_edges.push(left.flip());
                 }
             }
-            true
-        } else {
-            false
         }
+        Ok(true)
     }
 }
 
@@ -364,8 +408,10 @@ impl MutableHandleGraph for HashGraph {
         let subseqs: Vec<BString> = ranges.into_iter().map(|r| sequence[r].into()).collect();
 
         for seq in subseqs {
-            let h = self.append_handle(&seq);
-            result.push(h);
+            match self.append_handle(&seq) {
+                Ok(h) => result.push(h),
+                Err(why) => println!("Error: {}", why),
+            };
         }
 
         // move the outgoing edges to the last new segment

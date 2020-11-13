@@ -1,5 +1,5 @@
 use crate::handle::{Edge, Handle, NodeId};
-use crate::handlegraph::{HandleGraph, HandleGraphRef};
+use crate::handlegraph::{error::GraphError, HandleGraph, HandleGraphRef};
 
 pub trait SubtractiveHandleGraph {
     /// Function that remove a node and all its occurrencies
@@ -14,7 +14,7 @@ pub trait SubtractiveHandleGraph {
     /// // Nodes: 11, 13
     /// // Edges: 11 -> 13
     /// ```
-    fn remove_handle<T: Into<NodeId>>(&mut self, node: T) -> bool;
+    fn remove_handle<T: Into<NodeId>>(&mut self, node: T) -> Result<bool, GraphError>;
 
     /// Function that removes an Edge (Link) between 2 nodes
     /// # Example
@@ -29,7 +29,7 @@ pub trait SubtractiveHandleGraph {
     /// // Nodes: 11, 12, 13
     /// // Edges: 11 -> 12, 12 -> 13
     /// ```
-    fn remove_edge(&mut self, edge: Edge) -> bool;
+    fn remove_edge(&mut self, edge: Edge) -> Result<bool, GraphError>;
 
     /// Function that removes an Edge (Link) between 2 nodes
     /// # Example
@@ -43,7 +43,7 @@ pub trait SubtractiveHandleGraph {
     /// // Edges: 11 -> 12, 11 -> 13, 12 -> 13
     /// // Path: 0 (14): 11 -> 12 -> 13
     /// ```
-    fn remove_path(&mut self, name: &[u8]) -> bool;
+    fn remove_path(&mut self, name: &[u8]) -> Result<bool, GraphError>;
 
     /// Function that clears the graph and set max_id to 0 and min_id to u64::MAX
     /// like the Default implementation fore HashGraph
@@ -51,11 +51,15 @@ pub trait SubtractiveHandleGraph {
 }
 
 pub trait AdditiveHandleGraph {
-    fn append_handle(&mut self, seq: &[u8]) -> Handle;
+    fn append_handle(&mut self, seq: &[u8]) -> Result<Handle, GraphError>;
 
-    fn create_handle<T: Into<NodeId>>(&mut self, seq: &[u8], node_id: T) -> Handle;
+    fn create_handle<T: Into<NodeId>>(
+        &mut self,
+        seq: &[u8],
+        node_id: T,
+    ) -> Result<Handle, GraphError>;
 
-    fn create_edge(&mut self, edge: Edge) -> bool;
+    fn create_edge(&mut self, edge: Edge) -> Result<bool, GraphError>;
 }
 
 pub trait ModdableHandleGraph {
@@ -88,7 +92,11 @@ pub trait ModdableHandleGraph {
     ///     println!("Failed to modify Node");
     /// }
     /// ```
-    fn modify_handle<T: Into<NodeId>>(&mut self, node_id: T, seq: &[u8]) -> bool;
+    fn modify_handle<T: Into<NodeId>>(
+        &mut self,
+        node_id: T,
+        seq: &[u8],
+    ) -> Result<bool, GraphError>;
 
     /// given an Edge, this function will replace the left, or the right NodeId
     /// it can even replace the right and left Nodes
@@ -109,7 +117,7 @@ pub trait ModdableHandleGraph {
         old_edge: Edge,
         left_node: Option<Handle>,
         right_node: Option<Handle>,
-    ) -> bool;
+    ) -> Result<bool, GraphError>;
 
     /// given a pathname, this function will replace the sequence of ids
     /// # Example
@@ -124,7 +132,11 @@ pub trait ModdableHandleGraph {
     ///     println!("Failed to modify path");
     /// }
     /// ```
-    fn modify_path(&mut self, path_name: &[u8], sequence_of_id: Vec<Handle>) -> bool;
+    fn modify_path(
+        &mut self,
+        path_name: &[u8],
+        sequence_of_id: Vec<Handle>,
+    ) -> Result<bool, GraphError>;
 }
 
 /// Trait encapsulating the mutable aspects of a handlegraph

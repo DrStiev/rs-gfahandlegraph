@@ -184,17 +184,6 @@ const CHARS: [&str; 128] = [
     "DEL",
 ];
 
-/// function that performs the conversion from the code to the associated symbol
-/// # Example
-/// ```ignore
-///  let a: &str = "a";
-/// let a_: i32 = 97;
-/// assert_eq!(a, get_char_from_code(a_));
-/// ```
-fn get_char_from_code(c: i32) -> &'static str {
-    CHARS.get(c as usize).unwrap_or(&"")
-}
-
 /// function that performs the conversion from a symbol to the associated ascii code
 /// # Example
 /// ```ignore

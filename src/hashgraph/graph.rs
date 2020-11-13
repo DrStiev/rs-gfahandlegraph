@@ -1,11 +1,8 @@
-// TODO: MOVE ME IN THE PARSER SECTION
-// THE CONVERSION TO USIZE WILL BE USELESS FINALLY!
-
 use fnv::FnvHashMap;
 
 use crate::gfa::{
-    gfa1::{Line as Line1, Link, Path as GFAPath, Segment as Segment1},
-    gfa2::{Edge, GroupO, Line as Line2, Segment as Segment2},
+    gfa1::{Link, Path as GFAPath, Segment as Segment1, GFA},
+    gfa2::{Edge, GroupO, Segment as Segment2, GFA2},
 };
 
 use crate::{
@@ -54,23 +51,39 @@ impl HashGraph {
         Default::default()
     }
 
-    // TODO: wrap result in Result<HashGraph, GraphError>
-    pub fn insert_gfa2_line(mut graph: HashGraph, line: Line2<usize>) -> HashGraph {
-        use Line2::*;
-        match line {
-            Segment(s) => graph.add_segment2_from_gfa(&s),
-            Edge(e) => graph.add_edge_from_gfa(&e),
-            GroupO(o) => graph.add_ogroup_from_gfa(&o),
-            _ => (),
+    pub fn insert_gfa2_line(
+        mut graph: HashGraph,
+        file: &GFA2<usize>,
+    ) -> Result<HashGraph, GraphError> {
+        file.segments
+            .iter()
+            .for_each(|s| match graph.add_segment2_from_gfa(s) {
+                Ok(_) => (),
+                Err(why) => println!("Error {}", why),
+            });
+        file.edges
+            .iter()
+            .for_each(|e| match graph.add_edge_from_gfa(e) {
+                Ok(_) => (),
+                Err(why) => println!("Error {}", why),
+            });
+        file.groups_o
+            .iter()
+            .for_each(|o| match graph.add_ogroup_from_gfa(o) {
+                Ok(_) => (),
+                Err(why) => println!("Error {}", why),
+            });
+        Ok(graph)
+    }
+
+    pub fn add_segment2_from_gfa(&mut self, seg: &Segment2<usize>) -> Result<bool, GraphError> {
+        match self.create_handle(&seg.sequence, seg.id as u64) {
+            Ok(_) => Ok(true),
+            Err(why) => Err(why),
         }
-        graph
     }
 
-    fn add_segment2_from_gfa<'a, 'b>(&'a mut self, seg: &'b Segment2<usize>) {
-        self.create_handle(&seg.sequence, seg.id as u64);
-    }
-
-    fn add_edge_from_gfa(&mut self, link: &Edge<usize>) {
+    pub fn add_edge_from_gfa(&mut self, link: &Edge<usize>) -> Result<bool, GraphError> {
         use crate::gfa::orientation::Orientation;
 
         let left_len = link.sid1.to_string().len();
@@ -92,14 +105,18 @@ impl HashGraph {
 
         let left = Handle::new(left_id.parse::<u64>().unwrap() as u64, left_orient);
         let right = Handle::new(right_id.parse::<u64>().unwrap() as u64, right_orient);
-        self.create_edge(GraphEdge(left, right));
+        match self.create_edge(GraphEdge(left, right)) {
+            Ok(_) => Ok(true),
+            Err(why) => Err(why),
+        }
     }
 
-    fn add_ogroup_from_gfa(&mut self, path: &GroupO<usize>) {
+    pub fn add_ogroup_from_gfa(&mut self, path: &GroupO<usize>) -> Result<bool, GraphError> {
         let path_id = self.create_path_handle(&path.id, false);
         for (name, orient) in path.iter() {
             self.append_step(&path_id, Handle::new(name as u64, orient));
         }
+        Ok(true)
     }
 
     /*
@@ -114,75 +131,54 @@ impl HashGraph {
     }
     */
 
-    // TODO: wrap result in Result<HashGraph, GraphError>
-    pub fn insert_gfa1_line(mut graph: HashGraph, line: Line1<usize>) -> HashGraph {
-        use Line1::*;
-        match line {
-            Segment(s) => graph.add_segment_from_gfa(&s),
-            Link(l) => graph.add_link_from_gfa(&l),
-            Path(p) => graph.add_path_from_gfa(&p),
-            _ => (),
+    pub fn insert_gfa1_line(
+        mut graph: HashGraph,
+        file: &GFA<usize>,
+    ) -> Result<HashGraph, GraphError> {
+        file.segments
+            .iter()
+            .for_each(|s| match graph.add_segment_from_gfa(s) {
+                Ok(_) => (),
+                Err(why) => println!("Error {}", why),
+            });
+        file.links
+            .iter()
+            .for_each(|l| match graph.add_link_from_gfa(l) {
+                Ok(_) => (),
+                Err(why) => println!("Error {}", why),
+            });
+        file.paths
+            .iter()
+            .for_each(|p| match graph.add_path_from_gfa(p) {
+                Ok(_) => (),
+                Err(why) => println!("Error {}", why),
+            });
+        Ok(graph)
+    }
+
+    pub fn add_segment_from_gfa(&mut self, seg: &Segment1<usize>) -> Result<bool, GraphError> {
+        match self.create_handle(&seg.sequence, seg.name as u64) {
+            Ok(_) => Ok(true),
+            Err(why) => Err(why),
         }
-        graph
     }
 
-    fn add_segment_from_gfa<'a, 'b>(&'a mut self, seg: &'b Segment1<usize>) {
-        self.create_handle(&seg.sequence, seg.name as u64);
-    }
-
-    fn add_link_from_gfa(&mut self, link: &Link<usize>) {
+    pub fn add_link_from_gfa(&mut self, link: &Link<usize>) -> Result<bool, GraphError> {
         let left = Handle::new(link.from_segment as u64, link.from_orient);
         let right = Handle::new(link.to_segment as u64, link.to_orient);
 
-        self.create_edge(GraphEdge(left, right));
+        match self.create_edge(GraphEdge(left, right)) {
+            Ok(_) => Ok(true),
+            Err(why) => Err(why),
+        }
     }
 
-    fn add_path_from_gfa(&mut self, path: &GFAPath<usize>) {
+    pub fn add_path_from_gfa(&mut self, path: &GFAPath<usize>) -> Result<bool, GraphError> {
         let path_id = self.create_path_handle(&path.path_name, false);
         for (name, orient) in path.iter() {
             self.append_step(&path_id, Handle::new(name as u64, orient));
         }
-    }
-
-    /// Function that print all the sequence associated to the segment ids
-    /// found in a certain path
-    /// # Examples
-    /// ```ignore
-    /// use hashgraph::HashGraph::graph;
-    /// use bstr::BStr;
-    ///
-    /// let mut graph = HashGraph::new();
-    /// let h1 = graph.create_handle(b"ACCTT", 11);
-    /// let h2 = graph.create_handle(b"TCAAGG", 12);
-    /// let h3 = graph.create_handle(b"CTTGATT", 13);
-    ///
-    /// let p1 = graph.create_path_handle(b"path-1", false);
-    /// graph.append_step(&p1, h1);
-    /// graph.append_step(&p1, h2);
-    /// graph.append_step(&p1, h3);
-    ///
-    /// let mut x :i64 = 0;
-    /// while !graph.get_path(&x).is_none() {
-    ///     // ACCTT -> TCAAGG -> CTTGATT
-    ///     graph.print_path(&x);
-    ///     x +=1;
-    /// }
-    /// ```
-    pub fn print_path(&self, path_id: &PathId) {
-        let path = self.paths.get(&path_id).unwrap();
-        println!("Path\t{}", path_id);
-        for (ix, handle) in path.nodes.iter().enumerate() {
-            let node = self.get_node(&handle.id());
-            if node.is_some() {
-                if ix != 0 {
-                    print!(" -> ");
-                }
-                print!("{}", node.unwrap().sequence);
-            } else {
-                print!(" -> This node do not exists anymore");
-            }
-        }
-        println!();
+        Ok(true)
     }
 
     /// Print an HashGraph object in a simplified way

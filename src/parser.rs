@@ -1,5 +1,10 @@
 pub mod error;
+pub mod parser_gfa1;
+pub mod parser_gfa2;
+
 pub use self::error::*;
+pub use self::parser_gfa1::*;
+pub use self::parser_gfa2::*;
 
 use crate::gfa::*;
 use crate::gfa::{gfa1::Line as Line1, gfa2::Line as Line2};
@@ -7,8 +12,6 @@ use crate::hashgraph::HashGraph;
 use crate::parser::error::ParserTolerance;
 
 use bstr::{BStr, BString, ByteSlice};
-use lazy_static::lazy_static;
-use regex::bytes::Regex;
 
 /// Builder struct for GFAParsers
 pub struct ParserBuilder {
@@ -16,9 +19,12 @@ pub struct ParserBuilder {
     pub segments: bool,
     pub fragments: bool,
     pub edges: bool,
+    pub links: bool,
     pub gaps: bool,
+    pub containments: bool,
     pub groups_o: bool,
     pub groups_u: bool,
+    pub paths: bool,
     pub tolerance: ParserTolerance,
 }
 
@@ -30,9 +36,12 @@ impl ParserBuilder {
             segments: false,
             fragments: false,
             edges: false,
+            links: false,
             gaps: false,
+            containments: false,
             groups_o: false,
             groups_u: false,
+            paths: false,
             tolerance: Default::default(),
         }
     }
@@ -44,9 +53,12 @@ impl ParserBuilder {
             segments: true,
             fragments: true,
             edges: true,
+            links: true,
             gaps: true,
+            containments: true,
             groups_o: true,
             groups_u: true,
+            paths: true,
             tolerance: Default::default(),
         }
     }
@@ -72,9 +84,12 @@ impl ParserBuilder {
             segments: self.segments,
             fragments: self.fragments,
             edges: self.edges,
+            links: self.links,
             gaps: self.gaps,
+            containments: self.containments,
             groups_o: self.groups_o,
             groups_u: self.groups_u,
+            paths: self.paths,
             tolerance: self.tolerance,
             _segment_names: std::marker::PhantomData,
         }
@@ -95,9 +110,12 @@ pub struct Parser<N: SegmentId> {
     segments: bool,
     fragments: bool,
     edges: bool,
+    links: bool,
     gaps: bool,
+    containments: bool,
     groups_o: bool,
     groups_u: bool,
+    paths: bool,
     tolerance: ParserTolerance,
     _segment_names: std::marker::PhantomData<N>,
 }
@@ -128,31 +146,39 @@ impl Parser<usize> {
         match path.as_ref().extension().and_then(OsStr::to_str).unwrap() {
             "gfa2" => {
                 let lines = BufReader::new(file).byte_lines();
-                let mut graph = HashGraph::new();
+                let graph = HashGraph::new();
+                let mut gfa2: GFA2<usize> = GFA2::new();
 
                 for line in lines {
                     match self.parse_gfa2_line(line?.as_ref()) {
-                        Ok(parsed) => graph = HashGraph::insert_gfa2_line(graph, parsed),
+                        Ok(parsed) => gfa2.insert_line(parsed),
                         Err(err) if err.can_safely_continue(&self.tolerance) => (),
                         Err(why) => return Err(why),
                     }
                 }
-                Ok(graph)
+                match HashGraph::insert_gfa2_line(graph, &gfa2) {
+                    Ok(g) => Ok(g),
+                    Err(why) => Err(ParseError::ConversionGFAToGraph(why.to_string())),
+                }
             }
             "gfa" => {
                 let lines = BufReader::new(file).byte_lines();
-                let mut graph = HashGraph::new();
+                let graph = HashGraph::new();
+                let mut gfa: GFA<usize> = GFA::new();
 
                 for line in lines {
                     match self.parse_gfa_line(line?.as_ref()) {
-                        Ok(parsed) => graph = HashGraph::insert_gfa1_line(graph, parsed),
+                        Ok(parsed) => gfa.insert_line(parsed),
                         Err(err) if err.can_safely_continue(&self.tolerance) => (),
                         Err(why) => return Err(why),
                     }
                 }
-                Ok(graph)
+                match HashGraph::insert_gfa1_line(graph, &gfa) {
+                    Ok(g) => Ok(g),
+                    Err(why) => Err(ParseError::ConversionGFAToGraph(why.to_string())),
+                }
             }
-            _ => return Err(ParseError::ExtensionError()),
+            _ => Err(ParseError::ExtensionError()),
         }
     }
 
@@ -176,7 +202,7 @@ impl Parser<usize> {
         }
         .map_err(invalid_line)?;
         Ok(line)
-    } 
+    }
 
     fn parse_gfa_line(&self, bytes: &[u8]) -> Result<Line1<usize>, ParseError> {
         use crate::gfa::gfa1::*;
@@ -196,5 +222,28 @@ impl Parser<usize> {
         }
         .map_err(invalid_line)?;
         Ok(line)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn can_create_graph_from_gfa2_file() {
+        let parser: Parser<usize> = Parser::new();
+        match parser.parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
+            Ok(g) => g.print_graph(),
+            Err(why) => println!("Error {}", why),
+        }
+    }
+
+    #[test]
+    fn can_create_graph_from_gfa1_file() {
+        let parser: Parser<usize> = Parser::new();
+        match parser.parse_file_to_graph("./tests/gfa1_files/lil.gfa") {
+            Ok(g) => g.print_graph(),
+            Err(why) => println!("Error {}", why),
+        }
     }
 }

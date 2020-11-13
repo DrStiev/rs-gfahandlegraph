@@ -1,7 +1,9 @@
 use crate::handle::{Direction, Edge, Handle, NodeId};
 
+pub mod error;
 pub mod iter;
 
+pub use self::error::*;
 pub use self::iter::*;
 
 /// Access all the handles in the graph as an iterator, and related

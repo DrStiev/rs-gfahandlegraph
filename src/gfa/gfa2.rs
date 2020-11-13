@@ -175,6 +175,17 @@ impl<N: SegmentId> fmt::Display for Fragment<N> {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+pub struct NotNecessaryFieldsEdge<N> {
+    pub id: N,   // optional id, can be either * or id tag
+    pub beg1: BString,
+    pub end1: BString, // dollar character as optional final char
+    pub beg2: BString,
+    pub end2: BString,      // dollar character as optional final char
+    pub alignment: BString, // alignment field can be *, trace or CIGAR
+    pub tag: BString,
+}
+
 /// Returns an Edge line
 ///
 /// # Examples
@@ -699,5 +710,52 @@ impl<N: SegmentId> fmt::Display for GFA2<N> {
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
         )
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn o_group_iter() {
+        let ogroup_: GroupO<BString> = GroupO::new(
+            "P1".into(),
+            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+            "".into(),
+        );
+        for (name, orientation) in ogroup_.iter() {
+            println!("{}{}", name, orientation);
+        }
+    }
+
+    #[test]
+    fn u_group_iter() {
+        let ugroup_: GroupU<BString> =
+            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), "".into());
+        for name in ugroup_.iter() {
+            println!("{}", name);
+        }
+    }
+
+    #[test]
+    fn o_group_iter_usize() {
+        let ogroup_: GroupO<usize> = GroupO::new(
+            "P1".into(),
+            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+            "".into(),
+        );
+        for (name, orientation) in ogroup_.iter() {
+            println!("{}{}", name, orientation);
+        }
+    }
+
+    #[test]
+    fn u_group_iter_usize() {
+        let ugroup_: GroupU<usize> =
+            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), "".into());
+        for name in ugroup_.iter() {
+            println!("{}", name);
+        }
     }
 }
