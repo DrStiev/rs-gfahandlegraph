@@ -37,25 +37,6 @@ use bstr::BString;
 /// */
 /// ```
 pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
-    /*
-    // Provide a custom bar style
-    let pb_seg = ProgressBar::new(1000);
-    pb_seg.set_style(ProgressStyle::default_bar().template(
-        "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] [{pos}/{pos}]",
-    ));
-    // Provide a custom bar style
-    let pb_link = ProgressBar::new(1000);
-    pb_link.set_style(ProgressStyle::default_bar().template(
-        "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] [{pos}/{pos}]",
-    ));
-    // Provide a custom bar style
-    let pb_path = ProgressBar::new(1000);
-    pb_path.set_style(ProgressStyle::default_bar().template(
-        "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] [{pos}/{pos}]",
-    ));
-    */
-
-    // I think it can be more efficient but for now it's good
     let mut file: GFA2<BString> = GFA2::new();
 
     // default header
@@ -177,24 +158,6 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
 /// */
 /// ```
 pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
-    /*
-    // Provide a custom bar style
-    let pb_seg = ProgressBar::new(1000);
-    pb_seg.set_style(ProgressStyle::default_bar().template(
-        "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] [{pos}/{pos}]",
-    ));
-    // Provide a custom bar style
-    let pb_link = ProgressBar::new(1000);
-    pb_link.set_style(ProgressStyle::default_bar().template(
-        "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] [{pos}/{pos}]",
-    ));
-    // Provide a custom bar style
-    let pb_path = ProgressBar::new(1000);
-    pb_path.set_style(ProgressStyle::default_bar().template(
-        "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] [{pos}/{pos}]",
-    ));
-    */
-
     let mut gfa: GFA<BString> = GFA::new();
 
     // default header

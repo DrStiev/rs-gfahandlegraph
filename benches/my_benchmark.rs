@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use gfahandlegraph::{hashgraph::HashGraph, parser::*};
 
 /*
@@ -60,9 +60,11 @@ fn criterion_benchmark(c: &mut Criterion) {
 */
 
 fn criterion_benchmark(c: &mut Criterion) {
-    // time:   [95.027 ms 95.118 ms 95.216 ms]
+    // time:   [94.650 ms 94.735 ms 94.827 ms]
+    // change: [-0.2124% -0.0977% +0.0244%] (p = 0.12 > 0.05)
     c.bench_function("mid GFA", |b| b.iter(|| create_graph_from_medium_gfa1()));
-    // time:   [116.37 ms 118.10 ms 121.48 ms]
+    // time:   [116.16 ms 116.25 ms 116.33 ms]
+    // change: [-0.1622% -0.0589% +0.0451%] (p = 0.25 > 0.05)
     c.bench_function("mid GFA2", |b| b.iter(|| create_graph_from_medium_gfa2()));
 }
 

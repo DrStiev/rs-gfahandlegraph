@@ -532,7 +532,7 @@ mod tests {
         match result {
             Err(why) => println!("Error {}", why),
             Ok(o) => {
-                println!("{}", o.clone());
+                println!("{}", o);
                 assert_eq!(o, ogroup_)
             }
         }
@@ -550,7 +550,7 @@ mod tests {
         match result {
             Err(why) => println!("Error: {}", why),
             Ok(u) => {
-                println!("{}", u.clone());
+                println!("{}", u);
                 assert_eq!(u, ugroup_)
             }
         }
