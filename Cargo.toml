@@ -21,3 +21,10 @@ bio = "0.32"
 fnv = "1.0"
 succinct = "0.5"
 quickcheck = "0.9"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "my_benchmark"
+harness = false

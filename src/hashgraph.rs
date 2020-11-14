@@ -11,6 +11,7 @@ use crate::{
 pub mod graph;
 pub mod node;
 pub mod path;
+pub mod to_gfa;
 
 pub use self::graph::HashGraph;
 pub use self::node::Node;

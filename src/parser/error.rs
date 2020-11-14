@@ -1,3 +1,4 @@
+use crate::handlegraph::error::*;
 use bstr::ByteSlice;
 /// define a custom error for the GFA2 format
 use std::{error, fmt};
@@ -128,6 +129,12 @@ impl From<std::io::Error> for ParseError {
 impl From<ParseFieldError> for ParseError {
     fn from(err: ParseFieldError) -> Self {
         Self::InvalidField(err)
+    }
+}
+
+impl From<GraphError> for ParseError {
+    fn from(err: GraphError) -> Self {
+        Self::ConversionGFAToGraph(err.to_string())
     }
 }
 

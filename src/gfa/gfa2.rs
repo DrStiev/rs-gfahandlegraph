@@ -8,15 +8,11 @@ use std::fmt;
 /// Returns an Header line
 ///
 /// # Examples
-///
 /// ```ignore
-/// use gfa2::*;
-///
-/// // inizialize a simple header
 /// let header = "VN:Z:2.0";
 /// let header_ = Header {
 ///     version: Some("VN:Z:2.0".into()),
-///     tag: (),
+///     tag: "".into(),
 /// };
 /// ```
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -56,18 +52,12 @@ impl fmt::Display for Header {
 /// Returns a Segment line
 ///
 /// # Examples
-///
-/// ```ignore
-/// use gfa2::*;
-/// use bstr::BString;
-///
-/// // inizialize a simple segment
 /// let segment = "A\t10\tAAAAAAACGT";
-/// let segment_: Segment<BString, _> = Segment {
+/// let segment_: Segment<BString> = Segment {
 ///     id: "A".into(),
 ///     len: "10".into(),
 ///     sequence: "AAAAAAACGT".into(),
-///     tag:(),
+///     tag:"".into(),
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -107,12 +97,8 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
 /// # Examples
 ///
 /// ```ignore
-/// use gfa2::*;
-/// use bstr::BString;
-///
-/// // inizialize a simple fragment
 /// let fragment = "15\tr1-\t10\t10\t20\t20\t*";
-/// let fragment_: Fragment<BString, _> = Fragment {
+/// let fragment_: Fragment<BString> = Fragment {
 ///     id: "15".into(),
 ///     ext_ref: "r1-".into(),
 ///     sbeg: "10".into(),
@@ -120,7 +106,7 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
 ///     fbeg: "20".into(),
 ///     fend: "20".into(),
 ///     alignment: "*".into(),
-///     tag:(),
+///     tag: "".into(),
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -175,28 +161,13 @@ impl<N: SegmentId> fmt::Display for Fragment<N> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct NotNecessaryFieldsEdge<N> {
-    pub id: N,   // optional id, can be either * or id tag
-    pub beg1: BString,
-    pub end1: BString, // dollar character as optional final char
-    pub beg2: BString,
-    pub end2: BString,      // dollar character as optional final char
-    pub alignment: BString, // alignment field can be *, trace or CIGAR
-    pub tag: BString,
-}
-
 /// Returns an Edge line
 ///
 /// # Examples
 ///
 /// ```ignore
-/// use gfa2::*;
-/// use bstr::BString;
-///
-/// // inizialize a simple edge
 /// let edge = "*\t2+\t45+\t2531\t2591$\t0\t60\t60M";
-/// let edge_: Edge<BString, _> = Edge {
+/// let edge_: Edge<BString> = Edge {
 ///     id: "*".into(),
 ///     sid1: "2+".into(),
 ///     sid2: "45+".into(),
@@ -205,7 +176,7 @@ pub struct NotNecessaryFieldsEdge<N> {
 ///     beg2: "0".into(),
 ///     end2: "60".into(),
 ///     alignment: "60M".into(),
-///     tag:(),
+///     tag: "".into(),
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -269,18 +240,14 @@ impl<N: SegmentId> fmt::Display for Edge<N> {
 /// # Examples
 ///
 /// ```ignore
-/// use gfa2::*;
-/// use bstr::BString;
-///
-/// // inizialize a simple gap
 /// let gap = "g1\t7+\t22+\t10\t*";
-/// let gap_: Gap<BString, _> = Gap {
+/// let gap_: Gap<BString> = Gap {
 ///     id: "g1".into(),
 ///     sid1: "7+".into(),
 ///     sid2: "22+".into(),
 ///     dist: "10".into(),
 ///     var: "*".into(),
-///     tag:(),
+///     tag: "".into(),
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -326,15 +293,11 @@ impl<N: SegmentId> fmt::Display for Gap<N> {
 /// # Examples
 ///
 /// ```ignore
-/// use gfa2::*;
-/// use bstr::BString;
-///
-/// // inizialize a simple o-group
 /// let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
-/// let ogroup_: GroupO<BString, _> = GroupO::new(
+/// let ogroup_: GroupO<BString> = GroupO::new(
 ///     "P1".into(),
 ///     "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-///     (),
+///     "".into(),
 /// );
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -421,15 +384,11 @@ impl<N: SegmentId> fmt::Display for GroupO<N> {
 /// # Examples
 ///
 /// ```ignore
-/// use gfa2::*;
-/// use bstr::BString;
-///
-/// // inizialize a simple u-group
 /// let ugroup = "SG1\t16 24 SG2 51_24 16_24";
-/// let ugroup_: GroupU<BString, _> = GroupU::new(
+/// let ugroup_: GroupU<BString> = GroupU::new(
 ///     "SG1".into(),
 ///     "16 24 SG2 51_24 16_24".into(),
-///     (),
+///     "".into(),
 /// );
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -504,10 +463,7 @@ impl<N: SegmentId> fmt::Display for GroupU<N> {
 /// # Examples
 ///
 /// ```ignore
-/// use gfa2::*;
-/// use bstr::BString;
-///
-/// let gfa2: GFA2<BString, OptionalFields> = GFA2 {
+/// let gfa2: GFA2<BString> = GFA2 {
 ///     headers: vec![
 ///         Header::new(Some("VN:Z:2.0".into())),
 ///     ],
@@ -530,7 +486,6 @@ impl<N: SegmentId> fmt::Display for GroupU<N> {
 ///         GroupU::new(b"SG1", b"16 24 SG2 51_24 16_24", vec![]),
 ///     ]
 /// };
-/// // inizialize a simple gfa2 object
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd)]
 pub struct GFA2<N> {

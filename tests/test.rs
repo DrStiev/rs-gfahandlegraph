@@ -2,7 +2,6 @@ use gfahandlegraph::{
     gfa::orientation::Orientation,
     handle::{Edge, Handle, NodeId},
     hashgraph::HashGraph,
-    //handlegraph::*,
     mutablehandlegraph::*,
     parser::*,
     pathgraph::PathHandleGraph,
@@ -70,7 +69,7 @@ fn read_big_gfa1() -> HashGraph {
 
 #[test]
 fn create_medium_graph() {
-    // about 3 seconds total
+    // about 2 seconds total
     println!("Parse and Create graph from medium file [GFA]");
     let _g = read_medium_gfa1();
     /* nodes: 4058     edges: 9498     paths: 7
@@ -95,7 +94,12 @@ fn create_medium_graph() {
 #[test]
 #[ignore]
 fn create_big_graph() {
-    // less than 8 minutes each
+    // actual configuration (7.31.58) using GFAObject
+    // less than 8 minutes (7.33.28) using GFAObject
+    // less than 8 minutes (7.39.23) not using GFAObject
+    // The performance are very similar,
+    // so I don't think not using an intermediate ogject could
+    // improve the performance significantly
     println!("Parse and Create graph from big file [GFA]");
     let _g = read_big_gfa1();
     /* nodes: 715018   edges: 985445   paths: 0
@@ -106,8 +110,10 @@ fn create_big_graph() {
     */
     println!("Graph complete!");
 
+    // actual configuration (8.31.58) using GFAObject
+    // graph from gfa2 are generally 1 minute slower than from gfa
     println!("Parse and Create graph from big file [GFA2]");
-    //let _g = read_big_gfa2();
+    let _g = read_big_gfa2();
     /* nodes: 715018   edges: 985445   paths: 0
     let nodes = _g.all_handles().count();
     let edges = _g.all_edges().count();

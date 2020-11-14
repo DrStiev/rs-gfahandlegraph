@@ -53,7 +53,6 @@ where
             Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*").unwrap();
     }
 
-    //let next = next_field(input)?;
     RE.find(input.next()?.as_ref())
         .map(|s| BString::from(s.as_bytes()))
 }
@@ -442,11 +441,9 @@ mod tests {
         }
     }
 
-    // FIXME:parse_tag gives problems
     #[test]
-    #[ignore]
     fn can_parse_multiple_tag() {
-        let tag = vec!["aa:Z:test\thr:i:2020"];
+        let tag = vec!["aa:Z:test   hr:i:2020"];
         let result = parse_tag(&mut tag.iter());
 
         match result {

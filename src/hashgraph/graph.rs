@@ -1,8 +1,9 @@
 use fnv::FnvHashMap;
 
 use crate::gfa::{
-    gfa1::{Link, Path as GFAPath, Segment as Segment1, GFA},
-    gfa2::{Edge, GroupO, Segment as Segment2, GFA2},
+    gfa1:: GFA,
+    gfa2::GFA2,
+    orientation::Orientation,
 };
 
 use crate::{
@@ -46,12 +47,138 @@ impl Default for HashGraph {
     }
 }
 
+pub enum FileType {
+    GFA(GFA<usize>),
+    GFA2(GFA2<usize>),
+}
+
 impl HashGraph {
     pub fn new() -> HashGraph {
         Default::default()
     }
 
-    pub fn insert_gfa2_line(
+    fn add_segment<T: Into<NodeId>>(
+        &mut self,
+        node: T,
+        sequence: &[u8],
+    ) -> Result<bool, GraphError> {
+        let node = node.into();
+        match self.create_handle(sequence, node) {
+            Ok(_) => Ok(true),
+            Err(why) => Err(why),
+        }
+    }
+
+    fn add_edge<T: Into<NodeId>>(
+        &mut self,
+        left: T,
+        left_orient: Orientation,
+        right: T,
+        right_orient: Orientation,
+    ) -> Result<bool, GraphError> {
+        let left_handle = Handle::new(left, left_orient);
+        let right_handle = Handle::new(right, right_orient);
+
+        match self.create_edge(GraphEdge(left_handle, right_handle)) {
+            Ok(_) => Ok(true),
+            Err(why) => Err(why),
+        }
+    }
+
+    fn add_path(
+        &mut self,
+        path_id: &[u8],
+        sequence_id: impl Iterator<Item = (usize, Orientation)>,
+    ) -> Result<bool, GraphError> {
+        let path_id = self.create_path_handle(&path_id, false);
+        for (id, orient) in sequence_id {
+            self.append_step(&path_id, Handle::new(id as u64, orient));
+        }
+        Ok(true)
+    }
+
+    /// Build an HashGraph from a GFA(2)<usize> Object\
+    /// the function will iterate only over the segments, edges and ogroups fields
+    /// # Examples
+    /// ```ignore
+    /// let graph = HashGraph::new();
+    /// let mut file: GFA2<usize> = GFA2::new();
+    /// match graph.create_graph(FileType::GFA2(file)) {
+    ///     Ok(g) => Ok(g),
+    ///     Err(why) => println!("{}", why),
+    /// }
+    /// ```
+    #[inline]
+    pub fn create_graph(&self, file: FileType) -> Result<HashGraph, GraphError> {
+        let mut new_self = self.clone();
+        match file {
+            FileType::GFA(x) => {
+                //HashGraph::insert_gfa1_line(new_self, &x)
+                x.segments
+                    .iter()
+                    .for_each(|s| match /*new_self.add_segment_from_gfa(s)*/ new_self.add_segment(s.name, &s.sequence) {
+                        Ok(_) => (),
+                        Err(why) => println!("Error {}", why),
+                    });
+                x.links
+                    .iter()
+                    .for_each(|l| match /*new_self.add_link_from_gfa(l)*/ new_self.add_edge(l.from_segment, l.from_orient, l.to_segment, l.to_orient) {
+                        Ok(_) => (),
+                        Err(why) => println!("Error {}", why),
+                    });
+                x.paths
+                    .iter()
+                    .for_each(|p| match /*new_self.add_path_from_gfa(p)*/ new_self.add_path(&p.path_name, p.iter()) {
+                        Ok(_) => (),
+                        Err(why) => println!("Error {}", why),
+                    });
+                Ok(new_self)
+            }
+            FileType::GFA2(x) => {
+                //HashGraph::insert_gfa2_line(new_self, &x)
+                x.segments
+                    .iter()
+                    .for_each(|s| match /*new_self.add_segment2_from_gfa(s)*/ new_self.add_segment(s.id, &s.sequence) {
+                        Ok(_) => (),
+                        Err(why) => println!("Error {}", why),
+                    });
+                x.edges
+                    .iter()
+                    .for_each(|e| /*new_self.add_edge_from_gfa(e)*/ {
+                        let len = e.sid1.to_string().len() - 1;
+                        let l = e.sid1.to_string()[..len].parse::<u64>().unwrap();
+                        let l_orient = match &e.sid1.to_string()[len..] {
+                            "0" => Orientation::Forward,
+                            "1" => Orientation::Backward,
+                            _ => panic!("Error! Edge did not include orientation"),
+                        };
+
+                        let len = e.sid2.to_string().len() - 1;
+                        let r = e.sid2.to_string()[..len].parse::<u64>().unwrap();
+                        let r_orient = match &e.sid2.to_string()[len..] {
+                            "0" => Orientation::Forward,
+                            "1" => Orientation::Backward,
+                            _ => panic!("Error! Edge did not include orientation"),
+                        };
+
+                        match new_self.add_edge(l, l_orient, r, r_orient) {
+                            Ok(_) => (),
+                            Err(why) => println!("Error {}", why),
+                        }
+                    });
+                x.groups_o
+                    .iter()
+                    .for_each(|o| match /*new_self.add_ogroup_from_gfa(o)*/ new_self.add_path(&o.id, o.iter()) {
+                        Ok(_) => (),
+                        Err(why) => println!("Error {}", why),
+                    });
+                Ok(new_self)
+            }
+        }
+    }
+
+    /*
+    fn insert_gfa2_line(
         mut graph: HashGraph,
         file: &GFA2<usize>,
     ) -> Result<HashGraph, GraphError> {
@@ -75,17 +202,17 @@ impl HashGraph {
             });
         Ok(graph)
     }
+    */
 
-    pub fn add_segment2_from_gfa(&mut self, seg: &Segment2<usize>) -> Result<bool, GraphError> {
+    /*
+    fn add_segment2_from_gfa(&mut self, seg: &Segment2<usize>) -> Result<bool, GraphError> {
         match self.create_handle(&seg.sequence, seg.id as u64) {
             Ok(_) => Ok(true),
             Err(why) => Err(why),
         }
     }
 
-    pub fn add_edge_from_gfa(&mut self, link: &Edge<usize>) -> Result<bool, GraphError> {
-        use crate::gfa::orientation::Orientation;
-
+    fn add_edge_from_gfa(&mut self, link: &Edge<usize>) -> Result<bool, GraphError> {
         let left_len = link.sid1.to_string().len();
         let right_len = link.sid2.to_string().len();
 
@@ -111,7 +238,7 @@ impl HashGraph {
         }
     }
 
-    pub fn add_ogroup_from_gfa(&mut self, path: &GroupO<usize>) -> Result<bool, GraphError> {
+    fn add_ogroup_from_gfa(&mut self, path: &GroupO<usize>) -> Result<bool, GraphError> {
         let path_id = self.create_path_handle(&path.id, false);
         for (name, orient) in path.iter() {
             self.append_step(&path_id, Handle::new(name as u64, orient));
@@ -130,8 +257,10 @@ impl HashGraph {
         }
     }
     */
+    */
 
-    pub fn insert_gfa1_line(
+    /*
+    fn insert_gfa1_line(
         mut graph: HashGraph,
         file: &GFA<usize>,
     ) -> Result<HashGraph, GraphError> {
@@ -155,15 +284,17 @@ impl HashGraph {
             });
         Ok(graph)
     }
+    */
 
-    pub fn add_segment_from_gfa(&mut self, seg: &Segment1<usize>) -> Result<bool, GraphError> {
+    /*
+    fn add_segment_from_gfa(&mut self, seg: &Segment1<usize>) -> Result<bool, GraphError> {
         match self.create_handle(&seg.sequence, seg.name as u64) {
             Ok(_) => Ok(true),
             Err(why) => Err(why),
         }
     }
 
-    pub fn add_link_from_gfa(&mut self, link: &Link<usize>) -> Result<bool, GraphError> {
+    fn add_link_from_gfa(&mut self, link: &Link<usize>) -> Result<bool, GraphError> {
         let left = Handle::new(link.from_segment as u64, link.from_orient);
         let right = Handle::new(link.to_segment as u64, link.to_orient);
 
@@ -173,13 +304,14 @@ impl HashGraph {
         }
     }
 
-    pub fn add_path_from_gfa(&mut self, path: &GFAPath<usize>) -> Result<bool, GraphError> {
+    fn add_path_from_gfa(&mut self, path: &GFAPath<usize>) -> Result<bool, GraphError> {
         let path_id = self.create_path_handle(&path.path_name, false);
         for (name, orient) in path.iter() {
             self.append_step(&path_id, Handle::new(name as u64, orient));
         }
         Ok(true)
     }
+    */
 
     /// Print an HashGraph object in a simplified way
     /// # Example
@@ -193,9 +325,9 @@ impl HashGraph {
     ///         11: ACCTT
     ///     }
     ///     Edges: {
-    ///         12- --> 13+
-    ///         11+ --> 12-
-    ///         11+ --> 13+
+    ///         12- -- 13+
+    ///         11+ -- 12-
+    ///         11+ -- 13+
     ///     }
     ///     Paths: {
     ///         14: ACCTT -> CTTGATT
@@ -267,7 +399,7 @@ impl HashGraph {
             }
 
             println!(
-                "\t\t{}{} --> {}{}",
+                "\t\t{}{} -- {}{}",
                 from_node, left_orient, to_node, right_orient
             );
         }
@@ -320,14 +452,8 @@ impl HashGraph {
     /// The reference is a Node object wrapped in Option
     /// # Examples
     /// ```ignore
-    /// use hashgraph::HashGraph::graph;
-    /// use bstr::BStr;
-    ///
-    /// let mut graph = HashGraph::new();
-    /// let h1 = graph.create_handle(b"ACCTT", 11);
-    ///
-    /// // Some(Node { sequence: "ACCTT", left_edges: [], right_edges: [], occurrences: {} })
     /// println!("{:?}", graph.get_node(&11));
+    /// // Some(Node { sequence: "ACCTT", left_edges: [], right_edges: [], occurrences: {} })
     /// ```
     pub fn get_node(&self, node_id: &NodeId) -> Option<&Node> {
         self.graph.get(node_id)
@@ -347,19 +473,8 @@ impl HashGraph {
     /// The reference is a Path object wrapped in Option
     /// # Examples
     /// ```ignore
-    /// use hashgraph::HashGraph::graph;
-    /// use bstr::BStr;
-    ///
-    /// let mut graph = HashGraph::new();
-    /// let h1 = graph.create_handle(b"ACCTT", 11);
-    /// let h2 = graph.create_handle(b"TCAAGG", 12);
-    ///
-    /// let p1 = graph.create_path_handle(b"path-1", false);
-    /// graph.append_step(&p1, h1);
-    /// graph.append_step(&p1, h2);
-    ///
-    /// // Some(Path { path_id: 0, name: "path-1", is_circular: false, nodes: [Handle(22), Handle(24)] })
     /// println!("{:?}", graph.get_path(&0));
+    /// // Some(Path { path_id: 0, name: "path-1", is_circular: false, nodes: [Handle(22), Handle(24)] })
     /// ```
     pub fn get_path(&self, path_id: &PathId) -> Option<&Path> {
         self.paths.get(path_id)

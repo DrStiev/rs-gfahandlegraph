@@ -5,17 +5,13 @@ use bstr::{BStr, BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-/// This module defines the various GFA line types, the GFA object,
-/// and some utility functions and types.
-
 /// Simple representation of a parsed GFA file, using a Vec<T> to
 /// store each separate GFA line type.\
 /// Returns a GFA object
 ///
 /// # Examples
 /// ```ignore
-///
-/// let gfa: GFA<BString, OptionalFields> = GFA {
+/// let gfa: GFA<BString> = GFA {
 ///     headers: vec![
 ///         Header::new(Some("VN:Z:1.0".into())),
 ///     ],
@@ -174,16 +170,15 @@ impl<N: SegmentId> GFA<N> {
     }
 }
 
-/// The header line of a GFA graph
-/// /// Returns an Header line
+/// The header line of a GFA graph\
+/// Returns an Header line
 ///
 /// # Examples
 /// ```ignore
-/// // inizialize a simple header
 /// let header = "VN:Z:1.0";
 /// let header_ = Header {
 ///     version: Some("VN:Z:1.0".into()),
-///     optional: (),
+///     optional: "".into(),
 /// };
 /// ```
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
@@ -220,18 +215,16 @@ impl fmt::Display for Header {
     }
 }
 
-/// A segment in a GFA graph. Generic over the name type, but
-/// currently the parser is only defined for N = BString
+/// A segment in a GFA graph.\
 /// Returns a Segment line
 ///
 /// # Examples
 /// ```ignore
-/// // inizialize a simple segment
 /// let segment = "1\tAAAAAAACGT";
-/// let segment_: Segment<BString, _> = Segment {
+/// let segment_: Segment<BString> = Segment {
 ///     name: "1".into(),
 ///     sequence: "AAAAAAACGT".into(),
-///     optional:(),
+///     optional: "".into(),
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -267,15 +260,14 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
 ///
 /// # Examples
 /// ```ignore
-/// // inizialize a simple link
 /// let link = "15\t-\t10\t+\t20M";
-/// let link_: Link<BString, _> = Link {
+/// let link_: Link<BString> = Link {
 ///     from_segment: "15".into(),
 ///     from_orient: Orientation::Backward,
 ///     to_segment: "10".into(),
 ///     to_orient: Orientation::Forward,
 ///     overlap: 20M
-///     optional:(),
+///     optional:"".into(),
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -326,16 +318,15 @@ impl<N: SegmentId> fmt::Display for Link<N> {
 ///
 /// # Examples
 /// ```ignore
-/// // inizialize a simple link
 /// let containment = "15\t-\t10\t+\t4\t20M";
-/// let containment_: Containment<BString, _> = Containment {
+/// let containment_: Containment<BString> = Containment {
 ///     container_name: "15".into(),
 ///     container_orient: Orientation::Backward,
 ///     contained_name: "10".into(),
 ///     contained_orient: Orientation::Forward,
 ///     pos: 4
 ///     overlap: 20M
-///     optional:(),
+///     optional: "".into(),
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -371,13 +362,12 @@ impl<N: SegmentId> fmt::Display for Containment<N> {
 /// Returns a Path line
 /// # Examples
 /// ```ignore
-/// // inizialize a simple o-group
 /// let path = "14\t11+,12-,13+\t4M,5M";
-/// let path_: Path<BString, _> = Path::new(
+/// let path_: Path<BString> = Path::new(
 ///     "14".into(),
 ///     "11+,12-,13+".into(),
 ///     "4M,5M".into(),
-///     (),
+///     "".into(),
 /// );
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]

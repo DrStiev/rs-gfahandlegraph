@@ -1,4 +1,4 @@
-use crate::gfa::{gfa2::*, segment_id::SegmentId, orientation::Orientation};
+use crate::gfa::{gfa2::*, segment_id::SegmentId};
 use crate::parser::error::*;
 
 use bstr::BString;
@@ -11,16 +11,6 @@ where
     P: AsRef<[u8]>,
 {
     input.next().ok_or(ParseFieldError::MissingFields)
-}
-
-fn parse_orientation<I>(mut input: I) -> ParserFieldResult<Orientation>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    let next = next_field(&mut input)?;
-    let parsed = Orientation::from_bytes_plus_minus(next.as_ref());
-    Orientation::parse_error(parsed)
 }
 
 /// function that parses the version of the header tag
@@ -53,7 +43,6 @@ where
             Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*").unwrap();
     }
 
-    //let next = next_field(input)?;
     RE.find(input.next()?.as_ref())
         .map(|s| BString::from(s.as_bytes()))
 }
@@ -506,6 +495,7 @@ mod tests {
             Ok(e) => assert_eq!(e, edge_),
         }
     }
+
     #[test]
     fn can_parse_gap() {
         let gap = "g1\t7+\t22+\t10\t*";
@@ -661,11 +651,9 @@ mod tests {
         }
     }
 
-    // FIXME: parse_tag gives problems
     #[test]
-    #[ignore]
     fn can_parse_multiple_tag() {
-        let tag = vec!["aa:Z:test\thr:i:2020"];
+        let tag = vec!["aa:Z:test   hr:i:2020"];
         let result = parse_tag(&mut tag.iter());
 
         match result {
