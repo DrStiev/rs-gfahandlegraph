@@ -23,6 +23,10 @@ rayon = "1.5"
 num-traits = "0.2"
 num-iter = "0.1"
 
+# util
+time = "0.2.22"
+log = "0.4.11"
+
 [dev-dependencies]
 criterion = "0.3"
 quickcheck = "0.9"

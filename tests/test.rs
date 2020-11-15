@@ -69,8 +69,12 @@ fn read_big_gfa1() -> HashGraph {
 
 #[test]
 fn create_medium_graph() {
-    // about 2 seconds total
-    println!("Parse and Create graph from medium file [GFA]");
+    /*
+    Read file test.gfa: Duration { seconds: 0, nanoseconds: 59200 }
+    Parse file and create GFA2 Object: Duration { seconds: 0, nanoseconds: 377341700 }
+    Create graph: Duration { seconds: 0, nanoseconds: 567653600 }
+    TOTAL: Duration { seconds: 0, nanoseconds: 945846800 }
+    */
     let _g = read_medium_gfa1();
     /* nodes: 4058     edges: 9498     paths: 7
     let nodes = _g.all_handles().count();
@@ -78,9 +82,13 @@ fn create_medium_graph() {
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
     */
-    println!("Graph complete!");
 
-    println!("Parse and Create graph from medium file [GFA2]");
+    /*
+    Read file test.gfa2: Duration { seconds: 0, nanoseconds: 22300 }
+    Parse file and create GFA2 Object: Duration { seconds: 0, nanoseconds: 583455300 }
+    Create graph: Duration { seconds: 0, nanoseconds: 588518500 }
+    TOTAL: Duration { seconds: 1, nanoseconds: 172725300 }
+    */
     let _g = read_medium_gfa2();
     /* nodes: 4058     edges: 9498     paths: 7
     let nodes = _g.all_handles().count();
@@ -88,19 +96,17 @@ fn create_medium_graph() {
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
     */
-    println!("Graph complete!");
 }
 
 #[test]
 #[ignore]
 fn create_big_graph() {
-    // actual configuration (7.31.58) using GFAObject
-    // less than 8 minutes (7.33.28) using GFAObject
-    // less than 8 minutes (7.39.23) not using GFAObject
-    // The performance are very similar,
-    // so I don't think not using an intermediate ogject could
-    // improve the performance significantly
-    println!("Parse and Create graph from big file [GFA]");
+    /*
+    Read file ape-4-0.10b.gfa: Duration { seconds: 0, nanoseconds: 65500 }
+    Parse file and create GFA2 Object: Duration { seconds: 449, nanoseconds: 608020800 }
+    Create graph: Duration { seconds: 5, nanoseconds: 248893500 }
+    TOTAL: Duration { seconds: 454, nanoseconds: 857840800 }
+    */
     let _g = read_big_gfa1();
     /* nodes: 715018   edges: 985445   paths: 0
     let nodes = _g.all_handles().count();
@@ -108,11 +114,14 @@ fn create_big_graph() {
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
     */
-    println!("Graph complete!");
 
-    // actual configuration (8.31.58) using GFAObject
-    // graph from gfa2 are generally 1 minute slower than from gfa
-    println!("Parse and Create graph from big file [GFA2]");
+    
+    /*
+    Read file ape-4-0.10b.gfa2: Duration { seconds: 0, nanoseconds: 4600 }
+    Parse file and create GFA2 Object: Duration { seconds: 472, nanoseconds: 435751500 }
+    Create graph: Duration { seconds: 7, nanoseconds: 109592400 }
+    TOTAL: Duration { seconds: 479, nanoseconds: 546135000 }
+    */
     let _g = read_big_gfa2();
     /* nodes: 715018   edges: 985445   paths: 0
     let nodes = _g.all_handles().count();
@@ -120,7 +129,6 @@ fn create_big_graph() {
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
     */
-    println!("Graph complete!");
 }
 
 #[test]
