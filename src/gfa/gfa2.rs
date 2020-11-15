@@ -52,6 +52,7 @@ impl fmt::Display for Header {
 /// Returns a Segment line
 ///
 /// # Examples
+/// ```ignore
 /// let segment = "A\t10\tAAAAAAACGT";
 /// let segment_: Segment<BString> = Segment {
 ///     id: "A".into(),

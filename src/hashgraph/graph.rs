@@ -58,7 +58,6 @@ impl HashGraph {
         node: T,
         sequence: &[u8],
     ) -> Result<bool, GraphError> {
-        let node = node.into();
         match self.create_handle(sequence, node) {
             Ok(_) => Ok(true),
             Err(why) => Err(why),
@@ -106,65 +105,69 @@ impl HashGraph {
     /// ```
     #[inline]
     pub fn create_graph(&self, file: FileType) -> Result<HashGraph, GraphError> {
-        let mut new_self = self.clone();
         match file {
             FileType::GFA(x) => {
-                //HashGraph::insert_gfa1_line(new_self, &x)
+                let mut new_self = self.clone();
                 x.segments
                     .iter()
-                    .for_each(|s| match /*new_self.add_segment_from_gfa(s)*/ new_self.add_segment(s.name, &s.sequence) {
+                    .for_each(|s| match new_self.add_segment(s.name, &s.sequence) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     });
-                x.links
-                    .iter()
-                    .for_each(|l| match /*new_self.add_link_from_gfa(l)*/ new_self.add_edge(l.from_segment, l.from_orient, l.to_segment, l.to_orient) {
+                x.links.iter().for_each(|l| {
+                    match new_self.add_edge(
+                        l.from_segment,
+                        l.from_orient,
+                        l.to_segment,
+                        l.to_orient,
+                    ) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
-                    });
+                    }
+                });
                 x.paths
                     .iter()
-                    .for_each(|p| match /*new_self.add_path_from_gfa(p)*/ new_self.add_path(&p.path_name, p.iter()) {
+                    .for_each(|p| match new_self.add_path(&p.path_name, p.iter()) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     });
                 Ok(new_self)
             }
             FileType::GFA2(x) => {
-                //HashGraph::insert_gfa2_line(new_self, &x)
+                let mut new_self = self.clone();
                 x.segments
                     .iter()
-                    .for_each(|s| match /*new_self.add_segment2_from_gfa(s)*/ new_self.add_segment(s.id, &s.sequence) {
+                    .for_each(|s| match new_self.add_segment(s.id, &s.sequence) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     });
-                x.edges
-                    .iter()
-                    .for_each(|e| /*new_self.add_edge_from_gfa(e)*/ {
-                        let len = e.sid1.to_string().len() - 1;
-                        let l = e.sid1.to_string()[..len].parse::<u64>().unwrap();
-                        let l_orient = match &e.sid1.to_string()[len..] {
-                            "0" => Orientation::Forward,
-                            "1" => Orientation::Backward,
-                            _ => panic!("Error! Edge did not include orientation"),
-                        };
+                x.edges.iter().for_each(|e| {
+                    let sid1 = e.sid1.to_string();
+                    let len = sid1.len() - 1;
+                    let l = sid1[..len].parse::<u64>().unwrap();
+                    let l_orient = match &sid1[len..] {
+                        "0" => Orientation::Forward,
+                        "1" => Orientation::Backward,
+                        _ => panic!("Error! Edge did not include orientation"),
+                    };
 
-                        let len = e.sid2.to_string().len() - 1;
-                        let r = e.sid2.to_string()[..len].parse::<u64>().unwrap();
-                        let r_orient = match &e.sid2.to_string()[len..] {
-                            "0" => Orientation::Forward,
-                            "1" => Orientation::Backward,
-                            _ => panic!("Error! Edge did not include orientation"),
-                        };
+                    let sid2 = e.sid2.to_string();
+                    let len = sid2.len() - 1;
+                    let r = sid2[..len].parse::<u64>().unwrap();
+                    let r_orient = match &sid2[len..] {
+                        "0" => Orientation::Forward,
+                        "1" => Orientation::Backward,
+                        _ => panic!("Error! Edge did not include orientation"),
+                    };
 
-                        match new_self.add_edge(l, l_orient, r, r_orient) {
-                            Ok(_) => (),
-                            Err(why) => println!("Error {}", why),
-                        }
-                    });
+                    match new_self.add_edge(l, l_orient, r, r_orient) {
+                        Ok(_) => (),
+                        Err(why) => println!("Error {}", why),
+                    }
+                });
                 x.groups_o
                     .iter()
-                    .for_each(|o| match /*new_self.add_ogroup_from_gfa(o)*/ new_self.add_path(&o.id, o.iter()) {
+                    .for_each(|o| match new_self.add_path(&o.id, o.iter()) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     });
@@ -268,7 +271,7 @@ impl HashGraph {
 
     /// Function that prints all the paths in a graph
     fn print_paths(&self) {
-        use bio::alphabets::dna;
+        use crate::util::dna;
         use bstr::BString;
 
         println!("\tPaths: {{");
@@ -290,7 +293,7 @@ impl HashGraph {
                 }
                 // print correct reverse and complement sequence to display the correct path
                 if handle.is_reverse() {
-                    let rev_sequence: BString = dna::revcomp(node.sequence.as_slice()).into();
+                    let rev_sequence: BString = dna::rev_comp(node.sequence.as_slice()).into();
                     print!("{} -({})", rev_sequence, node.sequence);
                 } else {
                     print!("{}", node.sequence);

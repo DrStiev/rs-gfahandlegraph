@@ -90,9 +90,18 @@ mod tests {
         // use .flip() to apply reverse complement to the node
         graph.apply_orientation(h2.flip());
 
-        graph.create_edge(Edge(h1, h2));
-        graph.create_edge(Edge(h2, h3));
-        graph.create_edge(Edge(h1, h3));
+        match graph.create_edge(Edge(h1, h2)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        match graph.create_edge(Edge(h2, h3)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        match graph.create_edge(Edge(h1, h3)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
 
         let path = graph.create_path_handle(b"1", false);
         // path: 1 -> 2 -> 3
@@ -120,9 +129,18 @@ mod tests {
         // use .flip() to apply reverse complement to the node
         graph.apply_orientation(h2.flip());
 
-        graph.create_edge(Edge(h1, h2));
-        graph.create_edge(Edge(h2, h3));
-        graph.create_edge(Edge(h1, h3));
+        match graph.create_edge(Edge(h1, h2)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        match graph.create_edge(Edge(h2, h3)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        match graph.create_edge(Edge(h1, h3)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
 
         let path = graph.create_path_handle(b"1", false);
         // path: 1 -> 2 -> 3
@@ -147,9 +165,18 @@ mod tests {
         // use .flip() to apply reverse complement to the node
         graph.apply_orientation(h2.flip());
 
-        graph.create_edge(Edge(h1, h2));
-        graph.create_edge(Edge(h2, h3));
-        graph.create_edge(Edge(h1, h3));
+        match graph.create_edge(Edge(h1, h2)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        match graph.create_edge(Edge(h2, h3)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        match graph.create_edge(Edge(h1, h3)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
 
         let path = graph.create_path_handle(b"1", false);
         // path: 1 -> 2 -> 3
@@ -177,9 +204,18 @@ mod tests {
         // use .flip() to apply reverse complement to the node
         graph.apply_orientation(h2.flip());
 
-        graph.create_edge(Edge(h1, h2));
-        graph.create_edge(Edge(h2, h3));
-        graph.create_edge(Edge(h1, h3));
+        match graph.create_edge(Edge(h1, h2)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        match graph.create_edge(Edge(h2, h3)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        match graph.create_edge(Edge(h1, h3)) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
 
         let path = graph.create_path_handle(b"1", false);
         // path: 1 -> 2 -> 3

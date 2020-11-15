@@ -132,7 +132,7 @@ impl Parser<usize> {
     pub fn new() -> Self {
         Default::default()
     }
-    
+
     pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(
         &self,
         path: P,

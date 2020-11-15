@@ -1,11 +1,12 @@
-use bio::alphabets::dna;
 use bstr::BString;
+use rayon::prelude::*;
 
 use crate::{
     handle::{Direction, Edge, Handle, NodeId},
     handlegraph::*,
     mutablehandlegraph::*,
     pathgraph::PathHandleGraph,
+    util::dna,
 };
 
 pub mod graph;
@@ -34,6 +35,16 @@ impl<'a> AllHandles for &'a HashGraph {
     #[inline]
     fn has_node<I: Into<NodeId>>(self, n_id: I) -> bool {
         self.graph.contains_key(&n_id.into())
+    }
+}
+
+impl<'a> AllHandlesPar for &'a HashGraph {
+    type HandlesPar = rayon::iter::IterBridge<
+        NodeIdRefHandles<'a, std::collections::hash_map::Keys<'a, NodeId, Node>>,
+    >;
+
+    fn all_handles_par(self) -> Self::HandlesPar {
+        self.all_handles().par_bridge()
     }
 }
 
@@ -85,7 +96,7 @@ impl<'a> HandleSequences for &'a HashGraph {
     fn sequence(self, handle: Handle) -> Vec<u8> {
         let seq: &[u8] = &self.get_node_unchecked(&handle.id()).sequence.as_ref();
         if handle.is_reverse() {
-            dna::revcomp(seq)
+            dna::rev_comp(seq)
         } else {
             seq.into()
         }
@@ -122,9 +133,10 @@ impl ModdableHandleGraph for HashGraph {
         seq: &[u8],
     ) -> Result<bool, GraphError> {
         let node_id: NodeId = node_id.into();
+        let possible_node = self.graph.get_mut(&node_id);
         let seq: BString = BString::from(seq);
-        if self.graph.get_mut(&node_id).is_some() {
-            if self.graph.get_mut(&node_id).unwrap().sequence == seq {
+        if let Some(n)  = possible_node {
+            if n.sequence == seq {
                 // no need to update
                 Ok(true)
             } else {
@@ -214,7 +226,6 @@ impl SubtractiveHandleGraph for HashGraph {
                 let nodes = &self.paths.get_mut(&x).unwrap().nodes;
                 if nodes.iter().any(|x| x.id() == node_id) {
                     self.paths.remove(&x);
-                    //self.destroy_path(&x);
                 }
                 x += 1;
             }
@@ -247,7 +258,7 @@ impl SubtractiveHandleGraph for HashGraph {
                                         "left nodes".to_string()
                                     ),
                                 ))
-                            } //panic!("Error position not found"),
+                            }
                         };
                         self.graph.get_mut(&l.id()).unwrap().left_edges.remove(pos);
                     } else {
@@ -262,7 +273,7 @@ impl SubtractiveHandleGraph for HashGraph {
                                         "right nodes".to_string()
                                     ),
                                 ))
-                            } //panic!("Error position not found"),
+                            }
                         };
                         self.graph.get_mut(&l.id()).unwrap().right_edges.remove(pos);
                     }
@@ -277,7 +288,6 @@ impl SubtractiveHandleGraph for HashGraph {
                         let lr = l + 1;
                         if lr == r {
                             self.paths.remove(&x);
-                            //self.destroy_path(&x);
                         }
                     }
                 }
@@ -299,7 +309,6 @@ impl SubtractiveHandleGraph for HashGraph {
             // delete occurrencies in path leaves "holes"
             let path_handle = self.name_to_path_handle(name).unwrap();
             self.paths.remove(&path_handle);
-            //self.destroy_path(&path_handle);
             Ok(true)
         } else {
             Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
@@ -334,7 +343,6 @@ impl AdditiveHandleGraph for HashGraph {
         if self.get_node(&id).is_some() {
             Err(GraphError::IdAlreadyExist(id.to_string()))
         } else {
-            //println!("add_node: {}", id);
             self.graph.insert(id, Node::new(seq));
             self.max_id = std::cmp::max(self.max_id, id);
             self.min_id = std::cmp::min(self.min_id, id);
@@ -455,7 +463,10 @@ impl MutableHandleGraph for HashGraph {
 
         // create edges between the new segments
         for (this, next) in result.iter().zip(result.iter().skip(1)) {
-            self.create_edge(Edge(*this, *next));
+            match self.create_edge(Edge(*this, *next)) {
+                Ok(_) => (),
+                Err(why) => println!("Error: {}", why),
+            }
         }
 
         // update paths and path occurrences
@@ -483,7 +494,7 @@ impl MutableHandleGraph for HashGraph {
         }
 
         let node = self.get_node_mut(&handle.id()).unwrap();
-        node.sequence = dna::revcomp(node.sequence.as_slice()).into();
+        node.sequence = dna::rev_comp(node.sequence.as_slice()).into();
 
         let edges = {
             let node = self.get_node(&handle.id()).unwrap();

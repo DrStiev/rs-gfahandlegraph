@@ -17,13 +17,15 @@ nom = "5"
 bytemuck = { version = "1.4", features = ["derive"] }
 
 # handlegraph
-bio = "0.32"
 fnv = "1.0"
 succinct = "0.5"
-quickcheck = "0.9"
+rayon = "1.5"
+num-traits = "0.2"
+num-iter = "0.1"
 
 [dev-dependencies]
 criterion = "0.3"
+quickcheck = "0.9"
 
 [[bench]]
 name = "my_benchmark"
