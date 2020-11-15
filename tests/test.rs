@@ -99,7 +99,7 @@ fn create_medium_graph() {
 }
 
 #[test]
-//#[ignore]
+#[ignore]
 fn create_big_graph() {
     /*
     Read file ape-4-0.10b.gfa: Duration { seconds: 0, nanoseconds: 65500 }
