@@ -92,7 +92,7 @@ impl HashGraph {
         Ok(true)
     }
 
-    /// Build an HashGraph from a GFA(2)<usize> Object\
+    /// Build an HashGraph from a GFA1(2)<usize> Object\
     /// the function will iterate only over the segments, edges and ogroups fields
     /// # Examples
     /// ```ignore

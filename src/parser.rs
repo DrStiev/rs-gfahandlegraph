@@ -134,6 +134,35 @@ impl Parser<usize> {
         Default::default()
     }
 
+    /// Function that given a gfa or gfa2 file as input, creates the
+    /// corresponding graph.
+    /// # Example
+    /// ```ignore
+    /// let parser: Parser<usize> = Parser::new();
+    /// match parser.parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
+    ///     Ok(g) => g.print_graph(),
+    ///     Err(why) => println!("Error {}", why),
+    /// }
+    /// 
+    /// /*
+    /// Graph: {
+    ///     Nodes: {
+    ///         13: CTTGATT
+    ///         12: TCAAGG
+    ///         11: ACCTT
+    ///     }
+    ///     Edges: {
+    ///         12- -- 13+
+    ///         11+ -- 12-
+    ///         11+ -- 13+
+    ///     }
+    ///     Paths: {
+    ///         14: ACCTT -> CTTGATT
+    ///         15: ACCTT -> CCTTGA -(TCAAGG) -> CTTGATT
+    ///     }
+    /// }
+    /// */
+    /// ```
     pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(
         &self,
         path: P,
@@ -165,7 +194,7 @@ impl Parser<usize> {
                         Err(why) => return Err(why),
                     }
                 }
-                println!("Parse file and create GFA2 Object: {:?}", start.elapsed());
+                println!("Parse file and create GFA Object: {:?}", start.elapsed());
                 
                 let start = Instant::now();
                 match graph.create_graph(FileType::GFA2(gfa2)) {
