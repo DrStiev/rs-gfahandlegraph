@@ -13,7 +13,6 @@ use crate::hashgraph::HashGraph;
 use crate::parser::error::ParserTolerance;
 
 use bstr::{BStr, BString, ByteSlice};
-use time::Instant;
 
 /// Builder struct for GFAParsers
 pub struct ParserBuilder {
@@ -143,7 +142,7 @@ impl Parser<usize> {
     ///     Ok(g) => g.print_graph(),
     ///     Err(why) => println!("Error {}", why),
     /// }
-    /// 
+    ///
     /// /*
     /// Graph: {
     ///     Nodes: {
@@ -175,18 +174,13 @@ impl Parser<usize> {
         };
 
         let file = File::open(path.as_ref())?;
-        let filename = path.as_ref().file_name().and_then(OsStr::to_str).unwrap();
         match path.as_ref().extension().and_then(OsStr::to_str).unwrap() {
             "gfa2" => {
-                let total = Instant::now();
-                let start = Instant::now();
                 let lines = BufReader::new(file).byte_lines();
-                println!("Read file {}: {:?}", filename, start.elapsed());
 
                 let graph = HashGraph::default();
                 let mut gfa2: GFA2<usize> = GFA2::default();
-                
-                let start = Instant::now();
+
                 for line in lines {
                     match self.parse_gfa2_line(line?.as_ref()) {
                         Ok(parsed) => gfa2.insert_line(parsed),
@@ -194,28 +188,18 @@ impl Parser<usize> {
                         Err(why) => return Err(why),
                     }
                 }
-                println!("Parse file and create GFA Object: {:?}", start.elapsed());
-                
-                let start = Instant::now();
+
                 match graph.create_graph(FileType::GFA2(gfa2)) {
-                    Ok(g) => {
-                        println!("Create graph: {:?}", start.elapsed());
-                        println!("TOTAL: {:?}\n", total.elapsed());
-                        Ok(g)
-                    },
+                    Ok(g) => Ok(g),
                     Err(why) => Err(ParseError::ConversionGFAToGraph(why.to_string())),
                 }
             }
             "gfa" => {
-                let total = Instant::now();
-                let start = Instant::now();
                 let lines = BufReader::new(file).byte_lines();
-                println!("Read file {}: {:?}", filename, start.elapsed());
 
                 let graph = HashGraph::default();
                 let mut gfa: GFA<usize> = GFA::default();
 
-                let start = Instant::now();
                 for line in lines {
                     match self.parse_gfa_line(line?.as_ref()) {
                         Ok(parsed) => gfa.insert_line(parsed),
@@ -223,15 +207,9 @@ impl Parser<usize> {
                         Err(why) => return Err(why),
                     }
                 }
-                println!("Parse file and create GFA2 Object: {:?}", start.elapsed());
-                
-                let start = Instant::now();
+
                 match graph.create_graph(FileType::GFA(gfa)) {
-                    Ok(g) => {
-                        println!("Create graph: {:?}", start.elapsed());
-                        println!("TOTAL: {:?}\n", total.elapsed());
-                        Ok(g)
-                    },
+                    Ok(g) => Ok(g),
                     Err(why) => Err(ParseError::ConversionGFAToGraph(why.to_string())),
                 }
             }

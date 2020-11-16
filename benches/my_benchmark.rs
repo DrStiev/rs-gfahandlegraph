@@ -50,68 +50,15 @@ fn mod_graph_from_medium_gfa2() -> bool {
         };
     }
 
-    const PATHS: [&[u8]; 3] = [
-        b"gi|568815592:32578768-32589835",
-        b"gi|568815529:3998044-4011446",
-        b"gi|568815551:3814534-3830133",
-    ];
-    for i in 1..PATHS.len() {
-        let path_name: &[u8] = PATHS.get(i as usize).unwrap();
-        match graph.remove_path(path_name) {
-            Ok(_) => (),
-            Err(why) => println!("Error: {}", why),
-        };
-    }
-
-    let left = Handle::new(2138, Orientation::Backward);
-    let right = Handle::new(2137, Orientation::Backward);
-    let edge = Edge(left, right);
-    match graph.remove_edge(edge) {
-        Ok(_) => (),
-        Err(why) => println!("Error: {}", why),
-    };
-
-    let left = Handle::new(2139, Orientation::Forward);
-    let right = Handle::new(2140, Orientation::Forward);
-    let edge = Edge(left, right);
-    match graph.remove_edge(edge) {
-        Ok(_) => (),
-        Err(why) => println!("Error: {}", why),
-    };
-
-    let left = Handle::new(2139, Orientation::Forward);
-    let right = Handle::new(3090, Orientation::Forward);
-    let edge = Edge(left, right);
-    match graph.remove_edge(edge) {
-        Ok(_) => (),
-        Err(why) => println!("Error: {}", why),
-    };
-
-    let left = Handle::new(2139, Orientation::Backward);
-    let right = Handle::new(2138, Orientation::Backward);
-    let edge = Edge(left, right);
-    match graph.remove_edge(edge) {
-        Ok(_) => (),
-        Err(why) => println!("Error: {}", why),
-    };
-
-    let left = Handle::new(2140, Orientation::Forward);
-    let right = Handle::new(2141, Orientation::Forward);
-    let edge = Edge(left, right);
-    match graph.remove_edge(edge) {
-        Ok(_) => (),
-        Err(why) => println!("Error: {}", why),
-    };
-
     // add nodes, edges and paths
-    for i in 1..11 {
+    for i in 1..1001 {
         match graph.create_handle(b"TEST_SEQUENCE", 5000 + i as u64) {
             Ok(_) => (),
             Err(why) => println!("Error: {}", why),
         };
         if i > 1 {
-            let left = Handle::new(4000 + i - 1, Orientation::Forward);
-            let right = Handle::new(4000 + i, Orientation::Forward);
+            let left = Handle::new(5000 + i - 1, Orientation::Forward);
+            let right = Handle::new(5000 + i, Orientation::Forward);
             let edge = Edge(left, right);
             match graph.create_edge(edge) {
                 Ok(_) => (),
@@ -120,37 +67,15 @@ fn mod_graph_from_medium_gfa2() -> bool {
         }
     }
 
-    let paths: Vec<&[u8]> = vec![
-        b"5001+", b"5002+", b"5003-", b"5004+", b"5005-", b"5006-", b"5007+", b"5008+", b"5009+",
-        b"5010-",
-    ];
     let path_id = b"default_path_id";
-    // check if the path it's circular
-    let last = paths.len() - 1;
-    let is_circular: bool = paths[0] == paths[last];
-    let path = graph.create_path_handle(path_id, is_circular);
-
-    let handle = Handle::new(5001, Orientation::Forward);
-    graph.append_step(&path, handle);
-    let handle = Handle::new(5002, Orientation::Forward);
-    graph.append_step(&path, handle);
-    let handle = Handle::new(5003, Orientation::Backward);
-    graph.append_step(&path, handle);
-    let handle = Handle::new(5004, Orientation::Forward);
-    graph.append_step(&path, handle);
-    let handle = Handle::new(5005, Orientation::Backward);
-    graph.append_step(&path, handle);
-    let handle = Handle::new(5006, Orientation::Backward);
-    graph.append_step(&path, handle);
-    let handle = Handle::new(5007, Orientation::Forward);
-    graph.append_step(&path, handle);
-    let handle = Handle::new(5008, Orientation::Forward);
-    graph.append_step(&path, handle);
-    let handle = Handle::new(5009, Orientation::Forward);
-    graph.append_step(&path, handle);
-    let handle = Handle::new(5010, Orientation::Backward);
-    graph.append_step(&path, handle);
-
+    let path = graph.create_path_handle(path_id, false);
+    for i in 1..1001 {
+        let handle = Handle::new(5000 + i, Orientation::Forward);
+        match graph.append_step(&path, handle) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
     true
 }
 
@@ -172,20 +97,43 @@ fn criterion_benchmark(c: &mut Criterion) {
 */
 
 fn criterion_benchmark(c: &mut Criterion) {
-    // time:   [94.844 ms 95.228 ms 95.683 ms]
-    // change: [-0.2046% +0.2172% +0.7086%] (p = 0.37 > 0.05)
+    /*
+    Benchmarking CREATE GRAPH FROM MID GFA: Collecting 100 samples in estimated 9.6666 s (1
+                                  CREATE GRAPH FROM MID GFA
+                        time:   [95.559 ms 95.726 ms 95.907 ms]
+                        change: [+0.0109% +0.2479% +0.4906%] (p = 0.04 < 0.05)
+                        Change within noise threshold.
+    Found 5 outliers among 100 measurements (5.00%)
+    4 (4.00%) high mild
+    1 (1.00%) high severe
+    */
     c.bench_function("CREATE GRAPH FROM MID GFA", |b| {
         b.iter(|| create_graph_from_medium_gfa1())
     });
 
-    // time:   [109.98 ms 110.18 ms 110.40 ms]
-    // change: [-0.5739% -0.3201% -0.0705%] (p = 0.01 < 0.05)
+    /*
+    Benchmarking CREATE GRAPH FROM MID GFA2: Collecting 100 samples in estimated 11.104 s (
+                                  CREATE GRAPH FROM MID GFA2
+                        time:   [110.54 ms 110.66 ms 110.79 ms]
+                        change: [-2.8624% -2.5726% -2.3005%] (p = 0.00 < 0.05)
+                        Performance has improved.
+    Found 7 outliers among 100 measurements (7.00%)
+    4 (4.00%) high mild
+    3 (3.00%) high severe
+    */
     c.bench_function("CREATE GRAPH FROM MID GFA2", |b| {
         b.iter(|| create_graph_from_medium_gfa2())
     });
 
-    // time:   [1.0441 s 1.0461 s 1.0481 s]
-    // change: [+1.4798% +1.7356% +1.9653%] (p = 0.00 < 0.05)
+    /*
+    Benchmarking MOD MID GRAPH: Collecting 100 samples in estimated 178.4 s
+                                MOD MID GRAPH
+                    time:   [1.7961 s 1.8013 s 1.8068 s]
+                    change: [-1.7918% -1.3793% -0.9818%] (p = 0.00 < 0.05)
+                    Change within noise threshold.
+    Found 1 outliers among 100 measurements (1.00%)
+    1 (1.00%) high mild
+    */
     c.bench_function("MOD MID GRAPH", |b| b.iter(|| mod_graph_from_medium_gfa2()));
 }
 

@@ -1,4 +1,5 @@
-use crate::handle::Handle;
+use crate::handle::{Handle, NodeId};
+use crate::handlegraph::error::*;
 
 pub trait EmbeddedPaths {
     /// A handle to a path in the graph, can also be viewed as a path identifier
@@ -72,7 +73,11 @@ pub trait PathHandleGraph {
 
     fn create_path_handle(&mut self, name: &[u8], is_circular: bool) -> Self::PathHandle;
 
-    fn append_step(&mut self, path: &Self::PathHandle, to_append: Handle) -> Self::StepHandle;
+    fn append_step(
+        &mut self,
+        path: &Self::PathHandle,
+        to_append: Handle,
+    ) -> Result<Self::StepHandle, GraphError>;
 
     fn prepend_step(&mut self, path: &Self::PathHandle, to_prepend: Handle) -> Self::StepHandle;
 
@@ -99,4 +104,40 @@ pub trait PathHandleGraph {
         &'a self,
         path: &'a Self::PathHandle,
     ) -> Box<dyn Iterator<Item = Self::StepHandle> + 'a>;
+
+    /// Function that removes a node (and all it's occurrencies) from a path
+    /// # Example
+    /// ```ignore
+    /// let path = b"14";
+    /// let node = 11 as u64;
+    ///
+    /// match graph.remove_node_from_path(path, node) {
+    ///     Ok(_) => graph.print_graph(),
+    ///     Err(why) => println!("Error: {}", why),
+    /// }
+    /// ```
+    fn remove_node_from_path<T: Into<NodeId>>(
+        &mut self,
+        name: &[u8],
+        node: T,
+    ) -> Result<bool, GraphError>;
+
+    /// Function that modifies a node (and all it's occurrencies) from a path
+    /// # Example
+    /// ```ignore
+    /// let path = b"14";
+    /// let node = 11 as u64;
+    /// let nodea = Handle::new(13 as u64, Orientation::Forward);
+    ///
+    /// match graph.modify_node_from_path(path, node, nodea) {
+    ///     Ok(_) => graph.print_graph(),
+    ///     Err(why) => println!("Error: {}", why),
+    /// }
+    /// ```
+    fn modify_node_from_path<T: Into<NodeId>>(
+        &mut self,
+        name: &[u8],
+        old_node: T,
+        new_node: Handle,
+    ) -> Result<bool, GraphError>;
 }

@@ -12,7 +12,6 @@ use crate::{
 pub mod graph;
 pub mod node;
 pub mod path;
-pub mod to_gfa;
 
 pub use self::graph::HashGraph;
 pub use self::node::Node;
@@ -96,7 +95,7 @@ impl<'a> HandleSequences for &'a HashGraph {
     fn sequence(self, handle: Handle) -> Vec<u8> {
         let seq: &[u8] = &self.get_node_unchecked(&handle.id()).sequence.as_ref();
         if handle.is_reverse() {
-            dna::rev_comp(seq)
+            dna::dna::rev_comp(seq)
         } else {
             seq.into()
         }
@@ -135,7 +134,7 @@ impl ModdableHandleGraph for HashGraph {
         let node_id: NodeId = node_id.into();
         let possible_node = self.graph.get_mut(&node_id);
         let seq: BString = BString::from(seq);
-        if let Some(n)  = possible_node {
+        if let Some(n) = possible_node {
             if n.sequence == seq {
                 // no need to update
                 Ok(true)
@@ -190,7 +189,10 @@ impl ModdableHandleGraph for HashGraph {
             let mut x: usize = 0;
             let path = self.create_path_handle(path_name, false);
             while x < len {
-                self.append_step(&path, sequence_of_id[x]);
+                match self.append_step(&path, sequence_of_id[x]) {
+                    Ok(_) => (),
+                    Err(why) => return Err(why),
+                };
                 x += 1;
             }
             Ok(true)
@@ -220,14 +222,11 @@ impl SubtractiveHandleGraph for HashGraph {
                     .right_edges
                     .retain(|x| x.id() != node_id);
             }
-            // delete occurrencies of nodeid in path but leaves "holes" in it
-            let mut x: i64 = 0;
-            while self.get_path(&x).is_some() {
-                let nodes = &self.paths.get_mut(&x).unwrap().nodes;
+            for path in self.clone().paths_iter() {
+                let nodes = &self.paths.get_mut(&path).unwrap().nodes;
                 if nodes.iter().any(|x| x.id() == node_id) {
-                    self.paths.remove(&x);
+                    self.paths.remove(&path);
                 }
-                x += 1;
             }
             Ok(true)
         } else {
@@ -279,19 +278,16 @@ impl SubtractiveHandleGraph for HashGraph {
                     }
                 }
             }
-            // delete occurrencies of nodeid in path but leaves "holes" in it
-            let mut x: i64 = 0;
-            while self.get_path(&x).is_some() {
-                let nodes = &self.paths.get_mut(&x).unwrap().nodes;
+            for path in self.clone().paths_iter() {
+                let nodes = &self.paths.get_mut(&path).unwrap().nodes;
                 if let Some(l) = nodes.iter().position(|x| x.id() == left.id()) {
                     if let Some(r) = nodes.iter().position(|x| x.id() == right.id()) {
                         let lr = l + 1;
                         if lr == r {
-                            self.paths.remove(&x);
+                            self.paths.remove(&path);
                         }
                     }
                 }
-                x += 1;
             }
             Ok(true)
         } else {
@@ -306,7 +302,6 @@ impl SubtractiveHandleGraph for HashGraph {
         use bstr::ByteSlice;
 
         if self.has_path(name) {
-            // delete occurrencies in path leaves "holes"
             let path_handle = self.name_to_path_handle(name).unwrap();
             self.paths.remove(&path_handle);
             Ok(true)
@@ -494,7 +489,7 @@ impl MutableHandleGraph for HashGraph {
         }
 
         let node = self.get_node_mut(&handle.id()).unwrap();
-        node.sequence = dna::rev_comp(node.sequence.as_slice()).into();
+        node.sequence = dna::dna::rev_comp(node.sequence.as_slice()).into();
 
         let edges = {
             let node = self.get_node(&handle.id()).unwrap();
@@ -658,6 +653,58 @@ impl PathHandleGraph for HashGraph {
         self.paths.remove(&path);
     }
 
+    fn remove_node_from_path<T: Into<NodeId>>(
+        &mut self,
+        name: &[u8],
+        node: T,
+    ) -> Result<bool, GraphError> {
+        use bstr::ByteSlice;
+
+        if self.has_path(name) {
+            let path_handle = self.name_to_path_handle(name).unwrap();
+            let node = node.into();
+            let p: &mut Path = match self.paths.get_mut(&path_handle) {
+                Some(p) => p,
+                None => return Err(GraphError::PathNotExist(path_handle.to_string())),
+            };
+            p.nodes.retain(|x| x.id() != node);
+            Ok(true)
+        } else {
+            Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
+        }
+    }
+
+    // should work just fine
+    fn modify_node_from_path<T: Into<NodeId>>(
+        &mut self,
+        name: &[u8],
+        old_node: T,
+        new_node: Handle,
+    ) -> Result<bool, GraphError> {
+        use bstr::ByteSlice;
+
+        if self.has_path(name) {
+            let path_handle = self.name_to_path_handle(name).unwrap();
+            let old_node = old_node.into();
+            let p: &mut Path = match self.paths.get_mut(&path_handle) {
+                Some(p) => p,
+                None => return Err(GraphError::PathNotExist(path_handle.to_string())),
+            };
+            let path = p.nodes.clone();
+            let iter = path.iter().enumerate();
+            for i in iter {
+                let (id, &handle) = i;
+                if handle.id() == old_node {
+                    p.nodes.remove(id);
+                    p.nodes.insert(id, new_node);
+                }
+            }
+            Ok(true)
+        } else {
+            Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
+        }
+    }
+
     fn create_path_handle(&mut self, name: &[u8], is_circular: bool) -> Self::PathHandle {
         let path_id = self.paths.len() as i64;
         let path = Path::new(name, path_id, is_circular);
@@ -666,13 +713,20 @@ impl PathHandleGraph for HashGraph {
         path_id
     }
 
-    fn append_step(&mut self, path_id: &Self::PathHandle, to_append: Handle) -> Self::StepHandle {
-        let path: &mut Path = self.paths.get_mut(path_id).unwrap();
+    fn append_step(
+        &mut self,
+        path_id: &Self::PathHandle,
+        to_append: Handle,
+    ) -> Result<Self::StepHandle, GraphError> {
+        let path: &mut Path = match self.paths.get_mut(path_id) {
+            Some(path) => path,
+            None => return Err(GraphError::PathNotExist(path_id.to_string())),
+        };
         path.nodes.push(to_append);
         let step = (*path_id, path.nodes.len() - 1);
         let node: &mut Node = self.graph.get_mut(&to_append.id()).unwrap();
         node.occurrences.insert(step.0, step.1);
-        PathStep::Step(*path_id, path.nodes.len() - 1)
+        Ok(PathStep::Step(*path_id, path.nodes.len() - 1))
     }
 
     fn prepend_step(&mut self, path_id: &Self::PathHandle, to_prepend: Handle) -> Self::StepHandle {

@@ -6,6 +6,8 @@ use gfahandlegraph::{
     parser::*,
     pathgraph::PathHandleGraph,
 };
+use time::Instant;
+//use log::{info, warn, error};
 
 fn read_small_gfa2() -> HashGraph {
     let mut graph = HashGraph::new();
@@ -28,52 +30,62 @@ fn read_small_gfa1() -> HashGraph {
 }
 
 fn read_medium_gfa2() -> HashGraph {
+    let start = Instant::now();
     let mut graph = HashGraph::new();
     let parser: Parser<usize> = Parser::new();
     match parser.parse_file_to_graph("./tests/big_files/test.gfa2") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
+    /*
+    info!("Create graph from file: {:?}", start.elapsed());
+    warn!("Create graph from file: {:?}", start.elapsed());
+    error!("Create graph from file: {:?}", start.elapsed());
+    */
+    println!("Create graph from file: {:?}", start.elapsed());
     graph
 }
 
 fn read_medium_gfa1() -> HashGraph {
+    let start = Instant::now();
     let mut graph = HashGraph::new();
     let parser: Parser<usize> = Parser::new();
     match parser.parse_file_to_graph("./tests/big_files/test.gfa") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
+    println!("Create graph from file: {:?}", start.elapsed());
     graph
 }
 
 fn read_big_gfa2() -> HashGraph {
+    let start = Instant::now();
     let mut graph = HashGraph::new();
     let parser: Parser<usize> = Parser::new();
     match parser.parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa2") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
+    println!("Create graph from file: {:?}", start.elapsed());
     graph
 }
 
 fn read_big_gfa1() -> HashGraph {
+    let start = Instant::now();
     let mut graph = HashGraph::new();
     let parser: Parser<usize> = Parser::new();
     match parser.parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
+    println!("Create graph from file: {:?}", start.elapsed());
     graph
 }
 
 #[test]
 fn create_medium_graph() {
     /*
-    Read file test.gfa: Duration { seconds: 0, nanoseconds: 59200 }
-    Parse file and create GFA2 Object: Duration { seconds: 0, nanoseconds: 377341700 }
-    Create graph: Duration { seconds: 0, nanoseconds: 567653600 }
-    TOTAL: Duration { seconds: 0, nanoseconds: 945846800 }
+    Create graph from file: Duration { seconds: 0, nanoseconds: 898442000 }
     */
     let _g = read_medium_gfa1();
     /* nodes: 4058     edges: 9498     paths: 7
@@ -84,10 +96,7 @@ fn create_medium_graph() {
     */
 
     /*
-    Read file test.gfa2: Duration { seconds: 0, nanoseconds: 22300 }
-    Parse file and create GFA2 Object: Duration { seconds: 0, nanoseconds: 583455300 }
-    Create graph: Duration { seconds: 0, nanoseconds: 588518500 }
-    TOTAL: Duration { seconds: 1, nanoseconds: 172725300 }
+    Create graph from file: Duration { seconds: 1, nanoseconds: 146041600 }
     */
     let _g = read_medium_gfa2();
     /* nodes: 4058     edges: 9498     paths: 7
@@ -96,6 +105,57 @@ fn create_medium_graph() {
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
     */
+}
+
+#[test]
+fn mod_graph_from_medium_gfa2() {
+    /*
+    Create graph from file: Duration { seconds: 1, nanoseconds: 167729300 }
+    remove 1000 nodes from graph: Duration { seconds: 16, nanoseconds: 66863300 }
+    add 1000 nodes and edges: Duration { seconds: 0, nanoseconds: 3108200 }
+    add 1000 paths: Duration { seconds: 0, nanoseconds: 1849700 }
+    */
+    let mut graph = read_medium_gfa2();
+
+    let start = Instant::now();
+    for i in 1..1001 {
+        match graph.remove_handle(i as u64) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
+    println!("remove 1000 nodes from graph: {:?}", start.elapsed());
+
+    let start = Instant::now();
+    // add nodes, edges and paths
+    for i in 1..1001 {
+        match graph.create_handle(b"TEST_SEQUENCE", 5000 + i as u64) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        if i > 1 {
+            let left = Handle::new(5000 + i - 1, Orientation::Forward);
+            let right = Handle::new(5000 + i, Orientation::Forward);
+            let edge = Edge(left, right);
+            match graph.create_edge(edge) {
+                Ok(_) => (),
+                Err(why) => println!("Error: {}", why),
+            };
+        }
+    }
+    println!("add 1000 nodes and edges: {:?}", start.elapsed());
+
+    let start = Instant::now();
+    let path_id = b"default_path_id";
+    let path = graph.create_path_handle(path_id, false);
+    for i in 1..1001 {
+        let handle = Handle::new(5000 + i, Orientation::Forward);
+        match graph.append_step(&path, handle) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
+    println!("add 1000 paths: {:?}", start.elapsed());
 }
 
 #[test]
@@ -115,7 +175,6 @@ fn create_big_graph() {
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
     */
 
-    
     /*
     Read file ape-4-0.10b.gfa2: Duration { seconds: 0, nanoseconds: 4600 }
     Parse file and create GFA2 Object: Duration { seconds: 472, nanoseconds: 435751500 }
@@ -129,6 +188,109 @@ fn create_big_graph() {
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
     */
+}
+
+#[test]
+#[ignore]
+fn big_mod_graph_from_big_gfa1() {
+    /*
+    I've tried to make some maths about this and it' will take too much time
+    */
+    let mut graph = read_big_gfa1();
+
+    let start = Instant::now();
+    for i in 1..10_001 {
+        let id: u64 = format!("{}{}", 115, i).parse::<u64>().unwrap();
+        match graph.remove_handle(id as u64) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
+    println!("remove 10000 nodes from graph: {:?}", start.elapsed());
+
+    let start = Instant::now();
+    // add nodes, edges and paths
+    for i in 1..10_001 {
+        match graph.create_handle(b"TEST_SEQUENCE", 42_000 + i as u64) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        if i > 1 {
+            let left = Handle::new(42_000 + i - 1, Orientation::Forward);
+            let right = Handle::new(42_000 + i, Orientation::Forward);
+            let edge = Edge(left, right);
+            match graph.create_edge(edge) {
+                Ok(_) => (),
+                Err(why) => println!("Error: {}", why),
+            };
+        }
+    }
+    println!("add 10000 nodes and edges: {:?}", start.elapsed());
+
+    let start = Instant::now();
+    let path_id = b"default_path_id";
+    let path = graph.create_path_handle(path_id, false);
+    for i in 1..10_001 {
+        let handle = Handle::new(42_000 + i, Orientation::Forward);
+        match graph.append_step(&path, handle) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
+    println!("add 10000 paths: {:?}", start.elapsed());
+}
+
+#[test]
+#[ignore]
+fn mod_graph_from_big_gfa1() {
+    /*
+    Create graph from file: Duration { seconds: 465, nanoseconds: 274089600 }
+    remove 10000 nodes from graph: Duration { seconds: 67, nanoseconds: 201734900 } <- bottleneck
+    add 10000 nodes and edges: Duration { seconds: 0, nanoseconds: 69200 }
+    add 10000 paths: Duration { seconds: 0, nanoseconds: 34400 }
+    */
+    let mut graph = read_big_gfa1();
+
+    let start = Instant::now();
+    for i in 1..10 {
+        let id: u64 = format!("{}{}", 115, i).parse::<u64>().unwrap();
+        match graph.remove_handle(id as u64) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
+    println!("remove 10 nodes from graph: {:?}", start.elapsed());
+
+    let start = Instant::now();
+    // add nodes, edges and paths
+    for i in 1..10 {
+        match graph.create_handle(b"TEST_SEQUENCE", 42_000 + i as u64) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+        if i > 1 {
+            let left = Handle::new(42_000 + i - 1, Orientation::Forward);
+            let right = Handle::new(42_000 + i, Orientation::Forward);
+            let edge = Edge(left, right);
+            match graph.create_edge(edge) {
+                Ok(_) => (),
+                Err(why) => println!("Error: {}", why),
+            };
+        }
+    }
+    println!("add 10 nodes and edges: {:?}", start.elapsed());
+
+    let start = Instant::now();
+    let path_id = b"default_path_id";
+    let path = graph.create_path_handle(path_id, false);
+    for i in 1..10 {
+        let handle = Handle::new(42_000 + i, Orientation::Forward);
+        match graph.append_step(&path, handle) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
+    println!("add 10 paths: {:?}", start.elapsed());
 }
 
 #[test]
@@ -192,7 +354,10 @@ fn add_path() {
                         };
 
                         let handle = Handle::new(seq_id.parse::<u64>().unwrap(), orient);
-                        graph.append_step(&path, handle);
+                        match graph.append_step(&path, handle) {
+                            Ok(_) => (),
+                            Err(why) => println!("Error: {}", why),
+                        };
                     }
                     graph.print_graph()
                 }
@@ -235,6 +400,33 @@ fn remove_path() {
     match graph.remove_path(path) {
         Ok(_) => graph.print_graph(),
         Err(why) => println!("Error {}", why),
+    }
+}
+
+#[test]
+fn remove_node_from_path() {
+    let mut graph = read_small_gfa2();
+
+    let path = b"14";
+    let node = 11 as u64;
+
+    match graph.remove_node_from_path(path, node) {
+        Ok(_) => graph.print_graph(),
+        Err(why) => println!("Error: {}", why),
+    }
+}
+
+#[test]
+fn modify_node_from_path() {
+    let mut graph = read_small_gfa2();
+
+    let path = b"14";
+    let node = 11 as u64;
+    let nodea = Handle::new(13 as u64, Orientation::Forward);
+
+    match graph.modify_node_from_path(path, node, nodea) {
+        Ok(_) => graph.print_graph(),
+        Err(why) => println!("Error: {}", why),
     }
 }
 

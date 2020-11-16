@@ -53,45 +53,6 @@ impl HashGraph {
         Default::default()
     }
 
-    fn add_segment<T: Into<NodeId>>(
-        &mut self,
-        node: T,
-        sequence: &[u8],
-    ) -> Result<bool, GraphError> {
-        match self.create_handle(sequence, node) {
-            Ok(_) => Ok(true),
-            Err(why) => Err(why),
-        }
-    }
-
-    fn add_edge<T: Into<NodeId>>(
-        &mut self,
-        left: T,
-        left_orient: Orientation,
-        right: T,
-        right_orient: Orientation,
-    ) -> Result<bool, GraphError> {
-        let left_handle = Handle::new(left, left_orient);
-        let right_handle = Handle::new(right, right_orient);
-
-        match self.create_edge(GraphEdge(left_handle, right_handle)) {
-            Ok(_) => Ok(true),
-            Err(why) => Err(why),
-        }
-    }
-
-    fn add_path(
-        &mut self,
-        path_id: &[u8],
-        sequence_id: impl Iterator<Item = (usize, Orientation)>,
-    ) -> Result<bool, GraphError> {
-        let path_id = self.create_path_handle(&path_id, false);
-        for (id, orient) in sequence_id {
-            self.append_step(&path_id, Handle::new(id as u64, orient));
-        }
-        Ok(true)
-    }
-
     /// Build an HashGraph from a GFA1(2)<usize> Object\
     /// the function will iterate only over the segments, edges and ogroups fields
     /// # Examples
@@ -110,34 +71,34 @@ impl HashGraph {
                 let mut new_self = self.clone();
                 x.segments
                     .iter()
-                    .for_each(|s| match new_self.add_segment(s.name, &s.sequence) {
+                    .for_each(|s| match new_self.create_handle(&s.sequence, s.name) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     });
                 x.links.iter().for_each(|l| {
-                    match new_self.add_edge(
-                        l.from_segment,
-                        l.from_orient,
-                        l.to_segment,
-                        l.to_orient,
-                    ) {
+                    let left = Handle::new(l.from_segment, l.from_orient);
+                    let right = Handle::new(l.to_segment, l.to_orient);
+                    match new_self.create_edge(GraphEdge(left, right)) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     }
                 });
-                x.paths
-                    .iter()
-                    .for_each(|p| match new_self.add_path(&p.path_name, p.iter()) {
-                        Ok(_) => (),
-                        Err(why) => println!("Error {}", why),
-                    });
+                x.paths.iter().for_each(|p| {
+                    let path_id = new_self.create_path_handle(&p.path_name, false);
+                    for (id, orient) in p.iter() {
+                        match new_self.append_step(&path_id, Handle::new(id as u64, orient)) {
+                            Ok(_) => (),
+                            Err(why) => println!("Error: {}", why),
+                        };
+                    }
+                });
                 Ok(new_self)
             }
             FileType::GFA2(x) => {
                 let mut new_self = self.clone();
                 x.segments
                     .iter()
-                    .for_each(|s| match new_self.add_segment(s.id, &s.sequence) {
+                    .for_each(|s| match new_self.create_handle(&s.sequence, s.id) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     });
@@ -160,17 +121,22 @@ impl HashGraph {
                         _ => panic!("Error! Edge did not include orientation"),
                     };
 
-                    match new_self.add_edge(l, l_orient, r, r_orient) {
+                    let left = Handle::new(l, l_orient);
+                    let right = Handle::new(r, r_orient);
+                    match new_self.create_edge(GraphEdge(left, right)) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     }
                 });
-                x.groups_o
-                    .iter()
-                    .for_each(|o| match new_self.add_path(&o.id, o.iter()) {
-                        Ok(_) => (),
-                        Err(why) => println!("Error {}", why),
-                    });
+                x.groups_o.iter().for_each(|o| {
+                    let path_id = new_self.create_path_handle(&o.id, false);
+                    for (id, orient) in o.iter() {
+                        match new_self.append_step(&path_id, Handle::new(id as u64, orient)) {
+                            Ok(_) => (),
+                            Err(why) => println!("Error: {}", why),
+                        };
+                    }
+                });
                 Ok(new_self)
             }
         }
@@ -293,7 +259,7 @@ impl HashGraph {
                 }
                 // print correct reverse and complement sequence to display the correct path
                 if handle.is_reverse() {
-                    let rev_sequence: BString = dna::rev_comp(node.sequence.as_slice()).into();
+                    let rev_sequence: BString = dna::dna::rev_comp(node.sequence.as_slice()).into();
                     print!("{} -({})", rev_sequence, node.sequence);
                 } else {
                     print!("{}", node.sequence);
