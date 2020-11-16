@@ -243,27 +243,34 @@ fn big_mod_graph_from_big_gfa1() {
 #[test]
 #[ignore]
 fn mod_graph_from_big_gfa1() {
+    // TODO: the removing nodes part it's a bottleneck, and should be handled
     /*
     Create graph from file: Duration { seconds: 465, nanoseconds: 274089600 }
-    remove 10000 nodes from graph: Duration { seconds: 67, nanoseconds: 201734900 } <- bottleneck
-    add 10000 nodes and edges: Duration { seconds: 0, nanoseconds: 69200 }
-    add 10000 paths: Duration { seconds: 0, nanoseconds: 34400 }
+    remove 10 nodes from graph: Duration { seconds: 67, nanoseconds: 201734900 } <- bottleneck
+    add 10 nodes and edges: Duration { seconds: 0, nanoseconds: 69200 }
+    add 10 paths: Duration { seconds: 0, nanoseconds: 34400 }
+    */
+    /*
+    Create graph from file: Duration { seconds: 453, nanoseconds: 919712300 }
+    remove 100 nodes from graph: Duration { seconds: 765, nanoseconds: 543770500 } 
+    add 100 nodes and edges: Duration { seconds: 0, nanoseconds: 379600 }
+    add 100 paths: Duration { seconds: 0, nanoseconds: 207200 }
     */
     let mut graph = read_big_gfa1();
 
     let start = Instant::now();
-    for i in 1..10 {
+    for i in 1..101 {
         let id: u64 = format!("{}{}", 115, i).parse::<u64>().unwrap();
         match graph.remove_handle(id as u64) {
             Ok(_) => (),
             Err(why) => println!("Error: {}", why),
         };
     }
-    println!("remove 10 nodes from graph: {:?}", start.elapsed());
+    println!("remove 100 nodes from graph: {:?}", start.elapsed());
 
     let start = Instant::now();
     // add nodes, edges and paths
-    for i in 1..10 {
+    for i in 1..101 {
         match graph.create_handle(b"TEST_SEQUENCE", 42_000 + i as u64) {
             Ok(_) => (),
             Err(why) => println!("Error: {}", why),
@@ -278,19 +285,19 @@ fn mod_graph_from_big_gfa1() {
             };
         }
     }
-    println!("add 10 nodes and edges: {:?}", start.elapsed());
+    println!("add 100 nodes and edges: {:?}", start.elapsed());
 
     let start = Instant::now();
     let path_id = b"default_path_id";
     let path = graph.create_path_handle(path_id, false);
-    for i in 1..10 {
+    for i in 1..101 {
         let handle = Handle::new(42_000 + i, Orientation::Forward);
         match graph.append_step(&path, handle) {
             Ok(_) => (),
             Err(why) => println!("Error: {}", why),
         };
     }
-    println!("add 10 paths: {:?}", start.elapsed());
+    println!("add 100 paths: {:?}", start.elapsed());
 }
 
 #[test]

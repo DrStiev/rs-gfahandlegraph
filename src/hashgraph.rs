@@ -246,8 +246,8 @@ impl SubtractiveHandleGraph for HashGraph {
                         .get_mut(&l.id())
                         .expect("Node doesn't exist for the given handle");
                     if left.is_reverse() {
-                        let pos = match left_node.left_edges.iter().position(|&h| h == right) {
-                            Some(p) => p,
+                        match left_node.left_edges.iter().position(|&h| h == right) {
+                            Some(p) => self.graph.get_mut(&l.id()).unwrap().left_edges.remove(p),
                             None => {
                                 return Err(GraphError::PositionNotFound(
                                     right.id().to_string(),
@@ -259,10 +259,9 @@ impl SubtractiveHandleGraph for HashGraph {
                                 ))
                             }
                         };
-                        self.graph.get_mut(&l.id()).unwrap().left_edges.remove(pos);
                     } else {
-                        let pos = match left_node.right_edges.iter().position(|&h| h == right) {
-                            Some(p) => p,
+                        match left_node.right_edges.iter().position(|&h| h == right) {
+                            Some(p) => self.graph.get_mut(&l.id()).unwrap().right_edges.remove(p),
                             None => {
                                 return Err(GraphError::PositionNotFound(
                                     right.id().to_string(),
@@ -274,7 +273,6 @@ impl SubtractiveHandleGraph for HashGraph {
                                 ))
                             }
                         };
-                        self.graph.get_mut(&l.id()).unwrap().right_edges.remove(pos);
                     }
                 }
             }

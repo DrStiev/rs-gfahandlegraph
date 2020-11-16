@@ -126,15 +126,15 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
 
     /*
-    Benchmarking MOD MID GRAPH: Collecting 100 samples in estimated 178.4 s
-                                MOD MID GRAPH
+    Benchmarking MODIFY GRAPH FROM MID GFA2: Collecting 100 samples in estimated 178.4 s
+                                MODIFY GRAPH FROM MID GFA2
                     time:   [1.7961 s 1.8013 s 1.8068 s]
                     change: [-1.7918% -1.3793% -0.9818%] (p = 0.00 < 0.05)
                     Change within noise threshold.
     Found 1 outliers among 100 measurements (1.00%)
     1 (1.00%) high mild
     */
-    c.bench_function("MOD MID GRAPH", |b| b.iter(|| mod_graph_from_medium_gfa2()));
+    c.bench_function("MODIFY GRAPH FROM MID GFA2", |b| b.iter(|| mod_graph_from_medium_gfa2()));
 }
 
 criterion_group!(benches, criterion_benchmark);
