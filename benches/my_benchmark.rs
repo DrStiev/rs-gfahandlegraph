@@ -134,7 +134,9 @@ fn criterion_benchmark(c: &mut Criterion) {
     Found 1 outliers among 100 measurements (1.00%)
     1 (1.00%) high mild
     */
-    c.bench_function("MODIFY GRAPH FROM MID GFA2", |b| b.iter(|| mod_graph_from_medium_gfa2()));
+    c.bench_function("MODIFY GRAPH FROM MID GFA2", |b| {
+        b.iter(|| mod_graph_from_medium_gfa2())
+    });
 }
 
 criterion_group!(benches, criterion_benchmark);

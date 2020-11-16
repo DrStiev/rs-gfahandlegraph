@@ -1,4 +1,4 @@
-use gfahandlegraph::{
+/*use gfahandlegraph::{
     gfa::orientation::Orientation,
     handle::{Edge, Handle, NodeId},
     hashgraph::HashGraph,
@@ -6,7 +6,8 @@ use gfahandlegraph::{
     parser::*,
     pathgraph::PathHandleGraph,
 };
-use time::Instant;
+use time::Instant;*/
+use gfahandlegraph::parser::*;
 
 // ONLY TO ENABLE DEBUGGER
 // see: https://www.forrestthewoods.com/blog/how-to-debug-rust-with-visual-studio-code/
@@ -16,6 +17,7 @@ fn main() {
     can_create_graph_from_gfa2_file();
 }
 
+/*
 fn read_small_gfa2() -> HashGraph {
     let mut graph = HashGraph::new();
     let parser: Parser<usize> = Parser::new();
@@ -460,7 +462,7 @@ fn modify_path() {
         Err(why) => println!("Error {}", why),
     }
 }
-
+*/
 fn can_create_graph_from_gfa2_file() {
     let parser: Parser<usize> = Parser::new();
     match parser

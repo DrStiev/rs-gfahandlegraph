@@ -132,9 +132,8 @@ impl ModdableHandleGraph for HashGraph {
         seq: &[u8],
     ) -> Result<bool, GraphError> {
         let node_id: NodeId = node_id.into();
-        let possible_node = self.graph.get_mut(&node_id);
         let seq: BString = BString::from(seq);
-        if let Some(n) = possible_node {
+        if let Some(n) = self.graph.get_mut(&node_id) {
             if n.sequence == seq {
                 // no need to update
                 Ok(true)
@@ -211,16 +210,9 @@ impl SubtractiveHandleGraph for HashGraph {
             self.graph.remove(&node_id);
             // delete all the occurrencies in the edge list of node.id()
             for handle in self.clone().graph.keys() {
-                self.graph
-                    .get_mut(&handle)
-                    .unwrap()
-                    .left_edges
-                    .retain(|x| x.id() != node_id);
-                self.graph
-                    .get_mut(&handle)
-                    .unwrap()
-                    .right_edges
-                    .retain(|x| x.id() != node_id);
+                let graph = self.graph.get_mut(&handle).unwrap();
+                graph.left_edges.retain(|x| x.id() != node_id);
+                graph.right_edges.retain(|x| x.id() != node_id);
             }
             for path in self.clone().paths_iter() {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;

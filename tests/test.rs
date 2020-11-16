@@ -252,7 +252,7 @@ fn mod_graph_from_big_gfa1() {
     */
     /*
     Create graph from file: Duration { seconds: 453, nanoseconds: 919712300 }
-    remove 100 nodes from graph: Duration { seconds: 765, nanoseconds: 543770500 } 
+    remove 100 nodes from graph: Duration { seconds: 765, nanoseconds: 543770500 }
     add 100 nodes and edges: Duration { seconds: 0, nanoseconds: 379600 }
     add 100 paths: Duration { seconds: 0, nanoseconds: 207200 }
     */
