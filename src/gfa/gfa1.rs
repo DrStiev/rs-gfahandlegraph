@@ -29,7 +29,7 @@ use std::fmt;
 ///     ],
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GFA<N> {
     pub headers: Vec<Header>,
     pub segments: Vec<Segment<N>>,
@@ -63,7 +63,7 @@ impl<N: SegmentId> fmt::Display for GFA<N> {
 }
 
 /// Enum containing the different kinds of GFA lines.
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub enum Line<N> {
     Header(Header),
     Segment(Segment<N>),
@@ -181,7 +181,7 @@ impl<N: SegmentId> GFA<N> {
 ///     optional: "".into(),
 /// };
 /// ```
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Header {
     pub version: Option<BString>,
     pub optional: BString,
@@ -407,7 +407,7 @@ impl<N: SegmentId> Path<N> {
             _ => panic!("Path segment did not include orientation"),
         };
         let seg = &input[..last];
-        let id = N::parse_id(seg)?;
+        let id = N::parse_id(IdType::ID(), seg)?;
         Some((id, orient))
     }
 }

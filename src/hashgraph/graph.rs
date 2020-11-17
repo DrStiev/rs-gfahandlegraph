@@ -104,20 +104,20 @@ impl HashGraph {
                     });
                 x.edges.iter().for_each(|e| {
                     let sid1 = e.sid1.to_string();
-                    let len = sid1.len() - 1;
+                    let len = sid1.len() - 2;
                     let l = sid1[..len].parse::<u64>().unwrap();
                     let l_orient = match &sid1[len..] {
-                        "0" => Orientation::Forward,
-                        "1" => Orientation::Backward,
+                        "43" => Orientation::Forward,
+                        "45" => Orientation::Backward,
                         _ => panic!("Error! Edge did not include orientation"),
                     };
 
                     let sid2 = e.sid2.to_string();
-                    let len = sid2.len() - 1;
+                    let len = sid2.len() - 2;
                     let r = sid2[..len].parse::<u64>().unwrap();
                     let r_orient = match &sid2[len..] {
-                        "0" => Orientation::Forward,
-                        "1" => Orientation::Backward,
+                        "43" => Orientation::Forward,
+                        "45" => Orientation::Backward,
                         _ => panic!("Error! Edge did not include orientation"),
                     };
 

@@ -15,7 +15,7 @@ use std::fmt;
 ///     tag: "".into(),
 /// };
 /// ```
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Header {
     pub version: Option<BString>,
     pub tag: BString,
@@ -333,7 +333,7 @@ impl<N: SegmentId> GroupO<N> {
             _ => panic!("Group O segment did not include orientation"),
         };
         let seg = &input[..last];
-        let id = N::parse_id(seg)?;
+        let id = N::parse_id(IdType::ID(), seg)?;
         Some((id, orient))
     }
 }
@@ -418,7 +418,7 @@ impl<N: SegmentId> GroupU<N> {
 impl<N: SegmentId> GroupU<N> {
     /// parses (and copies) a segment ID in the group segment list
     fn parse_segment_id(input: &[u8]) -> Option<N> {
-        let id = N::parse_opt_id(input)?;
+        let id = N::parse_id(IdType::OPTIONALID(), input)?;
         Some(id)
     }
 }
@@ -488,7 +488,7 @@ impl<N: SegmentId> fmt::Display for GroupU<N> {
 ///     ]
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GFA2<N> {
     // OptFields is used to encode the <tag>* item
     // struct to hold the results of parsing a file; not actually a graph
@@ -502,7 +502,7 @@ pub struct GFA2<N> {
 }
 
 /// Enum containing the different kinds of GFA2 lines.
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub enum Line<N> {
     Header(Header),
     Segment(Segment<N>),
