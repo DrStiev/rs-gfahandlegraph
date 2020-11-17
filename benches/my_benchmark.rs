@@ -111,7 +111,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         b.iter(|| create_graph_from_medium_gfa1())
     });
 
-    /*
+    /* This benchmark is the one that fluctuate the most, but IDKW
     Benchmarking CREATE GRAPH FROM MID GFA2: Collecting 100 samples in estimated 11.104 s (
                                   CREATE GRAPH FROM MID GFA2
                         time:   [110.54 ms 110.66 ms 110.79 ms]
@@ -126,11 +126,11 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
 
     /*
-    Benchmarking MODIFY GRAPH FROM MID GFA2: Collecting 100 samples in estimated 178.4 s
-                                MODIFY GRAPH FROM MID GFA2
-                    time:   [1.7961 s 1.8013 s 1.8068 s]
-                    change: [-1.7918% -1.3793% -0.9818%] (p = 0.00 < 0.05)
-                    Change within noise threshold.
+    Benchmarking MODIFY GRAPH FROM MID GFA2: Collecting 100 samples in estimated 180.3
+                                   MODIFY GRAPH FROM MID GFA2
+                            time:   [1.7874 s 1.7912 s 1.7951 s]
+                            change: [-2.6764% -2.3334% -2.0093%] (p = 0.00 < 0.05)
+                            Performance has improved.
     Found 1 outliers among 100 measurements (1.00%)
     1 (1.00%) high mild
     */

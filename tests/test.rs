@@ -83,9 +83,21 @@ fn read_big_gfa1() -> HashGraph {
 }
 
 #[test]
+fn clear_big_graph() {
+    /*
+    Create graph from file: Duration { seconds: 460, nanoseconds: 665865700 }
+    Clear graph: Duration { seconds: 13, nanoseconds: 755750000 }
+    */
+    let mut graph = read_big_gfa1();
+    let start = Instant::now();
+    graph.clear_graph();
+    println!("Clear graph: {:?}", start.elapsed());
+}
+
+#[test]
 fn create_medium_graph() {
     /*
-    Create graph from file: Duration { seconds: 0, nanoseconds: 898442000 }
+    Create graph from file: Duration { seconds: 0, nanoseconds: 927394400 }
     */
     let _g = read_medium_gfa1();
     /* nodes: 4058     edges: 9498     paths: 7
@@ -96,7 +108,7 @@ fn create_medium_graph() {
     */
 
     /*
-    Create graph from file: Duration { seconds: 1, nanoseconds: 146041600 }
+    Create graph from file: Duration { seconds: 1, nanoseconds: 183543100 }
     */
     let _g = read_medium_gfa2();
     /* nodes: 4058     edges: 9498     paths: 7
@@ -108,12 +120,65 @@ fn create_medium_graph() {
 }
 
 #[test]
+fn mod_graph_from_medium_gfa1() {
+    /*
+    Create graph from file: Duration { seconds: 0, nanoseconds: 887707200 }
+    BOTTLENECK
+    remove 1000 nodes from graph: Duration { seconds: 14, nanoseconds: 486986400 }
+    remove 1000 edges: Duration { seconds: 17, nanoseconds: 770128900 }
+    */
+    let mut graph = read_medium_gfa1();
+
+    let start = Instant::now();
+    for i in 1..1001 {
+        match graph.remove_handle(i as u64) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
+    println!("remove 1000 nodes from graph: {:?}", start.elapsed());
+
+    // add nodes, edges and paths
+    for i in 1..1001 {
+        match graph.create_handle(b"TEST_SEQUENCE", 5000 + i as u64) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
+    for i in 1..1001 {
+        if i > 1 {
+            let left = Handle::new(5000 + i - 1, Orientation::Forward);
+            let right = Handle::new(5000 + i, Orientation::Forward);
+            let edge = Edge(left, right);
+            match graph.create_edge(edge) {
+                Ok(_) => (),
+                Err(why) => println!("Error: {}", why),
+            };
+        }
+    }
+
+    let start = Instant::now();
+    for i in 1..1001 {
+        if i > 1 {
+            let left = Handle::new(5000 + i - 1, Orientation::Forward);
+            let right = Handle::new(5000 + i, Orientation::Forward);
+            let edge = Edge(left, right);
+            match graph.remove_edge(edge) {
+                Ok(_) => (),
+                Err(why) => println!("Error: {}", why),
+            };
+        }
+    }
+    println!("remove 1000 edges: {:?}", start.elapsed());
+}
+
+#[test]
 fn mod_graph_from_medium_gfa2() {
     /*
-    Create graph from file: Duration { seconds: 1, nanoseconds: 167729300 }
-    remove 1000 nodes from graph: Duration { seconds: 16, nanoseconds: 66863300 }
-    add 1000 nodes and edges: Duration { seconds: 0, nanoseconds: 3108200 }
-    add 1000 paths: Duration { seconds: 0, nanoseconds: 1849700 }
+    Create graph from file: Duration { seconds: 1, nanoseconds: 215002900 }
+    BOTTLENECK
+    remove 1000 nodes from graph: Duration { seconds: 14, nanoseconds: 951911600 }
+    remove 1000 edges: Duration { seconds: 18, nanoseconds: 238189600 }
     */
     let mut graph = read_medium_gfa2();
 
@@ -126,13 +191,14 @@ fn mod_graph_from_medium_gfa2() {
     }
     println!("remove 1000 nodes from graph: {:?}", start.elapsed());
 
-    let start = Instant::now();
     // add nodes, edges and paths
     for i in 1..1001 {
         match graph.create_handle(b"TEST_SEQUENCE", 5000 + i as u64) {
             Ok(_) => (),
             Err(why) => println!("Error: {}", why),
         };
+    }
+    for i in 1..1001 {
         if i > 1 {
             let left = Handle::new(5000 + i - 1, Orientation::Forward);
             let right = Handle::new(5000 + i, Orientation::Forward);
@@ -143,19 +209,20 @@ fn mod_graph_from_medium_gfa2() {
             };
         }
     }
-    println!("add 1000 nodes and edges: {:?}", start.elapsed());
 
     let start = Instant::now();
-    let path_id = b"default_path_id";
-    let path = graph.create_path_handle(path_id, false);
     for i in 1..1001 {
-        let handle = Handle::new(5000 + i, Orientation::Forward);
-        match graph.append_step(&path, handle) {
-            Ok(_) => (),
-            Err(why) => println!("Error: {}", why),
-        };
+        if i > 1 {
+            let left = Handle::new(5000 + i - 1, Orientation::Forward);
+            let right = Handle::new(5000 + i, Orientation::Forward);
+            let edge = Edge(left, right);
+            match graph.remove_edge(edge) {
+                Ok(_) => (),
+                Err(why) => println!("Error: {}", why),
+            };
+        }
     }
-    println!("add 1000 paths: {:?}", start.elapsed());
+    println!("remove 1000 edges: {:?}", start.elapsed());
 }
 
 #[test]

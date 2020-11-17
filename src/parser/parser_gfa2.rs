@@ -1,4 +1,4 @@
-use crate::gfa::{gfa2::*, segment_id::SegmentId};
+use crate::gfa::{gfa2::*, segment_id::*};
 use crate::parser::error::*;
 
 use bstr::BString;
@@ -116,7 +116,7 @@ impl<N: SegmentId> Segment<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = N::parse_next(&mut input)?;
+        let id = N::parse_next(&mut input, IdType::ID())?;
         let len = parse_slen(&mut input)?;
         let sequence = parse_sequence(&mut input)?;
         let tag = parse_tag(&mut input).unwrap_or_else(|| BString::from(""));
@@ -178,8 +178,8 @@ impl<N: SegmentId> Fragment<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = N::parse_next(&mut input)?;
-        let ext_ref = N::parse_next_ref(&mut input)?;
+        let id = N::parse_next(&mut input, IdType::ID())?;
+        let ext_ref = N::parse_next(&mut input, IdType::REFERENCEID())?;
         let sbeg = parse_pos(&mut input)?;
         let send = parse_pos(&mut input)?;
         let fbeg = parse_pos(&mut input)?;
@@ -213,9 +213,9 @@ impl<N: SegmentId> Edge<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = N::parse_next_opt(&mut input)?;
-        let sid1 = N::parse_next_ref(&mut input)?;
-        let sid2 = N::parse_next_ref(&mut input)?;
+        let id = N::parse_next(&mut input, IdType::OPTIONALID())?;
+        let sid1 = N::parse_next(&mut input, IdType::OPTIONALID())?;
+        let sid2 = N::parse_next(&mut input, IdType::OPTIONALID())?;
         let beg1 = parse_pos(&mut input)?;
         let end1 = parse_pos(&mut input)?;
         let beg2 = parse_pos(&mut input)?;
@@ -284,9 +284,9 @@ impl<N: SegmentId> Gap<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = N::parse_next_opt(&mut input)?;
-        let sid1 = N::parse_next_ref(&mut input)?;
-        let sid2 = N::parse_next_ref(&mut input)?;
+        let id = N::parse_next(&mut input, IdType::OPTIONALID())?;
+        let sid1 = N::parse_next(&mut input, IdType::REFERENCEID())?;
+        let sid2 = N::parse_next(&mut input, IdType::REFERENCEID())?;
         let dist = parse_dist(&mut input)?;
         let var = parse_var(&mut input)?;
         let tag = parse_tag(&mut input).unwrap_or_else(|| BString::from(""));

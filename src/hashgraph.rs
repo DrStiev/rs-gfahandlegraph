@@ -204,6 +204,7 @@ impl ModdableHandleGraph for HashGraph {
 }
 
 impl SubtractiveHandleGraph for HashGraph {
+    // FIXME: BOTTLENECK
     fn remove_handle<T: Into<NodeId>>(&mut self, node: T) -> Result<bool, GraphError> {
         let node_id: NodeId = node.into();
         if self.graph.get(&node_id).is_some() {
@@ -226,45 +227,66 @@ impl SubtractiveHandleGraph for HashGraph {
         }
     }
 
+    // FIXME: BOTTLENECK
     fn remove_edge(&mut self, edge: Edge) -> Result<bool, GraphError> {
+        // delete all the occurrencies of edge found in graph
         let Edge(left, right) = edge;
         if self.has_edge(left, right) {
-            // delete all the occurrencies of edge found in graph
-            for edges in self.clone().all_edges() {
-                let Edge(l, _) = edges;
-                if edges == edge {
-                    let left_node = self
-                        .graph
-                        .get_mut(&l.id())
-                        .expect("Node doesn't exist for the given handle");
-                    if left.is_reverse() {
-                        match left_node.left_edges.iter().position(|&h| h == right) {
-                            Some(p) => self.graph.get_mut(&l.id()).unwrap().left_edges.remove(p),
-                            None => {
-                                return Err(GraphError::PositionNotFound(
-                                    right.id().to_string(),
-                                    format!(
-                                        "{}{}",
-                                        left.id().to_string(),
-                                        "left nodes".to_string()
-                                    ),
-                                ))
-                            }
-                        };
+            for e in self.clone().all_edges() {
+                let Edge(l, r) = e;
+                if e == edge {
+                    if l.is_reverse() {
+                        if r.is_reverse() {
+                            //print!("--");
+                            self.graph
+                                .get_mut(&l.id())
+                                .unwrap()
+                                .left_edges
+                                .retain(|x| x != &r);
+                            self.graph
+                                .get_mut(&r.id())
+                                .unwrap()
+                                .right_edges
+                                .retain(|x| x != &l);
+                        } else {
+                            //print!("-+");
+                            self.graph
+                                .get_mut(&l.id())
+                                .unwrap()
+                                .left_edges
+                                .retain(|x| x != &r);
+                            self.graph
+                                .get_mut(&r.id())
+                                .unwrap()
+                                .left_edges
+                                .retain(|x| x != &l);
+                        }
                     } else {
-                        match left_node.right_edges.iter().position(|&h| h == right) {
-                            Some(p) => self.graph.get_mut(&l.id()).unwrap().right_edges.remove(p),
-                            None => {
-                                return Err(GraphError::PositionNotFound(
-                                    right.id().to_string(),
-                                    format!(
-                                        "{}{}",
-                                        left.id().to_string(),
-                                        "right nodes".to_string()
-                                    ),
-                                ))
-                            }
-                        };
+                        if r.is_reverse() {
+                            //print!("+-");
+                            self.graph
+                                .get_mut(&l.id())
+                                .unwrap()
+                                .right_edges
+                                .retain(|x| x != &r);
+                            self.graph
+                                .get_mut(&r.id())
+                                .unwrap()
+                                .right_edges
+                                .retain(|x| x != &l);
+                        } else {
+                            //print!("++");
+                            self.graph
+                                .get_mut(&l.id())
+                                .unwrap()
+                                .right_edges
+                                .retain(|x| x != &r);
+                            self.graph
+                                .get_mut(&r.id())
+                                .unwrap()
+                                .left_edges
+                                .retain(|x| x != &l);
+                        }
                     }
                 }
             }
@@ -307,6 +329,10 @@ impl SubtractiveHandleGraph for HashGraph {
         self.graph.clear();
         self.path_id.clear();
         self.paths.clear();
+
+        self.graph.shrink_to_fit();
+        self.path_id.shrink_to_fit();
+        self.paths.shrink_to_fit();
     }
 }
 

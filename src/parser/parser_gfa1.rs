@@ -1,4 +1,4 @@
-use crate::gfa::{gfa1::*, orientation::Orientation, segment_id::SegmentId};
+use crate::gfa::{gfa1::*, orientation::Orientation, segment_id::*};
 use crate::parser::error::*;
 
 use bstr::{BString, ByteSlice};
@@ -120,7 +120,7 @@ impl<N: SegmentId> Segment<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let name = N::parse_next(&mut input)?;
+        let name = N::parse_next(&mut input, IdType::ID())?;
         let sequence = parse_sequence(&mut input)?;
         let optional = parse_tag(&mut input).unwrap_or_else(|| BString::from(""));
         Ok(Segment {
@@ -143,9 +143,9 @@ impl<N: SegmentId> Link<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let from_segment = N::parse_next(&mut input)?;
+        let from_segment = N::parse_next(&mut input, IdType::ID())?;
         let from_orient = parse_orientation(&mut input)?;
-        let to_segment = N::parse_next(&mut input)?;
+        let to_segment = N::parse_next(&mut input, IdType::ID())?;
         let to_orient = parse_orientation(&mut input)?;
         let overlap = parse_overlap(&mut input)?;
         let optional = parse_tag(&mut input).unwrap_or_else(|| BString::from(""));
@@ -173,9 +173,9 @@ impl<N: SegmentId> Containment<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let container_name = N::parse_next(&mut input)?;
+        let container_name = N::parse_next(&mut input, IdType::ID())?;
         let container_orient = parse_orientation(&mut input)?;
-        let contained_name = N::parse_next(&mut input)?;
+        let contained_name = N::parse_next(&mut input, IdType::ID())?;
         let contained_orient = parse_orientation(&mut input)?;
         let pos = next_field(&mut input)?;
         let pos = pos.as_ref().to_str()?.parse()?;
@@ -244,7 +244,7 @@ impl<N: SegmentId> Path<N> {
     {
         // Use the SegmentId parser for the path name as well; it's
         // just always BString
-        let path_name = BString::parse_next(&mut input)?;
+        let path_name = BString::parse_next(&mut input, IdType::ID())?;
         let segment_names = parse_segment_names(&mut input)?;
         let overlaps = parse_path_overlap(&mut input)?;
         let optional = parse_tag(&mut input).unwrap_or_else(|| BString::from(""));
