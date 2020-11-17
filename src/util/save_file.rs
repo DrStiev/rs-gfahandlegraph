@@ -12,6 +12,7 @@ pub enum ObjectType {
     GFAUSIZE(GFA<usize>),
     GFA2BSTRING(GFA2<BString>),
     GFA2USIZE(GFA2<usize>),
+    JSON(String),
 }
 
 pub enum GraphType {
@@ -20,8 +21,18 @@ pub enum GraphType {
 }
 
 #[inline]
-pub fn save_gfa_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<()> {
+pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<()> {
     match file {
+        ObjectType::JSON(x) => {
+            let path = path.unwrap_or_else(|| {
+                String::from("./tests/output_files/default_path/json_file.json")
+            });
+            let path = Path::new(&path);
+            let mut file = File::create(path)?;
+            file.write_all(x.as_bytes())?;
+            file.sync_all()?;
+            Ok(())
+        }
         ObjectType::GFAUSIZE(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_usize.gfa")

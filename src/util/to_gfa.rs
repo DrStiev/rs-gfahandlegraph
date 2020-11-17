@@ -248,7 +248,6 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
 #[cfg(test)]
 mod test {
     use super::*;
-
     use crate::parser::Parser;
 
     #[test]

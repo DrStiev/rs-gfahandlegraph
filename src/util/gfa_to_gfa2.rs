@@ -121,7 +121,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::util::save_file::save_gfa_on_file;
+    use crate::util::save_file::save_on_file;
     use crate::util::ObjectType;
 
     #[test]
@@ -131,7 +131,7 @@ mod test {
         let path: String = "./tests/big_files/ape-4-0.10b.gfa".to_string();
         //let path: String = "./tests/big_files/test.gfa".to_string();
         let gfa2: GFA2<BString> = gfa_file_to_gfa2(path.clone());
-        match save_gfa_on_file(
+        match save_on_file(
             ObjectType::GFA2BSTRING(gfa2),
             Some(format!("{}{}", path, "2")),
         ) {
@@ -145,7 +145,7 @@ mod test {
     fn can_parse_and_wirte_file_with_tags() {
         let path: String = "./tests/big_files/diatom.gfa".to_string();
         let gfa2: GFA2<BString> = gfa_file_to_gfa2(path.clone());
-        match save_gfa_on_file(
+        match save_on_file(
             ObjectType::GFA2BSTRING(gfa2),
             Some(format!("{}{}", path, "2")),
         ) {
