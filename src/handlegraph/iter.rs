@@ -249,7 +249,7 @@ where
 
     fn next(&mut self) -> Option<u8> {
         if self.reversing {
-            self.iter.next_back().map(crate::util::dna::dna::comp_base)
+            self.iter.next_back().map(crate::util::dna::comp_base)
         } else {
             self.iter.next()
         }

@@ -259,7 +259,7 @@ impl HashGraph {
                 }
                 // print correct reverse and complement sequence to display the correct path
                 if handle.is_reverse() {
-                    let rev_sequence: BString = dna::dna::rev_comp(node.sequence.as_slice()).into();
+                    let rev_sequence: BString = dna::rev_comp(node.sequence.as_slice()).into();
                     print!("{} -({})", rev_sequence, node.sequence);
                 } else {
                     print!("{}", node.sequence);

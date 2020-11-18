@@ -95,7 +95,7 @@ impl<'a> HandleSequences for &'a HashGraph {
     fn sequence(self, handle: Handle) -> Vec<u8> {
         let seq: &[u8] = &self.get_node_unchecked(&handle.id()).sequence.as_ref();
         if handle.is_reverse() {
-            dna::dna::rev_comp(seq)
+            dna::rev_comp(seq)
         } else {
             seq.into()
         }
@@ -235,58 +235,54 @@ impl SubtractiveHandleGraph for HashGraph {
             for e in self.clone().all_edges() {
                 let Edge(l, r) = e;
                 if e == edge {
-                    if l.is_reverse() {
-                        if r.is_reverse() {
-                            //print!("--");
-                            self.graph
-                                .get_mut(&l.id())
-                                .unwrap()
-                                .left_edges
-                                .retain(|x| x != &r);
-                            self.graph
-                                .get_mut(&r.id())
-                                .unwrap()
-                                .right_edges
-                                .retain(|x| x != &l);
-                        } else {
-                            //print!("-+");
-                            self.graph
-                                .get_mut(&l.id())
-                                .unwrap()
-                                .left_edges
-                                .retain(|x| x != &r);
-                            self.graph
-                                .get_mut(&r.id())
-                                .unwrap()
-                                .left_edges
-                                .retain(|x| x != &l);
-                        }
+                    if l.is_reverse() && r.is_reverse() {
+                        //print!("--");
+                        self.graph
+                            .get_mut(&l.id())
+                            .unwrap()
+                            .left_edges
+                            .retain(|x| x != &r);
+                        self.graph
+                            .get_mut(&r.id())
+                            .unwrap()
+                            .right_edges
+                            .retain(|x| x != &l);
+                    } else if l.is_reverse() && !r.is_reverse() {
+                        //print!("-+");
+                        self.graph
+                            .get_mut(&l.id())
+                            .unwrap()
+                            .left_edges
+                            .retain(|x| x != &r);
+                        self.graph
+                            .get_mut(&r.id())
+                            .unwrap()
+                            .left_edges
+                            .retain(|x| x != &l);
+                    } else if !l.is_reverse() && r.is_reverse() {
+                        //print!("+-");
+                        self.graph
+                            .get_mut(&l.id())
+                            .unwrap()
+                            .right_edges
+                            .retain(|x| x != &r);
+                        self.graph
+                            .get_mut(&r.id())
+                            .unwrap()
+                            .right_edges
+                            .retain(|x| x != &l);
                     } else {
-                        if r.is_reverse() {
-                            //print!("+-");
-                            self.graph
-                                .get_mut(&l.id())
-                                .unwrap()
-                                .right_edges
-                                .retain(|x| x != &r);
-                            self.graph
-                                .get_mut(&r.id())
-                                .unwrap()
-                                .right_edges
-                                .retain(|x| x != &l);
-                        } else {
-                            //print!("++");
-                            self.graph
-                                .get_mut(&l.id())
-                                .unwrap()
-                                .right_edges
-                                .retain(|x| x != &r);
-                            self.graph
-                                .get_mut(&r.id())
-                                .unwrap()
-                                .left_edges
-                                .retain(|x| x != &l);
-                        }
+                        //print!("++");
+                        self.graph
+                            .get_mut(&l.id())
+                            .unwrap()
+                            .right_edges
+                            .retain(|x| x != &r);
+                        self.graph
+                            .get_mut(&r.id())
+                            .unwrap()
+                            .left_edges
+                            .retain(|x| x != &l);
                     }
                 }
             }
@@ -505,7 +501,7 @@ impl MutableHandleGraph for HashGraph {
         }
 
         let node = self.get_node_mut(&handle.id()).unwrap();
-        node.sequence = dna::dna::rev_comp(node.sequence.as_slice()).into();
+        node.sequence = dna::rev_comp(node.sequence.as_slice()).into();
 
         let edges = {
             let node = self.get_node(&handle.id()).unwrap();
