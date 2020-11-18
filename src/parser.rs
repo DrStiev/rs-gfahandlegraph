@@ -6,13 +6,11 @@ pub use self::error::*;
 pub use self::parser_gfa1::*;
 pub use self::parser_gfa2::*;
 
-use crate::gfa::{
-    gfa1::Line as Line1, gfa1::GFA, gfa2::Line as Line2, gfa2::GFA2, segment_id::SegmentId,
-};
+use crate::gfa::{gfa1::Line as Line1, gfa1::GFA, gfa2::Line as Line2, gfa2::GFA2};
 use crate::hashgraph::HashGraph;
 use crate::parser::error::ParserTolerance;
 
-use bstr::{BStr, BString, ByteSlice};
+use bstr::{BStr, ByteSlice};
 
 /// Builder struct for GFAParsers
 pub struct ParserBuilder {
@@ -79,7 +77,7 @@ impl ParserBuilder {
         self
     }
 
-    pub fn build<N: SegmentId>(self) -> Parser<N> {
+    pub fn build(self) -> Parser {
         Parser {
             headers: self.headers,
             segments: self.segments,
@@ -92,21 +90,12 @@ impl ParserBuilder {
             groups_u: self.groups_u,
             paths: self.paths,
             tolerance: self.tolerance,
-            _segment_names: std::marker::PhantomData,
         }
-    }
-
-    pub fn build_usize_id(self) -> Parser<usize> {
-        self.build()
-    }
-
-    pub fn build_bstr_id(self) -> Parser<BString> {
-        self.build()
     }
 }
 
 #[derive(Clone)]
-pub struct Parser<N: SegmentId> {
+pub struct Parser {
     headers: bool,
     segments: bool,
     fragments: bool,
@@ -118,17 +107,16 @@ pub struct Parser<N: SegmentId> {
     groups_u: bool,
     paths: bool,
     tolerance: ParserTolerance,
-    _segment_names: std::marker::PhantomData<N>,
 }
 
-impl<N: SegmentId> Default for Parser<N> {
+impl Default for Parser {
     fn default() -> Self {
         let config = ParserBuilder::all();
         config.build()
     }
 }
 
-impl Parser<usize> {
+impl Parser {
     pub fn new() -> Self {
         Default::default()
     }
@@ -266,7 +254,7 @@ mod test {
 
     #[test]
     fn can_create_graph_from_gfa2_file() {
-        let parser: Parser<usize> = Parser::new();
+        let parser: Parser = Parser::new();
         match parser.parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
             Ok(g) => g.print_graph(),
             Err(why) => println!("Error {}", why),
@@ -275,7 +263,7 @@ mod test {
 
     #[test]
     fn ditto_test() {
-        let parser: Parser<usize> = Parser::new();
+        let parser: Parser = Parser::new();
         match parser.parse_file_to_graph("./tests/gfa2_files/irl.gfa2") {
             Ok(g) => g.print_graph(),
             Err(why) => println!("Error {}", why),
@@ -284,7 +272,7 @@ mod test {
 
     #[test]
     fn can_create_graph_from_gfa1_file() {
-        let parser: Parser<usize> = Parser::new();
+        let parser: Parser = Parser::new();
         match parser.parse_file_to_graph("./tests/gfa1_files/lil.gfa") {
             Ok(g) => g.print_graph(),
             Err(why) => println!("Error {}", why),

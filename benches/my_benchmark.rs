@@ -32,7 +32,7 @@ fn create_graph_from_big_gfa1() -> HashGraph {
 
 fn create_graph_from_medium_gfa2() -> HashGraph {
     let mut graph = HashGraph::new();
-    let parser: Parser<usize> = Parser::new();
+    let parser: Parser = Parser::new();
     match parser.parse_file_to_graph("./tests/big_files/test.gfa2") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
@@ -81,7 +81,7 @@ fn mod_graph_from_medium_gfa2() -> bool {
 
 fn create_graph_from_medium_gfa1() -> HashGraph {
     let mut graph = HashGraph::new();
-    let parser: Parser<usize> = Parser::new();
+    let parser: Parser = Parser::new();
     match parser.parse_file_to_graph("./tests/big_files/test.gfa") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
