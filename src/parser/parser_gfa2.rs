@@ -1,5 +1,6 @@
+/// This file provides the function to parse all the fields of a GFA2 file
 use crate::gfa::{gfa2::*, segment_id::*};
-use crate::parser::error::*;
+use crate::parser::{error::*, parse_tag::*};
 
 use bstr::BString;
 use lazy_static::lazy_static;
@@ -31,24 +32,6 @@ where
         .ok_or(ParseFieldError::InvalidField("Version"))
 }
 
-/// function that parses the tag element
-/// ```<tag> <- [A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*```
-fn parse_tag<I>(input: &mut I) -> ParserFieldResult<BString>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*").unwrap();
-    }
-
-    let next = next_field(input)?;
-    RE.find(next.as_ref())
-        .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Tag"))
-}
-
 /// function that parses the HEADER field
 /// ```H {VN:Z:2.0} {TS:i:<trace spacing>} <tag>*```
 impl Header {
@@ -64,8 +47,11 @@ impl Header {
         I::Item: AsRef<[u8]>,
     {
         let version = parse_header_tag(&mut input)?;
-        let tag: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut tag: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        tag.pop();
         Ok(Header { version, tag })
     }
 }
@@ -121,8 +107,11 @@ impl<N: SegmentId> Segment<N> {
         let id = N::parse_next(&mut input, IdType::ID())?;
         let len = parse_slen(&mut input)?;
         let sequence = parse_sequence(&mut input)?;
-        let tag: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut tag: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        tag.pop();
         Ok(Segment {
             id,
             len,
@@ -188,8 +177,11 @@ impl<N: SegmentId> Fragment<N> {
         let fbeg = parse_pos(&mut input)?;
         let fend = parse_pos(&mut input)?;
         let alignment = parse_alignment(&mut input)?;
-        let tag: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut tag: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        tag.pop();
         Ok(Fragment {
             id,
             ext_ref,
@@ -225,8 +217,11 @@ impl<N: SegmentId> Edge<N> {
         let beg2 = parse_pos(&mut input)?;
         let end2 = parse_pos(&mut input)?;
         let alignment = parse_alignment(&mut input)?;
-        let tag: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut tag: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        tag.pop();
         Ok(Edge {
             id,
             sid1,
@@ -294,8 +289,11 @@ impl<N: SegmentId> Gap<N> {
         let sid2 = N::parse_next(&mut input, IdType::REFERENCEID())?;
         let dist = parse_dist(&mut input)?;
         let var = parse_var(&mut input)?;
-        let tag: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut tag: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        tag.pop();
         Ok(Gap {
             id,
             sid1,
@@ -374,8 +372,11 @@ impl<N: SegmentId> GroupO<N> {
     {
         let id = parse_optional_id(&mut input)?;
         let var_field = parse_group_ref(&mut input)?;
-        let tag: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut tag: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        tag.pop();
         Ok(GroupO::new(id, var_field, &tag))
     }
 }
@@ -396,8 +397,11 @@ impl<N: SegmentId> GroupU<N> {
     {
         let id = parse_optional_id(&mut input)?;
         let var_field = parse_group_id(&mut input)?;
-        let tag: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut tag: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        tag.pop();
         Ok(GroupU::new(id, var_field, &tag))
     }
 }
@@ -422,7 +426,7 @@ mod tests {
             Ok(h) => {
                 assert_eq!(h, header_);
                 println!("{} {}", h, header_)
-            },
+            }
         }
     }
 
@@ -431,7 +435,7 @@ mod tests {
         let header = "VN:Z:2.0\tHD:Z:20.20\tuR:i:AAAAAAAA";
         let header_ = Header {
             version: "VN:Z:2.0".into(),
-            tag: BString::from("HD:Z:20.20"),
+            tag: BString::from("HD:Z:20.20\tuR:i:AAAAAAAA"),
         };
 
         let fields = header.split_terminator('\t');
@@ -440,7 +444,7 @@ mod tests {
         match result {
             Err(why) => println!("Error: {}", why),
             Ok(h) => {
-                //assert_eq!(h, header_);
+                assert_eq!(h, header_);
                 println!("{}\n{}", h, header_)
             }
         }

@@ -1,3 +1,4 @@
+/// This file provides the structure to create a GFA Object
 use crate::gfa::orientation::*;
 use crate::gfa::segment_id::*;
 
@@ -9,7 +10,23 @@ use std::fmt;
 /// store each separate GFA line type.\
 /// Returns a GFA object
 ///
-/// # Examples
+/// [vec]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
+///
+/// ## Parameter
+///
+/// * ```GFA<N>``` - ```N``` can be [`bstring`][bstring] or [`usize`][usize]
+///
+/// ## Arguments
+///
+/// * `headers` - A [`vector of Header`][vec].
+/// * `segments` - A [`vector of Segment`][vec].
+/// * `links` - A [`vector of Link`][vec].
+/// * `containments` - A [`vector of Containment`][vec].
+/// * `paths` - A [`vector of Path`][vec].
+///
+/// ## Examples
 /// ```ignore
 /// let gfa: GFA<BString> = GFA {
 ///     headers: vec![
@@ -170,10 +187,16 @@ impl<N: SegmentId> GFA<N> {
     }
 }
 
-/// The header line of a GFA graph\
 /// Returns an Header line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+///
+/// ## Arguments
+///
+/// * `version` - A [`bstring`][bstring] slice.
+/// * `optional field` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 /// ```ignore
 /// let header = "VN:Z:1.0";
 /// let header_ = Header {
@@ -202,10 +225,18 @@ impl fmt::Display for Header {
     }
 }
 
-/// A segment in a GFA graph.\
 /// Returns a Segment line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
+///
+/// ## Arguments
+///
+/// * `name` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `sequence` - A [`bstring`][bstring] slice.
+/// * `optional field` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 /// ```ignore
 /// let segment = "1\tAAAAAAACGT";
 /// let segment_: Segment<BString> = Segment {
@@ -247,7 +278,20 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
 
 /// Returns a Link line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
+/// [cigar]: https://samtools.github.io/hts-specs/SAMv1.pdf
+///
+/// ## Arguments
+///
+/// * `from_segment` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `from_orient` - An orientation identifier, it can be Forward or Backward (+-)
+/// * `to_segment` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `to_orient` - An orientation identifier, it can be Forward or Backward (+-)
+/// * `overlap` - A [`bstring`][bstring] slice encoding a [`CIGAR`][cigar] alignment
+/// * `optional field` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 /// ```ignore
 /// let link = "15\t-\t10\t+\t20M";
 /// let link_: Link<BString> = Link {
@@ -306,7 +350,21 @@ impl<N: SegmentId> fmt::Display for Link<N> {
 
 /// Returns a Containment line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
+/// [cigar]: https://samtools.github.io/hts-specs/SAMv1.pdf
+///
+/// ## Arguments
+///
+/// * `container_name` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `container_orient` - An orientation identifier, it can be Forward or Backward (+-)
+/// * `contained_name` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `contained_orient` - An orientation identifier, it can be Forward or Backward (+-)
+/// * `pos` - An [`usize`][usize] identifier
+/// * `overlap` - A [`bstring`][bstring] slice encoding a [`CIGAR`][cigar] alignment
+/// * `optional field` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 /// ```ignore
 /// let containment = "15\t-\t10\t+\t4\t20M";
 /// let containment_: Containment<BString> = Containment {
@@ -331,7 +389,7 @@ pub struct Containment<N> {
 }
 
 impl Containment<BString> {
-    fn new(
+    pub fn new(
         container_name: &[u8],
         container_orient: Orientation,
         contained_name: &[u8],
@@ -368,11 +426,19 @@ impl<N: SegmentId> fmt::Display for Containment<N> {
     }
 }
 
-/// The step list that the path actually consists of is an unparsed
-/// BString to keep memory down; use path.iter() to get an iterator
-/// over the parsed path segments and orientations.\
 /// Returns a Path line
-/// # Examples
+///
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [cigar]: https://samtools.github.io/hts-specs/SAMv1.pdf
+///
+/// ## Arguments
+///
+/// * `path_name` - A [`bstring`][bstring] identifier
+/// * `segment_names` - A [`bstring`][bstring] identifier
+/// * `overlap` - A [`bstring`][bstring] slice encoding a [`CIGAR`][cigar] alignment
+/// * `optional field` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 /// ```ignore
 /// let path = "14\t11+,12-,13+\t4M,5M";
 /// let path_: Path<BString> = Path::new(

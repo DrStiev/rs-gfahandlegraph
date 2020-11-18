@@ -1,3 +1,4 @@
+/// This file provides the structure to create a GFA2 Object
 use crate::gfa::orientation::*;
 use crate::gfa::segment_id::*;
 
@@ -7,7 +8,14 @@ use std::fmt;
 
 /// Returns an Header line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+///
+/// ## Arguments
+///
+/// * `version` - A [`bstring`][bstring] slice.
+/// * `tag` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 /// ```ignore
 /// let header = "VN:Z:2.0";
 /// let header_ = Header {
@@ -38,7 +46,17 @@ impl fmt::Display for Header {
 
 /// Returns a Segment line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
+///
+/// ## Arguments
+///
+/// * `id` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `len` - An [`usize`][usize] identifier
+/// * `sequence` - A [`bstring`][bstring] slice.
+/// * `tag` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 /// ```ignore
 /// let segment = "A\t10\tAAAAAAACGT";
 /// let segment_: Segment<BString> = Segment {
@@ -82,7 +100,23 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
 
 /// Returns a Fragment line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
+/// [cigar]: https://samtools.github.io/hts-specs/SAMv1.pdf
+/// [trace]: https://dazzlerblog.wordpress.com/2015/11/05/trace-points/
+///
+/// ## Arguments
+///
+/// * `id` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `ext_ref` - A [`bstring`][bstring] or [`usize`][usize] identifier followed by an Orientation character (+-) or (43-45)
+/// * `sbeg` - A [`bstring`][bstring] slice followed by an optional terminator ($)
+/// * `send` - A [`bstring`][bstring] slice followed by an optional terminator ($)
+/// * `fbeg` - A [`bstring`][bstring] slice followed by an optional terminator ($)
+/// * `fend` - A [`bstring`][bstring] slice followed by an optional terminator ($)
+/// * `alignment` - A [`bstring`][bstring] slice encoding a [`CIGAR`][cigar] or a [`trace`][trace] alignment
+/// * `tag` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 ///
 /// ```ignore
 /// let fragment = "15\tr1-\t10\t10\t20\t20\t*";
@@ -152,7 +186,24 @@ impl<N: SegmentId> fmt::Display for Fragment<N> {
 
 /// Returns an Edge line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
+/// [cigar]: https://samtools.github.io/hts-specs/SAMv1.pdf
+/// [trace]: https://dazzlerblog.wordpress.com/2015/11/05/trace-points/
+///
+/// ## Arguments
+///
+/// * `id` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `sid1` - A [`bstring`][bstring] or [`usize`][usize] identifier followed by an Orientation character (+-) or (43-45)
+/// * `sid2` - A [`bstring`][bstring] or [`usize`][usize] identifier followed by an Orientation character (+-) or (43-45)
+/// * `beg1` - A [`bstring`][bstring] slice followed by an optional terminator ($)
+/// * `end1` - A [`bstring`][bstring] slice followed by an optional terminator ($)
+/// * `beg2` - A [`bstring`][bstring] slice followed by an optional terminator ($)
+/// * `end2` - A [`bstring`][bstring] slice followed by an optional terminator ($)
+/// * `alignment` - A [`bstring`][bstring] slice encoding a [`CIGAR`][cigar] or a [`trace`][trace] alignment
+/// * `tag` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 ///
 /// ```ignore
 /// let edge = "*\t2+\t45+\t2531\t2591$\t0\t60\t60M";
@@ -227,7 +278,19 @@ impl<N: SegmentId> fmt::Display for Edge<N> {
 
 /// Returns a Gap line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
+///
+/// ## Arguments
+///
+/// * `id` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `sid1` - A [`bstring`][bstring] or [`usize`][usize] identifier followed by an Orientation character (+-) or (43-45)
+/// * `sid2` - A [`bstring`][bstring] or [`usize`][usize] identifier followed by an Orientation character (+-) or (43-45)
+/// * `dist` - A [`bstring`][bstring] slice.
+/// * `var` - A [`bstring`][bstring] slice.
+/// * `tag` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 ///
 /// ```ignore
 /// let gap = "g1\t7+\t22+\t10\t*";
@@ -280,7 +343,15 @@ impl<N: SegmentId> fmt::Display for Gap<N> {
 
 /// Returns an O-Group line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+///
+/// ## Arguments
+///
+/// * `id` - A [`bstring`][bstring] slice.
+/// * `var_field` - A [`bstring`][bstring] slice.
+/// * `tag` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 ///
 /// ```ignore
 /// let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
@@ -371,7 +442,15 @@ impl<N: SegmentId> fmt::Display for GroupO<N> {
 
 /// Returns an U-Group line
 ///
-/// # Examples
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+///
+/// ## Arguments
+///
+/// * `id` - A [`bstring`][bstring] slice.
+/// * `var_field` - A [`bstring`][bstring] slice.
+/// * `tag` - A [`bstring`][bstring] slice.
+///
+/// ## Examples
 ///
 /// ```ignore
 /// let ugroup = "SG1\t16 24 SG2 51_24 16_24";
@@ -450,7 +529,25 @@ impl<N: SegmentId> fmt::Display for GroupU<N> {
 
 /// Returns a GFA2 object
 ///
-/// # Examples
+/// [vec]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
+///
+/// ## Parameter
+///
+/// * ```GFA2<N>``` - ```N``` can be [`bstring`][bstring] or [`usize`][usize]
+///
+/// ## Arguments
+///
+/// * `headers` - A [`vector of Header`][vec].
+/// * `segments` - A [`vector of Segment`][vec].
+/// * `fragments` - A [`vector of Fragment`][vec].
+/// * `edges` - A [`vector of Edge`][vec].
+/// * `gaps` - A [`vector of Gap`][vec].
+/// * `o groups` - A [`vector of OGroup`][vec].
+/// * `u groups` - A [`vector of UGroup`][vec].
+///
+/// ## Examples
 ///
 /// ```ignore
 /// let gfa2: GFA2<BString> = GFA2 {

@@ -1,4 +1,5 @@
 pub mod error;
+pub mod parse_tag;
 pub mod parser_gfa1;
 pub mod parser_gfa2;
 
@@ -121,11 +122,11 @@ impl Parser {
         Default::default()
     }
 
-    /// Function that given a gfa or gfa2 file as input, creates the
-    /// corresponding graph.
+    /// Function that given a ```GFA``` or ```GFA2``` file as input, creates the
+    /// corresponding HashGraph.
     /// # Example
     /// ```ignore
-    /// let parser: Parser<usize> = Parser::new();
+    /// let parser: Parser = Parser::new();
     /// match parser.parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
     ///     Ok(g) => g.print_graph(),
     ///     Err(why) => println!("Error {}", why),

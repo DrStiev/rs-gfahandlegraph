@@ -1,5 +1,6 @@
+/// This file provides the function to parse all the fields of a GFA file
 use crate::gfa::{gfa1::*, orientation::Orientation, segment_id::*};
-use crate::parser::error::*;
+use crate::parser::{error::*, parse_tag::*};
 
 use bstr::{BString, ByteSlice};
 use lazy_static::lazy_static;
@@ -41,24 +42,6 @@ where
         .ok_or(ParseFieldError::InvalidField("Version"))
 }
 
-/// function that parses the tag element
-/// ```<tag> <- [A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*```
-fn parse_tag<I>(input: &mut I) -> ParserFieldResult<BString>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*").unwrap();
-    }
-
-    let next = next_field(input)?;
-    RE.find(next.as_ref())
-        .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Tag"))
-}
-
 impl Header {
     #[inline]
     pub fn wrap<N: SegmentId>(self) -> Line<N> {
@@ -72,8 +55,11 @@ impl Header {
         I::Item: AsRef<[u8]>,
     {
         let version = parse_header_tag(&mut input)?;
-        let optional: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut optional: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        optional.pop();
         Ok(Header { version, optional })
     }
 }
@@ -124,8 +110,11 @@ impl<N: SegmentId> Segment<N> {
     {
         let name = N::parse_next(&mut input, IdType::ID())?;
         let sequence = parse_sequence(&mut input)?;
-        let optional: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut optional: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        optional.pop();
         Ok(Segment {
             name,
             sequence,
@@ -151,8 +140,11 @@ impl<N: SegmentId> Link<N> {
         let to_segment = N::parse_next(&mut input, IdType::ID())?;
         let to_orient = parse_orientation(&mut input)?;
         let overlap = parse_overlap(&mut input)?;
-        let optional: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut optional: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        optional.pop();
         Ok(Link {
             from_segment,
             from_orient,
@@ -183,8 +175,11 @@ impl<N: SegmentId> Containment<N> {
         let pos = next_field(&mut input)?;
         let pos = pos.as_ref().to_str()?.parse()?;
         let overlap = parse_overlap(&mut input)?;
-        let optional: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut optional: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        optional.pop();
         Ok(Containment {
             container_name,
             container_orient,
@@ -250,8 +245,11 @@ impl<N: SegmentId> Path<N> {
         let path_name = BString::parse_next(&mut input, IdType::ID())?;
         let segment_names = parse_segment_names(&mut input)?;
         let overlaps = parse_path_overlap(&mut input)?;
-        let optional: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
-
+        let mut optional: BString = OptionalFields::parse_tag(input)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        optional.pop();
         Ok(Path::new(path_name, segment_names, overlaps, &optional))
     }
 }

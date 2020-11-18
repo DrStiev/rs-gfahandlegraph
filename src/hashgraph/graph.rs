@@ -53,9 +53,19 @@ impl HashGraph {
         Default::default()
     }
 
-    /// Build an HashGraph from a GFA1(2)<usize> Object\
-    /// the function will iterate only over the segments, edges and ogroups fields
-    /// # Examples
+    /// Build an HashGraph from a GFA Object\
+    /// The function will iterate only over the segments, edges (links) and ogroups (paths) fields
+    ///
+    /// [enum]: https://doc.rust-lang.org/std/keyword.enum.html
+    /// [gfa]: https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md
+    /// [gfa2]: https://github.com/GFA-spec/GFA-spec/blob/master/GFA2.md
+    ///
+    /// ## Arguments
+    /// * ```GFA Object``` wrapped in an [`enum`][enum] type to define the kind of format used
+    /// * ```GFA()``` [`enum`][enum] wrapper to specify the [`GFA`][gfa] version 1
+    /// * ```GFA2()``` [`enum`][enum] wrapper to specify the [`GFA`][gfa2] version 2
+    ///
+    /// ## Examples
     /// ```ignore
     /// let graph = HashGraph::new();
     /// let mut file: GFA2<usize> = GFA2::new();
