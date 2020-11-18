@@ -12,12 +12,12 @@ use bstr::BString;
 /// Sometimes can leads to unexpected bugs.
 /// # Example
 /// ```ignore
-/// let gfa_out: GFA2<BString> = handlegraph2::conversion::to_gfa2(&graph);
+/// let gfa_out: GFA2<BString> = to_gfa2(&graph);
 /// /* hashgraph to gfa2:
 /// H   VN:Z:2.0
-/// S   13  0   CTTGATT
-/// S   12  0   TCAAGG
-/// S   11  0   ACCTT
+/// S   13  7   CTTGATT
+/// S   12  6   TCAAGG
+/// S   11  5   ACCTT
 /// E   *   12- 13+ 0   0$  0   0$  0M
 /// E   *   11+ 12- 0   0$  0   0$  0M
 /// E   *   11+ 13+ 0   0$  0   0$  0M
@@ -25,15 +25,15 @@ use bstr::BString;
 /// */
 ///
 /// /* original gfa2:
-/// H	VN:Z:2.0
+/// H   VN:Z:2.0
 /// H
-/// S	11	5	ACCTT
-/// S	12	6	TCAAGG
-/// S	13	7	CTTGATT
-/// E	1	11+	12-	1	5$	2	6$	4M
-/// E	1	12-	13+	0	5	0	5	5M
-/// E	1	11+	13+	2	5$	0	3	3M
-/// O	14	11+ 12- 13+
+/// S   11   5   ACCTT
+/// S   12   6   TCAAGG
+/// S   13   7   CTTGATT
+/// E   1   11+   12-   1   5$   2   6$   4M
+/// E   1   12-   13+   0   5   0   5   5M
+/// E   1   11+   13+   2   5$   0   3   3M
+/// O   14   11+ 12- 13+
 /// */
 /// ```
 pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
@@ -132,7 +132,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
 /// Sometimes can leads to unexpected bugs.
 /// # Example
 /// ```ignore
-/// let gfa_out: GFA<BString> = handlegraph2::conversion::to_gfa(&graph);
+/// let gfa_out: GFA<BString> = to_gfa(&graph);
 ///  
 /// /* hashgraph to gfa:
 /// H   VN:Z:1.0
@@ -244,7 +244,8 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
 mod test {
     use super::*;
     use crate::parser::Parser;
-
+    use time::Instant;
+    
     #[test]
     fn can_convert_graph_to_gfa() {
         let parser: Parser = Parser::new();
@@ -261,13 +262,14 @@ mod test {
 
     #[test]
     fn can_convert_graph_to_gfa2() {
+        // Convert graph to GFA2: Duration { seconds: 0, nanoseconds: 193790400 }
         let parser: Parser = Parser::new();
-        match parser.parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
+        match parser.parse_file_to_graph("./tests/big_files/test.gfa2") {
             Ok(g) => {
-                g.print_graph();
+                let start = Instant::now();
                 let mut _file: GFA2<BString> = GFA2::new();
                 _file = to_gfa2(&g);
-                println!("{}", _file);
+                println!("Convert graph to GFA2 {:?}", start.elapsed());
             }
             Err(why) => println!("Error {}", why),
         }
