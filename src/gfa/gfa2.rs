@@ -11,41 +11,28 @@ use std::fmt;
 /// ```ignore
 /// let header = "VN:Z:2.0";
 /// let header_ = Header {
-///     version: Some("VN:Z:2.0".into()),
-///     tag: "".into(),
+///     version: "VN:Z:2.0".into(),
+///     tag: b"",
 /// };
 /// ```
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Header {
-    pub version: Option<BString>,
+    pub version: BString,
     pub tag: BString,
 }
 
 impl Header {
-    pub fn new(version: Option<BString>) -> Self {
+    pub fn new(version: &[u8], tag: &[u8]) -> Self {
         Header {
-            version,
-            tag: Default::default(),
-        }
-    }
-}
-
-impl Default for Header {
-    fn default() -> Self {
-        Header {
-            version: Some("2.0".into()),
-            tag: Default::default(),
+            version: version.into(),
+            tag: tag.into(),
         }
     }
 }
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(v) = &self.version {
-            write!(f, "H\t{}\t{}", v, self.tag.as_bstr().to_string(),)
-        } else {
-            write!(f, "H\t{}", self.tag.as_bstr().to_string(),)
-        }
+        write!(f, "H\t{}\t{}", self.version, self.tag,)
     }
 }
 
@@ -58,7 +45,7 @@ impl fmt::Display for Header {
 ///     id: "A".into(),
 ///     len: "10".into(),
 ///     sequence: "AAAAAAACGT".into(),
-///     tag:"".into(),
+///     tag: b"",
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -70,12 +57,12 @@ pub struct Segment<N> {
 }
 
 impl Segment<BString> {
-    pub fn new(id: &[u8], len: &[u8], sequence: &[u8]) -> Self {
+    pub fn new(id: &[u8], len: &[u8], sequence: &[u8], tag: &[u8]) -> Self {
         Segment {
             id: BString::from(id),
             len: BString::from(len),
             sequence: BString::from(sequence),
-            tag: Default::default(),
+            tag: BString::from(tag),
         }
     }
 }
@@ -88,7 +75,7 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
             self.id,
             self.len.as_bstr(),
             self.sequence.as_bstr(),
-            self.tag.as_bstr().to_string(),
+            self.tag,
         )
     }
 }
@@ -107,7 +94,7 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
 ///     fbeg: "20".into(),
 ///     fend: "20".into(),
 ///     alignment: "*".into(),
-///     tag: "".into(),
+///     tag: b"",
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -131,6 +118,7 @@ impl Fragment<BString> {
         fbeg: &[u8],
         fend: &[u8],
         alignment: &[u8],
+        tag: &[u8],
     ) -> Self {
         Fragment {
             id: BString::from(id),
@@ -140,7 +128,7 @@ impl Fragment<BString> {
             fbeg: fbeg.into(),
             fend: fend.into(),
             alignment: alignment.into(),
-            tag: Default::default(),
+            tag: tag.into(),
         }
     }
 }
@@ -157,7 +145,7 @@ impl<N: SegmentId> fmt::Display for Fragment<N> {
             self.fbeg.as_bstr(),
             self.fend.as_bstr(),
             self.alignment.as_bstr(),
-            self.tag.as_bstr().to_string(),
+            self.tag,
         )
     }
 }
@@ -177,7 +165,7 @@ impl<N: SegmentId> fmt::Display for Fragment<N> {
 ///     beg2: "0".into(),
 ///     end2: "60".into(),
 ///     alignment: "60M".into(),
-///     tag: "".into(),
+///     tag: b"",
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -203,6 +191,7 @@ impl Edge<BString> {
         beg2: &[u8],
         end2: &[u8],
         alignment: &[u8],
+        tag: &[u8],
     ) -> Self {
         Edge {
             id: BString::from(id),
@@ -213,7 +202,7 @@ impl Edge<BString> {
             beg2: beg2.into(),
             end2: end2.into(),
             alignment: alignment.into(),
-            tag: Default::default(),
+            tag: tag.into(),
         }
     }
 }
@@ -231,7 +220,7 @@ impl<N: SegmentId> fmt::Display for Edge<N> {
             self.beg2.as_bstr(),
             self.end2.as_bstr(),
             self.alignment.as_bstr(),
-            self.tag.as_bstr().to_string(),
+            self.tag,
         )
     }
 }
@@ -248,7 +237,7 @@ impl<N: SegmentId> fmt::Display for Edge<N> {
 ///     sid2: "22+".into(),
 ///     dist: "10".into(),
 ///     var: "*".into(),
-///     tag: "".into(),
+///     tag: b"",
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -262,14 +251,14 @@ pub struct Gap<N> {
 }
 
 impl Gap<BString> {
-    pub fn new(id: &[u8], sid1: &[u8], sid2: &[u8], dist: &[u8], var: &[u8]) -> Self {
+    pub fn new(id: &[u8], sid1: &[u8], sid2: &[u8], dist: &[u8], var: &[u8], tag: &[u8]) -> Self {
         Gap {
             id: BString::from(id),
             sid1: BString::from(sid1),
             sid2: BString::from(sid2),
             dist: dist.into(),
             var: var.into(),
-            tag: Default::default(),
+            tag: tag.into(),
         }
     }
 }
@@ -284,7 +273,7 @@ impl<N: SegmentId> fmt::Display for Gap<N> {
             self.sid2,
             self.dist.as_bstr(),
             self.var.as_bstr(),
-            self.tag.as_bstr().to_string(),
+            self.tag,
         )
     }
 }
@@ -298,7 +287,7 @@ impl<N: SegmentId> fmt::Display for Gap<N> {
 /// let ogroup_: GroupO<BString> = GroupO::new(
 ///     "P1".into(),
 ///     "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-///     "".into(),
+///     b"",
 /// );
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -312,11 +301,11 @@ pub struct GroupO<N> {
 }
 
 impl<N: SegmentId> GroupO<N> {
-    pub fn new(id: BString, var_field: BString, tag: BString) -> Self {
+    pub fn new(id: BString, var_field: BString, tag: &[u8]) -> Self {
         GroupO {
             id,
             var_field,
-            tag,
+            tag: tag.into(),
             _segment_names: std::marker::PhantomData,
         }
     }
@@ -375,7 +364,7 @@ impl<N: SegmentId> fmt::Display for GroupO<N> {
             "O\t{}\t{}\t{}",
             self.id,
             self.var_field.as_bstr().to_string(),
-            self.tag.as_bstr().to_string(),
+            self.tag,
         )
     }
 }
@@ -389,7 +378,7 @@ impl<N: SegmentId> fmt::Display for GroupO<N> {
 /// let ugroup_: GroupU<BString> = GroupU::new(
 ///     "SG1".into(),
 ///     "16 24 SG2 51_24 16_24".into(),
-///     "".into(),
+///     b"",
 /// );
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -403,11 +392,11 @@ pub struct GroupU<N> {
 }
 
 impl<N: SegmentId> GroupU<N> {
-    pub fn new(id: BString, var_field: BString, tag: BString) -> Self {
+    pub fn new(id: BString, var_field: BString, tag: &[u8]) -> Self {
         GroupU {
             id,
             var_field,
-            tag,
+            tag: tag.into(),
             _segment_names: std::marker::PhantomData,
         }
     }
@@ -454,7 +443,7 @@ impl<N: SegmentId> fmt::Display for GroupU<N> {
             "U\t{}\t{}\t{}",
             self.id,
             self.var_field.as_bstr().to_string(),
-            self.tag.as_bstr().to_string(),
+            self.tag,
         )
     }
 }
@@ -466,25 +455,25 @@ impl<N: SegmentId> fmt::Display for GroupU<N> {
 /// ```ignore
 /// let gfa2: GFA2<BString> = GFA2 {
 ///     headers: vec![
-///         Header::new(Some("VN:Z:2.0".into())),
+///         Header::new("VN:Z:2.0".into(), b""),
 ///     ],
 ///     segments: vec![
-///         Segment::new(b"A", b"10", b"AAAAAAACGT"),
+///         Segment::new(b"A", b"10", b"AAAAAAACGT", b""),
 ///     ],
 ///     fragments: vec![
-///         Fragment::new(b"15", b"r1-", b"10", b"10", b"20", b"20", b"*"),
+///         Fragment::new(b"15", b"r1-", b"10", b"10", b"20", b"20", b"*", b""),
 ///     ],
 ///     edges: vec![
-///         Edge::new(b"*", b"2+", b"45+", b"2531", b"2591$", b"0", b"60", b"60M"),
+///         Edge::new(b"*", b"2+", b"45+", b"2531", b"2591$", b"0", b"60", b"60M", b""),
 ///     ],
 ///     gaps: vec![
-///         Gap::new(b"g1", b"7+", b"22+", b"10", b"*"),
+///         Gap::new(b"g1", b"7+", b"22+", b"10", b"*", b""),
 ///     ],
 ///     groups_o: vec![
-///         GroupO::new(b"P1", b"36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-", vec![]),
+///         GroupO::new(b"P1", b"36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-", b""),
 ///     ],
 ///     groups_u: vec![
-///         GroupU::new(b"SG1", b"16 24 SG2 51_24 16_24", vec![]),
+///         GroupU::new(b"SG1", b"16 24 SG2 51_24 16_24", b""),
 ///     ]
 /// };
 /// ```
@@ -675,11 +664,8 @@ mod test {
 
     #[test]
     fn o_group_iter() {
-        let ogroup_: GroupO<BString> = GroupO::new(
-            "P1".into(),
-            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-            "".into(),
-        );
+        let ogroup_: GroupO<BString> =
+            GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(), b"");
         for (name, orientation) in ogroup_.iter() {
             println!("{}{}", name, orientation);
         }
@@ -688,7 +674,7 @@ mod test {
     #[test]
     fn u_group_iter() {
         let ugroup_: GroupU<BString> =
-            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), "".into());
+            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
         for name in ugroup_.iter() {
             println!("{}", name);
         }
@@ -696,11 +682,8 @@ mod test {
 
     #[test]
     fn o_group_iter_usize() {
-        let ogroup_: GroupO<usize> = GroupO::new(
-            "P1".into(),
-            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-            "".into(),
-        );
+        let ogroup_: GroupO<usize> =
+            GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(), b"");
         for (name, orientation) in ogroup_.iter() {
             println!("{}{}", name, orientation);
         }
@@ -708,8 +691,7 @@ mod test {
 
     #[test]
     fn u_group_iter_usize() {
-        let ugroup_: GroupU<usize> =
-            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), "".into());
+        let ugroup_: GroupU<usize> = GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
         for name in ugroup_.iter() {
             println!("{}", name);
         }

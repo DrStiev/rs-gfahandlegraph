@@ -464,7 +464,7 @@ fn modify_path() {
 }
 */
 fn can_create_graph_from_gfa2_file() {
-    let parser: Parser<usize> = Parser::new();
+    let parser: Parser = Parser::new();
     match parser
         .parse_file_to_graph("D:\\GitHub\\rs-gfahandlegraph\\tests\\gfa2_files\\spec_q7.gfa2")
     {

@@ -41,8 +41,8 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
 
     // default header
     let header = Header {
-        version: Some("VN:Z:2.0".into()),
-        tag: "".into(),
+        version: "VN:Z:2.0".into(),
+        tag: BString::from(""),
     };
     file.headers.push(header);
 
@@ -57,7 +57,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
             id: seq_id,
             len,
             sequence,
-            tag: "".into(),
+            tag: BString::from(""),
         };
         file.segments.push(segment);
     }
@@ -93,7 +93,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
             beg2: "0".into(),  // placeholder value
             end2: "0$".into(), // placeholder value
             alignment: "0M".into(),
-            tag: "".into(),
+            tag: BString::from(""),
         };
         file.edges.push(edge);
     }
@@ -120,8 +120,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
 
         // remove the last whitespace " "
         segment_names.pop();
-        let ogroup: GroupO<BString> =
-            GroupO::new(path_name, BString::from(segment_names), "".into());
+        let ogroup: GroupO<BString> = GroupO::new(path_name, BString::from(segment_names), b"");
         file.groups_o.push(ogroup);
     }
 
@@ -162,8 +161,8 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
 
     // default header
     let header = Header1 {
-        version: Some("VN:Z:1.0".into()),
-        optional: "".into(),
+        version: "VN:Z:1.0".into(),
+        optional: BString::from(""),
     };
     gfa.headers.push(header);
 
@@ -176,7 +175,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
         let segment = Segment1 {
             name,
             sequence,
-            optional: "".into(),
+            optional: BString::from(""),
         };
         gfa.segments.push(segment);
     }
@@ -205,7 +204,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
             to_segment,
             to_orient,
             overlap,
-            optional: "".into(),
+            optional: BString::from(""),
         };
 
         gfa.links.push(link);
@@ -232,12 +231,8 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
         // remove the last comma "," otherwise it will produce an error
         // that could break everything (overflow and other bad stuff)
         segment_names.pop();
-        let path: Path<BString> = Path::new(
-            path_name,
-            BString::from(segment_names),
-            "0M".into(),
-            "".into(),
-        );
+        let path: Path<BString> =
+            Path::new(path_name, BString::from(segment_names), "0M".into(), b"");
 
         gfa.paths.push(path);
     }
@@ -252,7 +247,7 @@ mod test {
 
     #[test]
     fn can_convert_graph_to_gfa() {
-        let parser: Parser<usize> = Parser::new();
+        let parser: Parser = Parser::new();
         match parser.parse_file_to_graph("./tests/gfa1_files/lil.gfa") {
             Ok(g) => {
                 g.print_graph();
@@ -266,7 +261,7 @@ mod test {
 
     #[test]
     fn can_convert_graph_to_gfa2() {
-        let parser: Parser<usize> = Parser::new();
+        let parser: Parser = Parser::new();
         match parser.parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
             Ok(g) => {
                 g.print_graph();

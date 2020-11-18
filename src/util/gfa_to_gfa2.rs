@@ -22,7 +22,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
             "H" => {
                 // default header
                 // ignore tag fields
-                gfa2.headers = vec![Header::new(Some("VN:Z:2.0".into()))];
+                gfa2.headers = vec![Header::new(b"VN:Z:2.0", b"")];
             }
             "S" => {
                 let id = BString::from(line_split.next().unwrap());
@@ -30,20 +30,20 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                 let len = BString::from(sequence.len().to_string());
 
                 let mut tag = line_split.next();
-                let mut opt_fields = vec![];
-                while !tag.is_none() {
+                let mut opt_fields: Vec<&[u8]> = vec![];
+                while tag.is_some() {
                     opt_fields.push(tag.unwrap().as_bytes());
                     tag = line_split.next();
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(|x| BString::from(x))
+                    .map(BString::from)
                     .collect::<BString>();
 
                 let segment = Segment {
-                    id: id,
-                    len: len,
-                    sequence: sequence,
+                    id,
+                    len,
+                    sequence,
                     tag,
                 };
                 gfa2.segments.push(segment);
@@ -66,25 +66,25 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                 let alignment = BString::from(line_split.next().unwrap());
 
                 let mut tag = line_split.next();
-                let mut opt_fields = vec![];
-                while !tag.is_none() {
+                let mut opt_fields: Vec<&[u8]> = vec![];
+                while tag.is_some() {
                     opt_fields.push(tag.unwrap().as_bytes());
                     tag = line_split.next();
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(|x| BString::from(x))
+                    .map(BString::from)
                     .collect::<BString>();
 
                 let edge = Edge {
-                    id: id,
+                    id,
                     sid1: BString::from(format!("{}{}", from_node, from_node_orient)),
                     sid2: BString::from(format!("{}{}", to_node, to_node_orient)),
-                    beg1: beg1,
-                    end1: end1,
-                    beg2: beg2,
-                    end2: end2,
-                    alignment: alignment,
+                    beg1,
+                    end1,
+                    beg2,
+                    end2,
+                    alignment,
                     tag,
                 };
                 gfa2.edges.push(edge);
@@ -98,17 +98,17 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                 let res = BString::from(str::replace(seg_ids, ",", " "));
 
                 let mut tag = line_split.next();
-                let mut opt_fields = vec![];
-                while !tag.is_none() {
+                let mut opt_fields: Vec<&[u8]> = vec![];
+                while tag.is_some() {
                     opt_fields.push(tag.unwrap().as_bytes());
                     tag = line_split.next();
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(|x| BString::from(x))
+                    .map(BString::from)
                     .collect::<BString>();
 
-                let ogroup = GroupO::new(id, res, tag);
+                let ogroup = GroupO::new(id, res, &tag);
                 gfa2.groups_o.push(ogroup);
             }
             // ignore all the other lines (typically comment-lines)

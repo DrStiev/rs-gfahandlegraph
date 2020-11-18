@@ -91,7 +91,7 @@ mod tests {
         Convert GFAObject to JSONObject: Duration { seconds: 67, nanoseconds: 927467900 }
         */
         let start = Instant::now();
-        let parser: Parser<usize> = Parser::new();
+        let parser: Parser = Parser::new();
         let mut gfa2: GFA2<BString> = GFA2::new();
         match parser.parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa2") {
             Ok(g) => {

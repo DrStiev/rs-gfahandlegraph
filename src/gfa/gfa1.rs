@@ -13,19 +13,19 @@ use std::fmt;
 /// ```ignore
 /// let gfa: GFA<BString> = GFA {
 ///     headers: vec![
-///         Header::new(Some("VN:Z:1.0".into())),
+///         Header::new("VN:Z:1.0".into(), b""),
 ///     ],
 ///     segments: vec![
-///         Segment::new(b"A", b"AAAAAAACGT"),
+///         Segment::new(b"A", b"AAAAAAACGT", b""),
 ///     ],
 ///     links: vec![
-///         Link::new(b"15", Orientation::Backward, b"10", Orientation::Forward, b"4M"),
+///         Link::new(b"15", Orientation::Backward, b"10", Orientation::Forward, b"4M", b""),
 ///     ],
 ///     containments: vec![
-///         Containmnet::new(b"1", Orientation::Backward, b"2", Orientation::Forward, b"110", b"100M"),
+///         Containmnet::new(b"1", Orientation::Backward, b"2", Orientation::Forward, b"110", b"100M", b""),
 ///     ],
 ///     paths: vec![
-///         Path::new(b"14", b"11+,12-,13+", vec![b"4M", b"5M"]),
+///         Path::new(b"14", b"11+,12-,13+", vec![b"4M", b"5M"], b""),
 ///     ],
 /// };
 /// ```
@@ -177,41 +177,28 @@ impl<N: SegmentId> GFA<N> {
 /// ```ignore
 /// let header = "VN:Z:1.0";
 /// let header_ = Header {
-///     version: Some("VN:Z:1.0".into()),
-///     optional: "".into(),
+///     version: "VN:Z:1.0".into(),
+///     optional: b"",
 /// };
 /// ```
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Header {
-    pub version: Option<BString>,
+    pub version: BString,
     pub optional: BString,
 }
 
-impl Default for Header {
-    fn default() -> Self {
-        Header {
-            version: Some("1.0".into()),
-            optional: Default::default(),
-        }
-    }
-}
-
 impl Header {
-    pub fn new(version: Option<BString>) -> Self {
+    pub fn new(version: &[u8], optional: &[u8]) -> Self {
         Header {
-            version,
-            optional: Default::default(),
+            version: version.into(),
+            optional: optional.into(),
         }
     }
 }
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if let Some(v) = &self.version {
-            write!(f, "H\t{}\t{}", v, self.optional.as_bstr().to_string(),)
-        } else {
-            write!(f, "H\t{}", self.optional.as_bstr().to_string(),)
-        }
+        write!(f, "H\t{}\t{}", self.version, self.optional,)
     }
 }
 
@@ -224,7 +211,7 @@ impl fmt::Display for Header {
 /// let segment_: Segment<BString> = Segment {
 ///     name: "1".into(),
 ///     sequence: "AAAAAAACGT".into(),
-///     optional: "".into(),
+///     optional: b"",
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -235,11 +222,11 @@ pub struct Segment<N> {
 }
 
 impl Segment<BString> {
-    pub fn new(name: &[u8], sequence: &[u8]) -> Self {
+    pub fn new(name: &[u8], sequence: &[u8], optional: &[u8]) -> Self {
         Segment {
             name: BString::from(name),
             sequence: BString::from(sequence),
-            optional: Default::default(),
+            optional: optional.into(),
         }
     }
 }
@@ -251,7 +238,9 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
             "S\t{}\t{}\t{}",
             self.name,
             self.sequence.as_bstr(),
-            self.optional.as_bstr().to_string(),
+            self.optional
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }
@@ -267,7 +256,7 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
 ///     to_segment: "10".into(),
 ///     to_orient: Orientation::Forward,
 ///     overlap: 20M
-///     optional:"".into(),
+///     optional: b"",
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -287,6 +276,7 @@ impl Link<BString> {
         to_segment: &[u8],
         to_orient: Orientation,
         overlap: &[u8],
+        optional: &[u8],
     ) -> Link<BString> {
         Link {
             from_segment: from_segment.into(),
@@ -294,7 +284,7 @@ impl Link<BString> {
             to_segment: to_segment.into(),
             to_orient,
             overlap: overlap.into(),
-            optional: Default::default(),
+            optional: optional.into(),
         }
     }
 }
@@ -309,7 +299,7 @@ impl<N: SegmentId> fmt::Display for Link<N> {
             self.to_segment,
             self.to_orient,
             self.overlap,
-            self.optional.as_bstr().to_string(),
+            self.optional,
         )
     }
 }
@@ -326,7 +316,7 @@ impl<N: SegmentId> fmt::Display for Link<N> {
 ///     contained_orient: Orientation::Forward,
 ///     pos: 4
 ///     overlap: 20M
-///     optional: "".into(),
+///     optional: b"",
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -340,6 +330,28 @@ pub struct Containment<N> {
     pub optional: BString,
 }
 
+impl Containment<BString> {
+    fn new(
+        container_name: &[u8],
+        container_orient: Orientation,
+        contained_name: &[u8],
+        contained_orient: Orientation,
+        pos: usize,
+        overlap: &[u8],
+        optional: &[u8],
+    ) -> Containment<BString> {
+        Containment {
+            container_name: container_name.into(),
+            container_orient,
+            contained_name: contained_name.into(),
+            contained_orient,
+            pos,
+            overlap: overlap.into(),
+            optional: optional.into(),
+        }
+    }
+}
+
 impl<N: SegmentId> fmt::Display for Containment<N> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -351,7 +363,7 @@ impl<N: SegmentId> fmt::Display for Containment<N> {
             self.contained_orient,
             self.pos,
             self.overlap,
-            self.optional.as_bstr().to_string(),
+            self.optional,
         )
     }
 }
@@ -367,7 +379,7 @@ impl<N: SegmentId> fmt::Display for Containment<N> {
 ///     "14".into(),
 ///     "11+,12-,13+".into(),
 ///     "4M,5M".into(),
-///     "".into(),
+///     b"",
 /// );
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
@@ -384,13 +396,13 @@ impl<N: SegmentId> Path<N> {
         path_name: BString,
         segment_names: BString,
         overlaps: BString,
-        optional: BString,
+        optional: &[u8],
     ) -> Self {
         Path {
             path_name,
             segment_names,
             overlaps,
-            optional,
+            optional: optional.into(),
             _segment_names: std::marker::PhantomData,
         }
     }
@@ -451,7 +463,9 @@ impl<N: SegmentId> fmt::Display for Path<N> {
             self.path_name,
             self.segment_names.as_bstr().to_string(),
             self.overlaps.as_bstr().to_string(),
-            self.optional.as_bstr().to_string(),
+            self.optional
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
         )
     }
 }

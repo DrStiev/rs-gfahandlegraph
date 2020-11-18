@@ -24,7 +24,7 @@ where
 }
 
 /// function that parses the version of the header tag
-/// ```<header> <- {VN:Z:2.0} <- ([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[0-9]+\.?[0-9]+)?```
+/// ```<header> <- {VN:Z:1.0}  <- ([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[0-9]+\.[0-9]+)?```
 fn parse_header_tag<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
@@ -43,7 +43,7 @@ where
 
 /// function that parses the tag element
 /// ```<tag> <- [A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*```
-fn parse_tag<I>(input: &mut I) -> Option<BString>
+fn parse_tag<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
@@ -53,8 +53,10 @@ where
             Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*").unwrap();
     }
 
-    RE.find(input.next()?.as_ref())
+    let next = next_field(input)?;
+    RE.find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
+        .ok_or(ParseFieldError::InvalidField("Tag"))
 }
 
 impl Header {
@@ -69,8 +71,8 @@ impl Header {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let version = Some(parse_header_tag(&mut input)?);
-        let optional = parse_tag(&mut input).unwrap_or_else(|| BString::from(""));
+        let version = parse_header_tag(&mut input)?;
+        let optional: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
 
         Ok(Header { version, optional })
     }
@@ -122,7 +124,8 @@ impl<N: SegmentId> Segment<N> {
     {
         let name = N::parse_next(&mut input, IdType::ID())?;
         let sequence = parse_sequence(&mut input)?;
-        let optional = parse_tag(&mut input).unwrap_or_else(|| BString::from(""));
+        let optional: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
+
         Ok(Segment {
             name,
             sequence,
@@ -148,7 +151,7 @@ impl<N: SegmentId> Link<N> {
         let to_segment = N::parse_next(&mut input, IdType::ID())?;
         let to_orient = parse_orientation(&mut input)?;
         let overlap = parse_overlap(&mut input)?;
-        let optional = parse_tag(&mut input).unwrap_or_else(|| BString::from(""));
+        let optional: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
 
         Ok(Link {
             from_segment,
@@ -180,7 +183,7 @@ impl<N: SegmentId> Containment<N> {
         let pos = next_field(&mut input)?;
         let pos = pos.as_ref().to_str()?.parse()?;
         let overlap = parse_overlap(&mut input)?;
-        let optional = parse_tag(&mut input).unwrap_or_else(|| BString::from(""));
+        let optional: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
 
         Ok(Containment {
             container_name,
@@ -247,9 +250,9 @@ impl<N: SegmentId> Path<N> {
         let path_name = BString::parse_next(&mut input, IdType::ID())?;
         let segment_names = parse_segment_names(&mut input)?;
         let overlaps = parse_path_overlap(&mut input)?;
-        let optional = parse_tag(&mut input).unwrap_or_else(|| BString::from(""));
+        let optional: BString = parse_tag(&mut input).unwrap_or_else(|_| BString::from(""));
 
-        Ok(Path::new(path_name, segment_names, overlaps, optional))
+        Ok(Path::new(path_name, segment_names, overlaps, &optional))
     }
 }
 
@@ -261,11 +264,12 @@ mod tests {
     fn blank_header() {
         let header = "";
         let header_ = Header {
-            version: Some("".into()),
-            optional: "".into(),
+            version: "".into(),
+            optional: BString::from(""),
         };
 
-        let result: ParserFieldResult<Header> = Header::parse_line([header].iter());
+        let fields = header.split_terminator('\t');
+        let result = Header::parse_line(fields);
 
         match result {
             Err(why) => println!("Error: {}", why),
@@ -277,11 +281,12 @@ mod tests {
     fn can_parse_header() {
         let header = "VN:Z:1.0";
         let header_ = Header {
-            version: Some("VN:Z:1.0".into()),
-            optional: "".into(),
+            version: "VN:Z:1.0".into(),
+            optional: BString::from(""),
         };
 
-        let result: ParserFieldResult<Header> = Header::parse_line([header].iter());
+        let fields = header.split_terminator('\t');
+        let result = Header::parse_line(fields);
 
         match result {
             Err(why) => println!("Error: {}", why),
@@ -295,7 +300,7 @@ mod tests {
         let segment_: Segment<BString> = Segment {
             name: "A".into(),
             sequence: "AAAAAAACGT".into(),
-            optional: "".into(),
+            optional: BString::from(""),
         };
 
         let fields = segment.split_terminator('\t');
@@ -316,7 +321,7 @@ mod tests {
             to_segment: "10".into(),
             to_orient: Orientation::Forward,
             overlap: "20M".into(),
-            optional: "".into(),
+            optional: BString::from(""),
         };
 
         let fields = link.split_terminator('\t');
@@ -338,7 +343,7 @@ mod tests {
             contained_orient: Orientation::Forward,
             pos: 4,
             overlap: "20M".into(),
-            optional: "".into(),
+            optional: BString::from(""),
         };
 
         let fields = containment.split_terminator('\t');
@@ -354,7 +359,7 @@ mod tests {
     fn can_parse_path() {
         let path = "14\t11+,12-,13+\t4M,5M";
         let path_: Path<BString> =
-            Path::new("14".into(), "11+,12-,13+".into(), "4M,5M".into(), "".into());
+            Path::new("14".into(), "11+,12-,13+".into(), "4M,5M".into(), b"");
 
         let fields = path.split_terminator('\t');
         let result = Path::parse_line(fields);
@@ -419,42 +424,6 @@ mod tests {
                     u
                 );
                 println!("{}", u);
-            }
-        }
-    }
-
-    #[test]
-    fn can_parse_single_tag() {
-        let tag = vec!["aa:Z:test"];
-        let result = parse_tag(&mut tag.iter());
-
-        match result {
-            None => (),
-            Some(t) => {
-                assert_eq!(
-                    tag.iter()
-                        .fold(String::new(), |acc, str| acc + &str.to_string()),
-                    t
-                );
-                println!("{}", t);
-            }
-        }
-    }
-
-    #[test]
-    fn can_parse_multiple_tag() {
-        let tag = vec!["aa:Z:test   hr:i:2020"];
-        let result = parse_tag(&mut tag.iter());
-
-        match result {
-            None => (),
-            Some(t) => {
-                assert_eq!(
-                    tag.iter()
-                        .fold(String::new(), |acc, str| acc + &str.to_string()),
-                    t
-                );
-                println!("{}", t);
             }
         }
     }
