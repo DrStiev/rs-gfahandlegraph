@@ -98,7 +98,7 @@ fn clear_big_graph() {
 #[test]
 fn create_medium_graph() {
     /*
-    Create graph from file: Duration { seconds: 0, nanoseconds: 899551800 }
+    Create graph from file: Duration { seconds: 0, nanoseconds: 930659400 }
     */
     let _g = read_medium_gfa1();
     /* nodes: 4058     edges: 9498     paths: 7
@@ -109,7 +109,7 @@ fn create_medium_graph() {
     */
 
     /*
-    Create graph from file: Duration { seconds: 1, nanoseconds: 183353500 }
+    Create graph from file: Duration { seconds: 1, nanoseconds: 231729800 }
     */
     let _g = read_medium_gfa2();
     /* nodes: 4058     edges: 9498     paths: 7
@@ -123,10 +123,10 @@ fn create_medium_graph() {
 #[test]
 fn mod_graph_from_medium_gfa1() {
     /*
-    Create graph from file: Duration { seconds: 0, nanoseconds: 907766600 }
+    Create graph from file: Duration { seconds: 0, nanoseconds: 946242800 }
     BOTTLENECK
-    remove 1000 nodes from graph: Duration { seconds: 14, nanoseconds: 714623900 }
-    remove 1000 edges: Duration { seconds: 17, nanoseconds: 898898400 }
+    remove 1000 nodes from graph: Duration { seconds: 8, nanoseconds: 615194600 }
+    remove 1000 edges: Duration { seconds: 6, nanoseconds: 309604800 }
     */
     let mut graph = read_medium_gfa1();
 
@@ -176,10 +176,10 @@ fn mod_graph_from_medium_gfa1() {
 #[test]
 fn mod_graph_from_medium_gfa2() {
     /*
-    Create graph from file: Duration { seconds: 1, nanoseconds: 215002900 }
+    Create graph from file: Duration { seconds: 1, nanoseconds: 254874500 }
     BOTTLENECK
-    remove 1000 nodes from graph: Duration { seconds: 14, nanoseconds: 951911600 }
-    remove 1000 edges: Duration { seconds: 18, nanoseconds: 238189600 }
+    remove 1000 nodes from graph: Duration { seconds: 8, nanoseconds: 797610700 }
+    remove 1000 edges: Duration { seconds: 6, nanoseconds: 323585100 }
     */
     let mut graph = read_medium_gfa2();
 
@@ -262,7 +262,7 @@ fn create_big_graph() {
 #[ignore]
 fn big_mod_graph_from_big_gfa1() {
     /*
-    I've tried to make some maths about this and it' will take too much time
+    I tried to make some maths about this and it' will take too much time
     */
     let mut graph = read_big_gfa1();
 
@@ -306,23 +306,30 @@ fn big_mod_graph_from_big_gfa1() {
         };
     }
     println!("add 10000 paths: {:?}", start.elapsed());
+
+    let start = Instant::now();
+    for i in 1..10_001 {
+        if i > 1 {
+            let left = Handle::new(42_000 + i - 1, Orientation::Forward);
+            let right = Handle::new(42_000 + i, Orientation::Forward);
+            let edge = Edge(left, right);
+            match graph.remove_edge(edge) {
+                Ok(_) => (),
+                Err(why) => println!("Error: {}", why),
+            };
+        }
+    }
+    println!("remove 10000 edges: {:?}", start.elapsed());
 }
 
 #[test]
 #[ignore]
 fn mod_graph_from_big_gfa1() {
-    // TODO: the removing nodes part it's a bottleneck, and should be handled
     /*
-    Create graph from file: Duration { seconds: 465, nanoseconds: 274089600 }
-    remove 10 nodes from graph: Duration { seconds: 67, nanoseconds: 201734900 } <- bottleneck
-    add 10 nodes and edges: Duration { seconds: 0, nanoseconds: 69200 }
-    add 10 paths: Duration { seconds: 0, nanoseconds: 34400 }
-    */
-    /*
-    Create graph from file: Duration { seconds: 453, nanoseconds: 919712300 }
-    remove 100 nodes from graph: Duration { seconds: 765, nanoseconds: 543770500 }
-    add 100 nodes and edges: Duration { seconds: 0, nanoseconds: 379600 }
-    add 100 paths: Duration { seconds: 0, nanoseconds: 207200 }
+    Create graph from file: Duration { seconds: 500, nanoseconds: 658882600 }
+    remove 100 nodes from graph: Duration { seconds: 410, nanoseconds: 65483800 }
+    add 100 nodes and edges: Duration { seconds: 0, nanoseconds: 347800 }
+    add 100 paths: Duration { seconds: 0, nanoseconds: 219300 }
     */
     let mut graph = read_big_gfa1();
 
@@ -366,6 +373,20 @@ fn mod_graph_from_big_gfa1() {
         };
     }
     println!("add 100 paths: {:?}", start.elapsed());
+
+    let start = Instant::now();
+    for i in 1..101 {
+        if i > 1 {
+            let left = Handle::new(42_000 + i - 1, Orientation::Forward);
+            let right = Handle::new(42_000 + i, Orientation::Forward);
+            let edge = Edge(left, right);
+            match graph.remove_edge(edge) {
+                Ok(_) => (),
+                Err(why) => println!("Error: {}", why),
+            };
+        }
+    }
+    println!("remove 100 edges: {:?}", start.elapsed());
 }
 
 #[test]

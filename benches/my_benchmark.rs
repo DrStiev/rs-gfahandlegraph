@@ -98,41 +98,40 @@ fn criterion_benchmark(c: &mut Criterion) {
 
 fn criterion_benchmark(c: &mut Criterion) {
     /*
-    Benchmarking CREATE GRAPH FROM MID GFA: Collecting 100 samples in estimated 9.6666 s (1
-                                  CREATE GRAPH FROM MID GFA
-                        time:   [95.559 ms 95.726 ms 95.907 ms]
-                        change: [+0.0109% +0.2479% +0.4906%] (p = 0.04 < 0.05)
-                        Change within noise threshold.
-    Found 5 outliers among 100 measurements (5.00%)
-    4 (4.00%) high mild
-    1 (1.00%) high severe
+    Benchmarking CREATE GRAPH FROM MID GFA: Collecting 100 samples in estimated 9.8362 s 
+                                CREATE GRAPH FROM MID GFA
+                        time:   [97.870 ms 98.045 ms 98.220 ms]
+                        change: [-11.018% -10.774% -10.524%] (p = 0.00 < 0.05)       
+                        Performance has improved.
+    Found 1 outliers among 100 measurements (1.00%)
+    1 (1.00%) low mild
     */
     c.bench_function("CREATE GRAPH FROM MID GFA", |b| {
         b.iter(|| create_graph_from_medium_gfa1())
     });
 
     /* This benchmark is the one that fluctuate the most, but IDKW
-    Benchmarking CREATE GRAPH FROM MID GFA2: Collecting 100 samples in estimated 11.104 s (
-                                  CREATE GRAPH FROM MID GFA2
-                        time:   [110.54 ms 110.66 ms 110.79 ms]
-                        change: [-2.8624% -2.5726% -2.3005%] (p = 0.00 < 0.05)
-                        Performance has improved.
-    Found 7 outliers among 100 measurements (7.00%)
-    4 (4.00%) high mild
-    3 (3.00%) high severe
+    Benchmarking CREATE GRAPH FROM MID GFA2: Collecting 100 samples in estimated 12.888 s
+                                CREATE GRAPH FROM MID GFA2
+                        time:   [122.13 ms 122.35 ms 122.56 ms]
+                        change: [+0.1383% +0.4733% +0.8052%] (p = 0.01 < 0.05)       
+                        Change within noise threshold.
+    Found 9 outliers among 100 measurements (9.00%)
+    4 (4.00%) low mild
+    5 (5.00%) high mild
     */
     c.bench_function("CREATE GRAPH FROM MID GFA2", |b| {
         b.iter(|| create_graph_from_medium_gfa2())
     });
 
     /*
-    Benchmarking MODIFY GRAPH FROM MID GFA2: Collecting 100 samples in estimated 180.3
-                                   MODIFY GRAPH FROM MID GFA2
-                            time:   [1.7874 s 1.7912 s 1.7951 s]
-                            change: [-2.6764% -2.3334% -2.0093%] (p = 0.00 < 0.05)
-                            Performance has improved.
-    Found 1 outliers among 100 measurements (1.00%)
-    1 (1.00%) high mild
+    Benchmarking MODIFY GRAPH FROM MID GFA2: Collecting 100 samples in estimated 102.70 s
+                                MODIFY GRAPH FROM MID GFA2
+                        time:   [1.0215 s 1.0237 s 1.0261 s]
+                        change: [-2.2096% -1.3387% -0.6630%] (p = 0.00 < 0.05)       
+                        Change within noise threshold.
+    Found 3 outliers among 100 measurements (3.00%)
+    3 (3.00%) high mild
     */
     c.bench_function("MODIFY GRAPH FROM MID GFA2", |b| {
         b.iter(|| mod_graph_from_medium_gfa2())
