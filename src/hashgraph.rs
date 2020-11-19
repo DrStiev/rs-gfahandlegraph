@@ -69,7 +69,6 @@ impl<'a> HandleNeighbors for &'a HashGraph {
             (Direction::Right, true) => &node.left_edges,
             (Direction::Right, false) => &node.right_edges,
         };
-
         NeighborIter::new(handles.iter(), dir == Direction::Left)
     }
 
@@ -207,20 +206,22 @@ impl SubtractiveHandleGraph for HashGraph {
     // FIXME: BOTTLENECK
     fn remove_handle<T: Into<NodeId>>(&mut self, node: T) -> Result<bool, GraphError> {
         let node_id: NodeId = node.into();
-        if self.graph.get(&node_id).is_some() {
-            self.graph.remove(&node_id);
+        if self.graph.remove(&node_id).is_some() {
+            let new_self = self.clone();
             // delete all the occurrencies in the edge list of node.id()
-            for handle in self.clone().graph.keys() {
-                let graph = self.graph.get_mut(&handle).unwrap();
+            for handle in new_self.all_handles() {
+                let graph = self.graph.get_mut(&handle.id()).unwrap();
                 graph.left_edges.retain(|x| x.id() != node_id);
                 graph.right_edges.retain(|x| x.id() != node_id);
             }
-            for path in self.clone().paths_iter() {
+
+            for path in new_self.paths_iter() {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;
                 if nodes.iter().any(|x| x.id() == node_id) {
                     self.paths.remove(&path);
                 }
             }
+
             Ok(true)
         } else {
             Err(GraphError::NodeNotExist(node_id.to_string()))
@@ -230,66 +231,62 @@ impl SubtractiveHandleGraph for HashGraph {
     // FIXME: BOTTLENECK
     fn remove_edge(&mut self, edge: Edge) -> Result<bool, GraphError> {
         // delete all the occurrencies of edge found in graph
-        let Edge(left, right) = edge;
-        if self.has_edge(left, right) {
-            for e in self.clone().all_edges() {
-                let Edge(l, r) = e;
-                if e == edge {
-                    if l.is_reverse() && r.is_reverse() {
-                        //print!("--");
-                        self.graph
-                            .get_mut(&l.id())
-                            .unwrap()
-                            .left_edges
-                            .retain(|x| x != &r);
-                        self.graph
-                            .get_mut(&r.id())
-                            .unwrap()
-                            .right_edges
-                            .retain(|x| x != &l);
-                    } else if l.is_reverse() && !r.is_reverse() {
-                        //print!("-+");
-                        self.graph
-                            .get_mut(&l.id())
-                            .unwrap()
-                            .left_edges
-                            .retain(|x| x != &r);
-                        self.graph
-                            .get_mut(&r.id())
-                            .unwrap()
-                            .left_edges
-                            .retain(|x| x != &l);
-                    } else if !l.is_reverse() && r.is_reverse() {
-                        //print!("+-");
-                        self.graph
-                            .get_mut(&l.id())
-                            .unwrap()
-                            .right_edges
-                            .retain(|x| x != &r);
-                        self.graph
-                            .get_mut(&r.id())
-                            .unwrap()
-                            .right_edges
-                            .retain(|x| x != &l);
-                    } else {
-                        //print!("++");
-                        self.graph
-                            .get_mut(&l.id())
-                            .unwrap()
-                            .right_edges
-                            .retain(|x| x != &r);
-                        self.graph
-                            .get_mut(&r.id())
-                            .unwrap()
-                            .left_edges
-                            .retain(|x| x != &l);
-                    }
-                }
+        let Edge(l, r) = edge;
+        if self.has_edge(l, r) {
+            if l.is_reverse() && r.is_reverse() {
+                //print!("--");
+                self.graph
+                    .get_mut(&l.id())
+                    .unwrap()
+                    .left_edges
+                    .retain(|x| x != &r);
+                self.graph
+                    .get_mut(&r.id())
+                    .unwrap()
+                    .right_edges
+                    .retain(|x| x != &l);
+            } else if l.is_reverse() && !r.is_reverse() {
+                //print!("-+");
+                self.graph
+                    .get_mut(&l.id())
+                    .unwrap()
+                    .left_edges
+                    .retain(|x| x != &r);
+                self.graph
+                    .get_mut(&r.id())
+                    .unwrap()
+                    .left_edges
+                    .retain(|x| x != &l);
+            } else if !l.is_reverse() && r.is_reverse() {
+                //print!("+-");
+                self.graph
+                    .get_mut(&l.id())
+                    .unwrap()
+                    .right_edges
+                    .retain(|x| x != &r);
+                self.graph
+                    .get_mut(&r.id())
+                    .unwrap()
+                    .right_edges
+                    .retain(|x| x != &l);
+            } else {
+                //print!("++");
+                self.graph
+                    .get_mut(&l.id())
+                    .unwrap()
+                    .right_edges
+                    .retain(|x| x != &r);
+                self.graph
+                    .get_mut(&r.id())
+                    .unwrap()
+                    .left_edges
+                    .retain(|x| x != &l);
             }
+
             for path in self.clone().paths_iter() {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;
-                if let Some(l) = nodes.iter().position(|x| x.id() == left.id()) {
-                    if let Some(r) = nodes.iter().position(|x| x.id() == right.id()) {
+                if let Some(l) = nodes.iter().position(|x| x.id() == l.id()) {
+                    if let Some(r) = nodes.iter().position(|x| x.id() == r.id()) {
                         let lr = l + 1;
                         if lr == r {
                             self.paths.remove(&path);
@@ -300,8 +297,8 @@ impl SubtractiveHandleGraph for HashGraph {
             Ok(true)
         } else {
             Err(GraphError::EdgeNotExist(
-                left.id().to_string(),
-                right.id().to_string(),
+                l.id().to_string(),
+                r.id().to_string(),
             ))
         }
     }
@@ -508,6 +505,7 @@ impl MutableHandleGraph for HashGraph {
             node.left_edges
                 .iter()
                 .chain(node.right_edges.iter())
+                //.map(|(&x, &y)| (x, y))
                 .copied()
                 .collect::<Vec<_>>()
         };
@@ -675,11 +673,10 @@ impl PathHandleGraph for HashGraph {
         if self.has_path(name) {
             let path_handle = self.name_to_path_handle(name).unwrap();
             let node = node.into();
-            let p: &mut Path = match self.paths.get_mut(&path_handle) {
-                Some(p) => p,
+            match self.paths.get_mut(&path_handle) {
+                Some(p) => p.nodes.retain(|x| x.id() != node),
                 None => return Err(GraphError::PathNotExist(path_handle.to_string())),
             };
-            p.nodes.retain(|x| x.id() != node);
             Ok(true)
         } else {
             Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
@@ -698,19 +695,19 @@ impl PathHandleGraph for HashGraph {
         if self.has_path(name) {
             let path_handle = self.name_to_path_handle(name).unwrap();
             let old_node = old_node.into();
-            let p: &mut Path = match self.paths.get_mut(&path_handle) {
-                Some(p) => p,
+            match self.paths.get_mut(&path_handle) {
+                Some(p) => {
+                    let path = p.nodes.clone();
+                    for (id, &handle) in path.iter().enumerate() {
+                        if handle.id() == old_node {
+                            p.nodes.remove(id);
+                            p.nodes.insert(id, new_node);
+                        }
+                    }
+                }
                 None => return Err(GraphError::PathNotExist(path_handle.to_string())),
             };
-            let path = p.nodes.clone();
-            let iter = path.iter().enumerate();
-            for i in iter {
-                let (id, &handle) = i;
-                if handle.id() == old_node {
-                    p.nodes.remove(id);
-                    p.nodes.insert(id, new_node);
-                }
-            }
+
             Ok(true)
         } else {
             Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
