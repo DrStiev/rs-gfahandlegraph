@@ -76,9 +76,9 @@ mod tests {
     #[ignore]
     fn convert_big_gfa_to_object() {
         /* convert BIG GFA files to JSON it's pretty much useless
-        Create graph from file: Duration { seconds: 485, nanoseconds: 486852300 }
-        Convert graph to GFAObject: Duration { seconds: 150, nanoseconds: 748793200 }
-        Convert GFAObject to JSONObject: Duration { seconds: 960, nanoseconds: 804706000 }
+        Create graph from file: Duration { seconds: 529, nanoseconds: 323089300 }
+        Convert graph to GFAObject: Duration { seconds: 150, nanoseconds: 838532100 }
+        Convert GFAObject to JSONObject: Duration { seconds: 956, nanoseconds: 302402100 }
         */
         let start = Instant::now();
         let parser: Parser = Parser::new();
@@ -103,10 +103,10 @@ mod tests {
 
     #[test]
     fn convert_medium_gfa_to_object() {
-        /* convert GFA to JSON sucks!
-        Create graph from file: Duration { seconds: 1, nanoseconds: 232650900 }
-        Convert graph to GFAObject: Duration { seconds: 0, nanoseconds: 191577100 }
-        Convert GFAObject to JSONObject: Duration { seconds: 0, nanoseconds: 258884800 }
+        /*
+        Create graph from file: Duration { seconds: 1, nanoseconds: 259415800 }
+        Convert graph to GFAObject: Duration { seconds: 0, nanoseconds: 207941200 }
+        Convert GFAObject to JSONObject: Duration { seconds: 0, nanoseconds: 258862200 }
         */
         let start = Instant::now();
         let parser: Parser = Parser::new();

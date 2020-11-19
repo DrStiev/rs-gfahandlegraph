@@ -37,7 +37,7 @@ use bstr::BString;
 /// */
 /// ```
 pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
-    let mut file: GFA2<BString> = GFA2::new();
+    let mut file: GFA2<BString> = GFA2::default();
 
     // default header
     let header = Header {
@@ -45,6 +45,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
         tag: BString::from(""),
     };
     file.headers.push(header);
+    //file.headers.insert(1, header);
 
     for handle in graph.all_handles()
     /*.progress_with(pb_seg)*/
@@ -60,6 +61,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
             tag: BString::from(""),
         };
         file.segments.push(segment);
+        //file.segments.insert(pos, segment);
     }
 
     let orient = |rev: bool| {
@@ -96,6 +98,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
             tag: BString::from(""),
         };
         file.edges.push(edge);
+        //file.edges.insert(pos, edge);
     }
 
     for path_id in graph.paths_iter()
@@ -122,8 +125,8 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
         segment_names.pop();
         let ogroup: GroupO<BString> = GroupO::new(path_name, BString::from(segment_names), b"");
         file.groups_o.push(ogroup);
+        //file.groups_o.insert(pos, ogroup);
     }
-
     file
 }
 
@@ -157,7 +160,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
 /// */
 /// ```
 pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
-    let mut gfa: GFA<BString> = GFA::new();
+    let mut gfa: GFA<BString> = GFA::default();
 
     // default header
     let header = Header1 {
@@ -165,6 +168,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
         optional: BString::from(""),
     };
     gfa.headers.push(header);
+    //gfa.headers.insert(1, header);
 
     for handle in graph.all_handles()
     /*.progress_with(pb_seg)*/
@@ -178,6 +182,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
             optional: BString::from(""),
         };
         gfa.segments.push(segment);
+        //gfa.segments.insert(pos, segment);
     }
 
     let orient = |rev: bool| {
@@ -206,8 +211,8 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
             overlap,
             optional: BString::from(""),
         };
-
         gfa.links.push(link);
+        //gfa.links.insert(pos, link);
     }
 
     for path_id in graph.paths_iter()
@@ -235,8 +240,8 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
             Path::new(path_name, BString::from(segment_names), "0M".into(), b"");
 
         gfa.paths.push(path);
+        //gfa.paths.insert(pos, path);
     }
-
     gfa
 }
 
@@ -245,7 +250,7 @@ mod test {
     use super::*;
     use crate::parser::Parser;
     use time::Instant;
-    
+
     #[test]
     fn can_convert_graph_to_gfa() {
         let parser: Parser = Parser::new();
@@ -262,14 +267,30 @@ mod test {
 
     #[test]
     fn can_convert_graph_to_gfa2() {
-        // Convert graph to GFA2: Duration { seconds: 0, nanoseconds: 193790400 }
+        // Convert graph to GFA2: Duration { seconds: 0, nanoseconds: 209741800 }
         let parser: Parser = Parser::new();
         match parser.parse_file_to_graph("./tests/big_files/test.gfa2") {
             Ok(g) => {
                 let start = Instant::now();
                 let mut _file: GFA2<BString> = GFA2::new();
                 _file = to_gfa2(&g);
-                println!("Convert graph to GFA2 {:?}", start.elapsed());
+                println!("Convert graph to GFA2: {:?}", start.elapsed());
+            }
+            Err(why) => println!("Error {}", why),
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn can_convert_big_graph_to_gfa() {
+        // Convert graph to GFA:
+        let parser: Parser = Parser::new();
+        match parser.parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa") {
+            Ok(g) => {
+                let start = Instant::now();
+                let mut _file: GFA<BString> = GFA::new();
+                _file = to_gfa(&g);
+                println!("Convert graph to GFA: {:?}", start.elapsed());
             }
             Err(why) => println!("Error {}", why),
         }
