@@ -35,8 +35,6 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                     version: tag,
                     tag: BString::from(""),
                 };
-                //gfa2.headers = vec![Header::new(b"VN:Z:2.0", b"")];
-                //gfa2.headers.insert(index, header);
                 gfa2.headers.push(header);
             }
             "S" => {
@@ -62,7 +60,6 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                     tag,
                 };
                 gfa2.segments.push(segment);
-                //gfa2.segments.insert(index, segment);
             }
             "L" => {
                 // placeholder value
@@ -81,12 +78,6 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                 let mut end2 = BString::from("0$");
 
                 if alignment != "*" {
-                    /* real values or should they
-                    (++) = 100-align 100$ 0 align
-                    (--) = 0 align 100-align 100$
-                    (-+) = 0 align 0 align
-                    (+-) = 100-align 100$ 100-align 100$
-                    */
                     let len = alignment.len() - 1;
                     let dist = alignment[..len].to_str().unwrap().parse::<i64>().unwrap();
 
@@ -135,7 +126,6 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                     tag,
                 };
                 gfa2.edges.push(edge);
-                //gfa2.edges.insert(index, edge);
             }
             "P" => {
                 let id = BString::from(line_split.next().unwrap());
@@ -155,7 +145,6 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
 
                 let ogroup = GroupO::new(id, res, &tag);
                 gfa2.groups_o.push(ogroup);
-                //gfa2.groups_o.insert(index, ogroup);
             }
             // ignore all the other lines (typically C- and comment-lines)
             _ => (),

@@ -8,8 +8,6 @@ use crate::gfa::{
 use bstr::BString;
 
 /// Function that takes a HashGraph object as input and return a GFA2 object
-/// This function is still ```Work In Progress``` so it's not perfect.\
-/// Sometimes can leads to unexpected bugs.
 /// # Example
 /// ```ignore
 /// let gfa_out: GFA2<BString> = to_gfa2(&graph);
@@ -45,10 +43,8 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
         tag: BString::from(""),
     };
     file.headers.push(header);
-    //file.headers.insert(1, header);
 
     for handle in graph.all_handles()
-    /*.progress_with(pb_seg)*/
     {
         let seq_id = BString::from(handle.id().to_string());
         let sequence: BString = graph.sequence_iter(handle.forward()).collect();
@@ -61,7 +57,6 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
             tag: BString::from(""),
         };
         file.segments.push(segment);
-        //file.segments.insert(pos, segment);
     }
 
     let orient = |rev: bool| {
@@ -73,7 +68,6 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
     };
 
     for edge in graph.all_edges()
-    /*.progress_with(pb_link)*/
     {
         let Edge(left, right) = edge;
 
@@ -98,11 +92,9 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
             tag: BString::from(""),
         };
         file.edges.push(edge);
-        //file.edges.insert(pos, edge);
     }
 
     for path_id in graph.paths_iter()
-    /*.progress_with(pb_path)*/
     {
         let path_name: BString = graph.path_handle_to_name(path_id).into();
         let mut segment_names: Vec<String> = Vec::new();
@@ -125,14 +117,11 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
         segment_names.pop();
         let ogroup: GroupO<BString> = GroupO::new(path_name, BString::from(segment_names), b"");
         file.groups_o.push(ogroup);
-        //file.groups_o.insert(pos, ogroup);
     }
     file
 }
 
 /// Function that takes a HashGraph object as input and return a GFA object
-/// This function is still so it's not perfect.\
-/// Sometimes can leads to unexpected bugs.
 /// # Example
 /// ```ignore
 /// let gfa_out: GFA<BString> = to_gfa(&graph);
@@ -162,16 +151,13 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
 pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
     let mut gfa: GFA<BString> = GFA::default();
 
-    // default header
     let header = Header1 {
         version: "VN:Z:1.0".into(),
         optional: BString::from(""),
     };
     gfa.headers.push(header);
-    //gfa.headers.insert(1, header);
 
     for handle in graph.all_handles()
-    /*.progress_with(pb_seg)*/
     {
         let name = BString::from(handle.id().to_string());
         let sequence: BString = graph.sequence_iter(handle.forward()).collect();
@@ -182,7 +168,6 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
             optional: BString::from(""),
         };
         gfa.segments.push(segment);
-        //gfa.segments.insert(pos, segment);
     }
 
     let orient = |rev: bool| {
@@ -194,7 +179,6 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
     };
 
     for edge in graph.all_edges()
-    /*.progress_with(pb_link)*/
     {
         let Edge(left, right) = edge;
         let from_segment: BString = BString::from(left.id().to_string());
@@ -212,11 +196,9 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
             optional: BString::from(""),
         };
         gfa.links.push(link);
-        //gfa.links.insert(pos, link);
     }
 
     for path_id in graph.paths_iter()
-    /*.progress_with(pb_path)*/
     {
         let path_name: BString = graph.path_handle_to_name(path_id).into();
         let mut segment_names: Vec<String> = Vec::new();
@@ -240,7 +222,6 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
             Path::new(path_name, BString::from(segment_names), "0M".into(), b"");
 
         gfa.paths.push(path);
-        //gfa.paths.insert(pos, path);
     }
     gfa
 }
