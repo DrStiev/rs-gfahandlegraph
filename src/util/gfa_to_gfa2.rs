@@ -22,9 +22,10 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
             "H" => {
                 let mut tag = line_split.next();
                 let mut opt_fields: Vec<&[u8]> = vec![];
+                let mut version: BString = BString::from("");
                 while tag.is_some() {
                     if tag.unwrap() == "VN:Z:1.0" {
-                        opt_fields.push(b"VN:Z:2.0");
+                        version = BString::from("VN:Z:2.0");
                     } else {
                         opt_fields.push(tag.unwrap().as_bytes());
                     }
@@ -36,8 +37,8 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                     .collect::<BString>();
 
                 let header = Header {
-                    version: tag,
-                    tag: BString::from(""),
+                    version,
+                    tag,
                 };
                 gfa2.headers.push(header);
             }
