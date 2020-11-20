@@ -74,7 +74,6 @@ impl HashGraph {
     ///     Err(why) => println!("{}", why),
     /// }
     /// ```
-    #[inline]
     pub fn create_graph(&self, file: FileType) -> Result<HashGraph, GraphError> {
         match file {
             FileType::GFA(x) => {

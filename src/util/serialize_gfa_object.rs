@@ -11,7 +11,6 @@ pub enum GFAType {
 }
 
 /// Function that convert a GFA object into a JSON file
-#[inline]
 pub fn to_json(gfa: GFAType) -> Result<String> {
     match gfa {
         GFAType::GFAUSIZE(g) => {
@@ -34,7 +33,6 @@ pub fn to_json(gfa: GFAType) -> Result<String> {
 }
 
 /// Function that convert a GFA object into a  BINCODE file
-#[inline]
 pub fn to_bincode(gfa: GFAType) -> Result<Vec<u8>> {
     match gfa {
         GFAType::GFAUSIZE(g) => {

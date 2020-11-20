@@ -28,7 +28,6 @@ pub enum ObjectType {
 /// save_on_file(ObjectType::JSON(json), Some(String::from("./tests/output_files/json_to_file.gfa")));
 /// save_on_file(ObjectType::BINCODE(bincode), Some(String::from("./tests/output_files/bincode_to_file.gfa")));
 /// ```
-#[inline]
 pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<()> {
     match file {
         ObjectType::JSON(x) => {
