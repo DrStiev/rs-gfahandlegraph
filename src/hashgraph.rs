@@ -203,19 +203,25 @@ impl ModdableHandleGraph for HashGraph {
 }
 
 impl SubtractiveHandleGraph for HashGraph {
-    // FIXME: BOTTLENECK
     fn remove_handle<T: Into<NodeId>>(&mut self, node: T) -> Result<bool, GraphError> {
         let node_id: NodeId = node.into();
-        if self.graph.remove(&node_id).is_some() {
-            let new_self = self.clone();
+        if let Some(node) = self.graph.remove(&node_id) {
+            let l = node.left_edges;
+            let r = node.right_edges;
+
             // delete all the occurrencies in the edge list of node.id()
-            for handle in new_self.all_handles() {
-                let graph = self.graph.get_mut(&handle.id()).unwrap();
-                graph.left_edges.retain(|x| x.id() != node_id);
-                graph.right_edges.retain(|x| x.id() != node_id);
+            for i in 0..l.len() {
+                if let Some(left) = self.graph.get_mut(&l[i].id()) {
+                    left.right_edges.retain(|x| x.id() != node_id);
+                }
+            }
+            for i in 0..r.len() {
+                if let Some(right) = self.graph.get_mut(&r[i].id()) {
+                    right.left_edges.retain(|x| x.id() != node_id);
+                }
             }
 
-            for path in new_self.paths_iter() {
+            for path in self.clone().paths_iter() {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;
                 if nodes.iter().any(|x| x.id() == node_id) {
                     self.paths.remove(&path);
@@ -228,7 +234,6 @@ impl SubtractiveHandleGraph for HashGraph {
         }
     }
 
-    // FIXME: BOTTLENECK
     fn remove_edge(&mut self, edge: Edge) -> Result<bool, GraphError> {
         // delete all the occurrencies of edge found in graph
         let Edge(l, r) = edge;
