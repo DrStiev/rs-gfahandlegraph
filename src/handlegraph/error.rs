@@ -9,6 +9,7 @@ pub enum GraphError {
     EmptySequence,
     NodeNotExist(String),
     EdgeNotExist(String, String),
+    EdgeAlreadyExist(String, String),
     PathNotExist(String),
     OrientationNotExists(String),
     PositionNotFound(String, String),
@@ -23,6 +24,7 @@ impl fmt::Display for GraphError {
             GE::EmptySequence => write!(f, "Empty sequence"),
             GE::NodeNotExist(node) => write!(f, "Cannot find the node: {}", node),
             GE::EdgeNotExist(l, r) => write!(f, "The Edge ({} -> {}) did not exist", l, r),
+            GE::EdgeAlreadyExist(l, r) => write!(f, "The Edge ({} -> {}) already exists", l, r),
             GE::PathNotExist(path) => write!(f, "The Path ({}) did not exist", path),
             GE::PositionNotFound(pos_list, lr) => {
                 write!(f, "Not found node {} in {} list", pos_list, lr)
