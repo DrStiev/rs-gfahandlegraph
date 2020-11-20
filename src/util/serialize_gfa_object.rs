@@ -1,12 +1,8 @@
-use serde_json::Result;
-use serde::{Serialize, Deserialize};
-use time::Instant;
-
 use crate::gfa::{gfa1::GFA, gfa2::GFA2};
-use crate::util::save_file::*;
 use bstr::BString;
+use serde_json::Result;
 
-// creates JSON OBject by serializing data structures
+// creates JSON or BINCODE OBject by serializing data structures
 pub enum GFAType {
     GFABSTRING(GFA<BString>),
     GFAUSIZE(GFA<usize>),
@@ -16,102 +12,46 @@ pub enum GFAType {
 
 /// Function that convert a GFA object into a JSON file
 #[inline]
-pub fn to_json(gfa: GFAType, path: String) -> Result<()> {
+pub fn to_json(gfa: GFAType) -> Result<String> {
     match gfa {
         GFAType::GFAUSIZE(g) => {
-            let start = Instant::now();
             let json_file: String = serde_json::to_string(&g)?;
-            match save_on_file(ObjectType::JSON(json_file), Some(path)) {
-                Ok(_) => {
-                    println!("Convert GFAObject to JSONObject: {:?}", start.elapsed());
-                }
-                Err(why) => println!("Error: {}", why),
-            }
-            Ok(())
+            Ok(json_file)
         }
         GFAType::GFA2USIZE(g) => {
-            let start = Instant::now();
             let json_file: String = serde_json::to_string(&g)?;
-            match save_on_file(ObjectType::JSON(json_file), Some(path)) {
-                Ok(_) => {
-                    println!("Convert GFAObject to JSONObject: {:?}", start.elapsed());
-                }
-                Err(why) => println!("Error: {}", why),
-            }
-            Ok(())
+            Ok(json_file)
         }
         GFAType::GFABSTRING(g) => {
-            let start = Instant::now();
             let json_file: String = serde_json::to_string(&g)?;
-            match save_on_file(ObjectType::JSON(json_file), Some(path)) {
-                Ok(_) => {
-                    println!("Convert GFAObject to JSONObject: {:?}", start.elapsed());
-                }
-                Err(why) => println!("Error: {}", why),
-            }
-            Ok(())
+            Ok(json_file)
         }
         GFAType::GFA2BSTRING(g) => {
-            let start = Instant::now();
             let json_file: String = serde_json::to_string(&g)?;
-            match save_on_file(ObjectType::JSON(json_file), Some(path)) {
-                Ok(_) => {
-                    println!("Convert GFAObject to JSONObject: {:?}", start.elapsed());
-                }
-                Err(why) => println!("Error: {}", why),
-            }
-            Ok(())
+            Ok(json_file)
         }
     }
 }
 
 /// Function that convert a GFA object into a  BINCODE file
 #[inline]
-pub fn to_bincode(gfa: GFAType, path: String) -> Result<()> {
+pub fn to_bincode(gfa: GFAType) -> Result<Vec<u8>> {
     match gfa {
         GFAType::GFAUSIZE(g) => {
-            let start = Instant::now();
             let bincode_file: Vec<u8> = bincode::serialize(&g).unwrap();
-            match save_on_file(ObjectType::BINCODE(bincode_file), Some(path)) {
-                Ok(_) => {
-                    println!("Convert GFAObject to BINCODEObject: {:?}", start.elapsed());
-                }
-                Err(why) => println!("Error: {}", why),
-            }
-            Ok(())
+            Ok(bincode_file)
         }
         GFAType::GFA2USIZE(g) => {
-            let start = Instant::now();
             let bincode_file: Vec<u8> = bincode::serialize(&g).unwrap();
-            match save_on_file(ObjectType::BINCODE(bincode_file), Some(path)) {
-                Ok(_) => {
-                    println!("Convert GFAObject to BINCODEObject: {:?}", start.elapsed());
-                }
-                Err(why) => println!("Error: {}", why),
-            }
-            Ok(())
+            Ok(bincode_file)
         }
         GFAType::GFABSTRING(g) => {
-            let start = Instant::now();
             let bincode_file: Vec<u8> = bincode::serialize(&g).unwrap();
-            match save_on_file(ObjectType::BINCODE(bincode_file), Some(path)) {
-                Ok(_) => {
-                    println!("Convert GFAObject to BINCODEObject: {:?}", start.elapsed());
-                }
-                Err(why) => println!("Error: {}", why),
-            }
-            Ok(())
+            Ok(bincode_file)
         }
         GFAType::GFA2BSTRING(g) => {
-            let start = Instant::now();
             let bincode_file: Vec<u8> = bincode::serialize(&g).unwrap();
-            match save_on_file(ObjectType::BINCODE(bincode_file), Some(path)) {
-                Ok(_) => {
-                    println!("Convert GFAObject to BINCODEObject: {:?}", start.elapsed());
-                }
-                Err(why) => println!("Error: {}", why),
-            }
-            Ok(())
+            Ok(bincode_file)
         }
     }
 }
@@ -120,16 +60,13 @@ pub fn to_bincode(gfa: GFAType, path: String) -> Result<()> {
 mod tests {
     use super::*;
     use crate::parser::*;
+    use crate::util::save_file::*;
     use crate::util::to_gfa::*;
+    use time::Instant;
 
-    #[test]
-    //#[ignore]
     fn convert_big_gfa_to_json() {
-        /* convert BIG GFA files to JSON it's pretty much useless
-        Create graph from file: Duration { seconds: 529, nanoseconds: 323089300 }
-        Convert graph to GFAObject: Duration { seconds: 150, nanoseconds: 838532100 }
-        Convert GFAObject to JSONObject: Duration { seconds: 956, nanoseconds: 302402100 }
-        */
+        /*
+         */
         let start = Instant::now();
         let parser: Parser = Parser::new();
         let mut gfa2: GFA2<BString> = GFA2::new();
@@ -139,11 +76,51 @@ mod tests {
                 let start = Instant::now();
                 gfa2 = to_gfa2(&g);
                 println!("Convert graph to GFAObject: {:?}", start.elapsed());
-                match to_json(
-                    GFAType::GFA2BSTRING(gfa2),
-                    "./tests/output_files/ape-4-0.10b.json".to_string(),
-                ) {
-                    Ok(_) => (),
+                let start = Instant::now();
+                match to_json(GFAType::GFA2BSTRING(gfa2)) {
+                    Ok(j) => {
+                        println!("Convert GFAObject to JSONObject: {:?}", start.elapsed());
+                        let start = Instant::now();
+                        match save_on_file(
+                            ObjectType::JSON(j),
+                            Some("./tests/output_files/ape-4-0.10b.gfa2.json".to_string()),
+                        ) {
+                            Ok(_) => println!("Save JSONObject to file: {:?}", start.elapsed()),
+                            Err(why) => println!("Error: {}", why),
+                        }
+                    }
+                    Err(why) => println!("Error: {}", why),
+                }
+            }
+            Err(why) => println!("Error {}", why),
+        }
+    }
+
+    fn convert_big_gfa_to_bincode() {
+        /*
+         */
+        let start = Instant::now();
+        let parser: Parser = Parser::new();
+        let mut gfa2: GFA2<BString> = GFA2::new();
+        match parser.parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa2") {
+            Ok(g) => {
+                println!("Create graph from file: {:?}", start.elapsed());
+                let start = Instant::now();
+                gfa2 = to_gfa2(&g);
+                println!("Convert graph to GFAObject: {:?}", start.elapsed());
+                let start = Instant::now();
+                match to_bincode(GFAType::GFA2BSTRING(gfa2)) {
+                    Ok(b) => {
+                        println!("Convert GFAObject to BINCODEObject: {:?}", start.elapsed());
+                        let start = Instant::now();
+                        match save_on_file(
+                            ObjectType::BINCODE(b),
+                            Some("./tests/output_files/ape-4-0.10b.gfa2.txt".to_string()),
+                        ) {
+                            Ok(_) => println!("Save BINCODEObject to file: {:?}", start.elapsed()),
+                            Err(why) => println!("Error: {}", why),
+                        }
+                    }
                     Err(why) => println!("Error: {}", why),
                 }
             }
@@ -152,40 +129,19 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
-    fn convert_big_gfa_to_bincode() {
-        /* convert BIG GFA files to JSON it's pretty much useless
-        Create graph from file: Duration { seconds: 529, nanoseconds: 323089300 }
-        Convert graph to GFAObject: Duration { seconds: 150, nanoseconds: 838532100 }
-        Convert GFAObject to JSONObject: Duration { seconds: 956, nanoseconds: 302402100 }
-        */
-        let start = Instant::now();
-        let parser: Parser = Parser::new();
-        let mut gfa2: GFA2<BString> = GFA2::new();
-        match parser.parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa2") {
-            Ok(g) => {
-                println!("Create graph from file: {:?}", start.elapsed());
-                let start = Instant::now();
-                gfa2 = to_gfa2(&g);
-                println!("Convert graph to GFAObject: {:?}", start.elapsed());
-                match to_bincode(
-                    GFAType::GFA2BSTRING(gfa2),
-                    "./tests/output_files/ape-4-0.10b.json".to_string(),
-                ) {
-                    Ok(_) => (),
-                    Err(why) => println!("Error: {}", why),
-                }
-            }
-            Err(why) => println!("Error {}", why),
-        }
+    //#[ignore]
+    fn big_files() {
+        convert_big_gfa_to_bincode();
+        convert_big_gfa_to_json();
     }
 
     #[test]
     fn convert_medium_gfa_to_json() {
         /*
-        Create graph from file: Duration { seconds: 1, nanoseconds: 260153500 }
-        Convert graph to GFAObject: Duration { seconds: 0, nanoseconds: 191341000 }
-        Convert GFAObject to JSONObject: Duration { seconds: 0, nanoseconds: 470087700 }
+        Create graph from file: Duration { seconds: 1, nanoseconds: 243468200 }
+        Convert graph to GFAObject: Duration { seconds: 0, nanoseconds: 192942500 }
+        Convert GFAObject to JSONObject: Duration { seconds: 0, nanoseconds: 212035100 }
+        Save JSONObject to file: Duration { seconds: 0, nanoseconds: 49159200 }
         */
         let start = Instant::now();
         let parser: Parser = Parser::new();
@@ -196,11 +152,16 @@ mod tests {
                 let start = Instant::now();
                 gfa2 = to_gfa2(&g);
                 println!("Convert graph to GFAObject: {:?}", start.elapsed());
-                match to_json(
-                    GFAType::GFA2BSTRING(gfa2),
-                    "./tests/output_files/test.json".to_string(),
-                ) {
-                    Ok(_) => (),
+                let start = Instant::now();
+                match to_json(GFAType::GFA2BSTRING(gfa2)) {
+                    Ok(j) => {
+                        println!("Convert GFAObject to JSONObject: {:?}", start.elapsed());
+                        let start = Instant::now();
+                        match save_on_file(ObjectType::JSON(j), None) {
+                            Ok(_) => println!("Save JSONObject to file: {:?}", start.elapsed()),
+                            Err(why) => println!("Error: {}", why),
+                        }
+                    }
                     Err(why) => println!("Error: {}", why),
                 }
             }
@@ -211,9 +172,10 @@ mod tests {
     #[test]
     fn convert_medium_gfa_to_bincode() {
         /*
-        Create graph from file: Duration { seconds: 1, nanoseconds: 244970200 }
-        Convert graph to GFAObject: Duration { seconds: 0, nanoseconds: 195652800 }
-        Convert GFAObject to BINCODEObject: Duration { seconds: 0, nanoseconds: 64547100 }
+        Create graph from file: Duration { seconds: 1, nanoseconds: 234540300 }
+        Convert graph to GFAObject: Duration { seconds: 0, nanoseconds: 193081300 }
+        Convert GFAObject to BINCODEObject: Duration { seconds: 0, nanoseconds: 33020400 }
+        Save BINCODEObject to file: Duration { seconds: 0, nanoseconds: 179276200 }
         */
         let start = Instant::now();
         let parser: Parser = Parser::new();
@@ -224,11 +186,16 @@ mod tests {
                 let start = Instant::now();
                 gfa2 = to_gfa2(&g);
                 println!("Convert graph to GFAObject: {:?}", start.elapsed());
-                match to_bincode(
-                    GFAType::GFA2BSTRING(gfa2),
-                    "./tests/output_files/test.json".to_string(),
-                ) {
-                    Ok(_) => (),
+                let start = Instant::now();
+                match to_bincode(GFAType::GFA2BSTRING(gfa2)) {
+                    Ok(b) => {
+                        println!("Convert GFAObject to BINCODEObject: {:?}", start.elapsed());
+                        let start = Instant::now();
+                        match save_on_file(ObjectType::BINCODE(b), None) {
+                            Ok(_) => println!("Save BINCODEObject to file: {:?}", start.elapsed()),
+                            Err(why) => println!("Error: {}", why),
+                        }
+                    }
                     Err(why) => println!("Error: {}", why),
                 }
             }
