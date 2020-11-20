@@ -179,58 +179,6 @@ fn mod_graph_from_medium_gfa1() {
 }
 
 #[test]
-fn mod_graph_from_medium_gfa2() {
-    /*
-    Create graph from file: Duration { seconds: 1, nanoseconds: 212514300 }
-    remove 1000 nodes from graph: Duration { seconds: 6, nanoseconds: 304872400 }
-    remove 1000 edges: Duration { seconds: 6, nanoseconds: 590445200 }
-    */
-    let mut graph = read_medium_gfa2();
-
-    let start = Instant::now();
-    for i in 1..1001 {
-        match graph.remove_handle(i as u64) {
-            Ok(_) => (),
-            Err(why) => println!("Error: {}", why),
-        };
-    }
-    println!("remove 1000 nodes from graph: {:?}", start.elapsed());
-
-    // add nodes, edges and paths
-    for i in 1..1001 {
-        match graph.create_handle(b"TEST_SEQUENCE", 5000 + i as u64) {
-            Ok(_) => (),
-            Err(why) => println!("Error: {}", why),
-        };
-    }
-    for i in 1..1001 {
-        if i > 1 {
-            let left = Handle::new(5000 + i - 1, Orientation::Forward);
-            let right = Handle::new(5000 + i, Orientation::Forward);
-            let edge = Edge(left, right);
-            match graph.create_edge(edge) {
-                Ok(_) => (),
-                Err(why) => println!("Error: {}", why),
-            };
-        }
-    }
-
-    let start = Instant::now();
-    for i in 1..1001 {
-        if i > 1 {
-            let left = Handle::new(5000 + i - 1, Orientation::Forward);
-            let right = Handle::new(5000 + i, Orientation::Forward);
-            let edge = Edge(left, right);
-            match graph.remove_edge(edge) {
-                Ok(_) => (),
-                Err(why) => println!("Error: {}", why),
-            };
-        }
-    }
-    println!("remove 1000 edges: {:?}", start.elapsed());
-}
-
-#[test]
 #[ignore]
 fn create_big_graph() {
     /*
@@ -258,70 +206,6 @@ fn create_big_graph() {
     let edges = _g.all_edges().count();
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
-}
-
-#[test]
-#[ignore]
-fn big_mod_graph_from_big_gfa1() {
-    /*
-    I tried to make some maths about this and it' will take too much time
-    */
-    let mut graph = read_big_gfa1();
-
-    let start = Instant::now();
-    for i in 1..10_001 {
-        let id: u64 = format!("{}{}", 115, i).parse::<u64>().unwrap();
-        match graph.remove_handle(id as u64) {
-            Ok(_) => (),
-            Err(why) => println!("Error: {}", why),
-        };
-    }
-    println!("remove 10000 nodes from graph: {:?}", start.elapsed());
-
-    let start = Instant::now();
-    // add nodes, edges and paths
-    for i in 1..10_001 {
-        match graph.create_handle(b"TEST_SEQUENCE", 42_000 + i as u64) {
-            Ok(_) => (),
-            Err(why) => println!("Error: {}", why),
-        };
-        if i > 1 {
-            let left = Handle::new(42_000 + i - 1, Orientation::Forward);
-            let right = Handle::new(42_000 + i, Orientation::Forward);
-            let edge = Edge(left, right);
-            match graph.create_edge(edge) {
-                Ok(_) => (),
-                Err(why) => println!("Error: {}", why),
-            };
-        }
-    }
-    println!("add 10000 nodes and edges: {:?}", start.elapsed());
-
-    let start = Instant::now();
-    let path_id = b"default_path_id";
-    let path = graph.create_path_handle(path_id, false);
-    for i in 1..10_001 {
-        let handle = Handle::new(42_000 + i, Orientation::Forward);
-        match graph.append_step(&path, handle) {
-            Ok(_) => (),
-            Err(why) => println!("Error: {}", why),
-        };
-    }
-    println!("add 10000 paths: {:?}", start.elapsed());
-
-    let start = Instant::now();
-    for i in 1..10_001 {
-        if i > 1 {
-            let left = Handle::new(42_000 + i - 1, Orientation::Forward);
-            let right = Handle::new(42_000 + i, Orientation::Forward);
-            let edge = Edge(left, right);
-            match graph.remove_edge(edge) {
-                Ok(_) => (),
-                Err(why) => println!("Error: {}", why),
-            };
-        }
-    }
-    println!("remove 10000 edges: {:?}", start.elapsed());
 }
 
 #[test]

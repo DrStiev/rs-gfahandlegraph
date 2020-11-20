@@ -23,7 +23,11 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                 let mut tag = line_split.next();
                 let mut opt_fields: Vec<&[u8]> = vec![];
                 while tag.is_some() {
-                    opt_fields.push(tag.unwrap().as_bytes());
+                    if tag.unwrap() == "VN:Z:1.0" {
+                        opt_fields.push(b"VN:Z:2.0");
+                    } else {
+                        opt_fields.push(tag.unwrap().as_bytes());
+                    }
                     tag = line_split.next();
                 }
                 let tag = opt_fields
