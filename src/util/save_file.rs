@@ -26,6 +26,7 @@ pub enum ObjectType {
 /// save_on_file(ObjectType::GFAUSIZE(gfa), Some(String::from("./tests/output_files/gfa_to_file.gfa")));
 /// save_on_file(ObjectType::GFA2BSTRING(gfa2), Some(String::from("./tests/output_files/gfa2_to_file.gfa")));
 /// save_on_file(ObjectType::JSON(json), Some(String::from("./tests/output_files/json_to_file.gfa")));
+/// save_on_file(ObjectType::BINCODE(bincode), Some(String::from("./tests/output_files/bincode_to_file.gfa")));
 /// ```
 #[inline]
 pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<()> {
@@ -39,17 +40,17 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(x.as_bytes())?;
             file.sync_all()?;
             Ok(())
-        },
+        }
         ObjectType::BINCODE(x) => {
             let path = path.unwrap_or_else(|| {
-                String::from("./tests/output_files/default_path/json_file.json")
+                String::from("./tests/output_files/default_path/bincode_file.txt")
             });
             let path = Path::new(&path);
             let mut file = File::create(path)?;
             file.write_all(&x)?;
             file.sync_all()?;
             Ok(())
-        },
+        }
         ObjectType::GFAUSIZE(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_usize.gfa")
@@ -59,7 +60,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(format!("{}", x).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        },
+        }
         ObjectType::GFA2USIZE(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_usize.gfa2")
@@ -69,7 +70,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(format!("{}", x).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        },
+        }
         ObjectType::GFABSTRING(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_bstring.gfa")
@@ -79,7 +80,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(format!("{}", x).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        },
+        }
         ObjectType::GFA2BSTRING(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_bstring.gfa2")
@@ -89,7 +90,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(format!("{}", x).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        },
+        }
         ObjectType::FROMGFA1GRAPH(g) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_graph.gfa")
@@ -100,7 +101,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(format!("{}", gfa_file).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        },
+        }
         ObjectType::FROMGFA2GRAPH(g) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_graph.gfa2")
@@ -111,7 +112,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(format!("{}", gfa_file).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        },
+        }
     }
 }
 
