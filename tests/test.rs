@@ -1,6 +1,7 @@
 use gfahandlegraph::{
     gfa::orientation::Orientation,
     handle::{Edge, Handle, NodeId},
+    handlegraph::*,
     hashgraph::HashGraph,
     mutablehandlegraph::*,
     parser::*,
@@ -19,10 +20,10 @@ fn read_small_gfa2() -> HashGraph {
     graph
 }
 
-fn read_small_gfa1() -> HashGraph {
+fn read_ditto() -> HashGraph {
     let mut graph = HashGraph::new();
     let parser: Parser = Parser::new();
-    match parser.parse_file_to_graph("./tests/gfa1_files/lil.gfa") {
+    match parser.parse_file_to_graph("./tests/gfa2_files/ditto.gfa2") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
@@ -96,37 +97,41 @@ fn clear_big_graph() {
 }
 
 #[test]
-fn create_medium_graph() {
-    /*
-    Create graph from file: Duration { seconds: 0, nanoseconds: 930659400 }
-    */
-    let _g = read_medium_gfa1();
-    /* nodes: 4058     edges: 9498     paths: 7
-    let nodes = _g.all_handles().count();
-    let edges = _g.all_edges().count();
-    let paths = _g.paths_iter().count();
-    println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
-    */
+fn ditto() {
+    let mut graph = read_ditto();
+    //graph.print_graph();
+    let node: NodeId = 13.into();
+    match graph.remove_handle(node) {
+        Ok(_) => graph.print_graph(),
+        Err(why) => println!("Error {}", why),
+    }
+}
 
-    /*
-    Create graph from file: Duration { seconds: 1, nanoseconds: 231729800 }
-    */
-    let _g = read_medium_gfa2();
-    /* nodes: 4058     edges: 9498     paths: 7
-    let nodes = _g.all_handles().count();
-    let edges = _g.all_edges().count();
-    let paths = _g.paths_iter().count();
+#[test]
+fn create_medium_graph() {
+    //Create graph from file: Duration { seconds: 0, nanoseconds: 930659400 }
+    let g = read_medium_gfa1();
+    // nodes: 4058     edges: 9498     paths: 7
+    let nodes = g.all_handles().count();
+    let edges = g.all_edges().count();
+    let paths = g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
-    */
+
+    //Create graph from file: Duration { seconds: 1, nanoseconds: 231729800 }
+    let g = read_medium_gfa2();
+    // nodes: 4058     edges: 9498     paths: 7
+    let nodes = g.all_handles().count();
+    let edges = g.all_edges().count();
+    let paths = g.paths_iter().count();
+    println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
 }
 
 #[test]
 fn mod_graph_from_medium_gfa1() {
     /*
-    Create graph from file: Duration { seconds: 0, nanoseconds: 946242800 }
-    BOTTLENECK
-    remove 1000 nodes from graph: Duration { seconds: 8, nanoseconds: 615194600 }
-    remove 1000 edges: Duration { seconds: 6, nanoseconds: 309604800 }
+    Create graph from file: Duration { seconds: 0, nanoseconds: 904378300 }
+    remove 1000 nodes from graph: Duration { seconds: 6, nanoseconds: 262859100 }
+    remove 1000 edges: Duration { seconds: 6, nanoseconds: 404936100 }
     */
     let mut graph = read_medium_gfa1();
 
@@ -176,10 +181,9 @@ fn mod_graph_from_medium_gfa1() {
 #[test]
 fn mod_graph_from_medium_gfa2() {
     /*
-    Create graph from file: Duration { seconds: 1, nanoseconds: 254874500 }
-    BOTTLENECK
-    remove 1000 nodes from graph: Duration { seconds: 8, nanoseconds: 797610700 }
-    remove 1000 edges: Duration { seconds: 6, nanoseconds: 323585100 }
+    Create graph from file: Duration { seconds: 1, nanoseconds: 212514300 }
+    remove 1000 nodes from graph: Duration { seconds: 6, nanoseconds: 304872400 }
+    remove 1000 edges: Duration { seconds: 6, nanoseconds: 590445200 }
     */
     let mut graph = read_medium_gfa2();
 
@@ -236,12 +240,11 @@ fn create_big_graph() {
     TOTAL: Duration { seconds: 454, nanoseconds: 857840800 }
     */
     let _g = read_big_gfa1();
-    /* nodes: 715018   edges: 985445   paths: 0
+    // nodes: 715018   edges: 985445   paths: 0
     let nodes = _g.all_handles().count();
     let edges = _g.all_edges().count();
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
-    */
 
     /*
     Read file ape-4-0.10b.gfa2: Duration { seconds: 0, nanoseconds: 4600 }
@@ -250,12 +253,11 @@ fn create_big_graph() {
     TOTAL: Duration { seconds: 479, nanoseconds: 546135000 }
     */
     let _g = read_big_gfa2();
-    /* nodes: 715018   edges: 985445   paths: 0
+    // nodes: 715018   edges: 985445   paths: 0
     let nodes = _g.all_handles().count();
     let edges = _g.all_edges().count();
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
-    */
 }
 
 #[test]
