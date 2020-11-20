@@ -13,13 +13,20 @@ pub enum ObjectType {
     GFA2BSTRING(GFA2<BString>),
     GFA2USIZE(GFA2<usize>),
     JSON(String),
-}
-
-pub enum GraphType {
+    BINCODE(Vec<u8>),
     FROMGFA1GRAPH(HashGraph),
     FROMGFA2GRAPH(HashGraph),
 }
 
+/// Function that save a GFA1(2), a JSON or an HashGraph Object on a file
+/// on a specific or default location
+/// # Example
+/// ```ignore
+/// save_on_file(ObjectType::FROMGFA2GRAPH(graph), Some(String::from("./tests/output_files/graph_to_file.gfa")));
+/// save_on_file(ObjectType::GFAUSIZE(gfa), Some(String::from("./tests/output_files/gfa_to_file.gfa")));
+/// save_on_file(ObjectType::GFA2BSTRING(gfa2), Some(String::from("./tests/output_files/gfa2_to_file.gfa")));
+/// save_on_file(ObjectType::JSON(json), Some(String::from("./tests/output_files/json_to_file.gfa")));
+/// ```
 #[inline]
 pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<()> {
     match file {
@@ -32,7 +39,17 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(x.as_bytes())?;
             file.sync_all()?;
             Ok(())
-        }
+        },
+        ObjectType::BINCODE(x) => {
+            let path = path.unwrap_or_else(|| {
+                String::from("./tests/output_files/default_path/json_file.json")
+            });
+            let path = Path::new(&path);
+            let mut file = File::create(path)?;
+            file.write_all(&x)?;
+            file.sync_all()?;
+            Ok(())
+        },
         ObjectType::GFAUSIZE(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_usize.gfa")
@@ -42,7 +59,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(format!("{}", x).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        }
+        },
         ObjectType::GFA2USIZE(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_usize.gfa2")
@@ -52,7 +69,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(format!("{}", x).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        }
+        },
         ObjectType::GFABSTRING(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_bstring.gfa")
@@ -62,7 +79,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(format!("{}", x).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        }
+        },
         ObjectType::GFA2BSTRING(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_bstring.gfa2")
@@ -72,20 +89,8 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.write_all(format!("{}", x).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        }
-    }
-}
-
-/// Function that save a GFA1(2) object in a file
-/// on a specific or default location
-/// # Example
-/// ```ignore
-/// save_graph_to_file(GraphType::FROMGFA2GRAPH(graph), Some(String::from("./tests/output_files/gfa2_to_file.gfa")));
-/// ```
-#[inline]
-pub fn save_graph_to_file(graph: GraphType, path: Option<String>) -> std::io::Result<()> {
-    match graph {
-        GraphType::FROMGFA1GRAPH(g) => {
+        },
+        ObjectType::FROMGFA1GRAPH(g) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_graph.gfa")
             });
@@ -95,8 +100,8 @@ pub fn save_graph_to_file(graph: GraphType, path: Option<String>) -> std::io::Re
             file.write_all(format!("{}", gfa_file).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        }
-        GraphType::FROMGFA2GRAPH(g) => {
+        },
+        ObjectType::FROMGFA2GRAPH(g) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_graph.gfa2")
             });
@@ -106,7 +111,7 @@ pub fn save_graph_to_file(graph: GraphType, path: Option<String>) -> std::io::Re
             file.write_all(format!("{}", gfa_file).as_bytes())?;
             file.sync_all()?;
             Ok(())
-        }
+        },
     }
 }
 
@@ -116,7 +121,7 @@ mod tests {
     use crate::handle::*;
     use crate::mutablehandlegraph::{AdditiveHandleGraph, MutableHandleGraph};
     use crate::pathgraph::PathHandleGraph;
-    use crate::util::GraphType;
+    use crate::util::ObjectType;
 
     #[test]
     fn can_save_handlegraph_as_gfa2_file() {
@@ -157,8 +162,8 @@ mod tests {
         };
 
         // save file on a specific path
-        match save_graph_to_file(
-            GraphType::FROMGFA2GRAPH(graph),
+        match save_on_file(
+            ObjectType::FROMGFA2GRAPH(graph),
             Some(String::from("./tests/output_files/file_gfa2.gfa2")),
         ) {
             Ok(_) => println!("Handlegraph saved correctly!"),
@@ -205,7 +210,7 @@ mod tests {
         };
 
         // save file on a default path
-        match save_graph_to_file(GraphType::FROMGFA2GRAPH(graph), None) {
+        match save_on_file(ObjectType::FROMGFA2GRAPH(graph), None) {
             Ok(_) => println!("Handlegraph saved correctly!"),
             Err(why) => println!("Error: {}", why),
         };
@@ -250,8 +255,8 @@ mod tests {
         };
 
         // save file on a specific path
-        match save_graph_to_file(
-            GraphType::FROMGFA1GRAPH(graph),
+        match save_on_file(
+            ObjectType::FROMGFA1GRAPH(graph),
             Some(String::from("./tests/output_files/file_gfa1.gfa")),
         ) {
             Ok(_) => println!("Handlegraph saved correctly!"),
@@ -298,7 +303,7 @@ mod tests {
         };
 
         // save file on a default path
-        match save_graph_to_file(GraphType::FROMGFA1GRAPH(graph), None) {
+        match save_on_file(ObjectType::FROMGFA1GRAPH(graph), None) {
             Ok(_) => println!("Handlegraph saved correctly!"),
             Err(why) => println!("Error: {}", why),
         };
