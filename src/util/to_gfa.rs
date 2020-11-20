@@ -44,8 +44,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
     };
     file.headers.push(header);
 
-    for handle in graph.all_handles()
-    {
+    for handle in graph.all_handles() {
         let seq_id = BString::from(handle.id().to_string());
         let sequence: BString = graph.sequence_iter(handle.forward()).collect();
         let len: BString = BString::from(sequence.len().to_string());
@@ -67,8 +66,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
         }
     };
 
-    for edge in graph.all_edges()
-    {
+    for edge in graph.all_edges() {
         let Edge(left, right) = edge;
 
         let sid1_id: String = left.id().to_string();
@@ -94,8 +92,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2<BString> {
         file.edges.push(edge);
     }
 
-    for path_id in graph.paths_iter()
-    {
+    for path_id in graph.paths_iter() {
         let path_name: BString = graph.path_handle_to_name(path_id).into();
         let mut segment_names: Vec<String> = Vec::new();
 
@@ -157,8 +154,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
     };
     gfa.headers.push(header);
 
-    for handle in graph.all_handles()
-    {
+    for handle in graph.all_handles() {
         let name = BString::from(handle.id().to_string());
         let sequence: BString = graph.sequence_iter(handle.forward()).collect();
 
@@ -178,8 +174,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
         }
     };
 
-    for edge in graph.all_edges()
-    {
+    for edge in graph.all_edges() {
         let Edge(left, right) = edge;
         let from_segment: BString = BString::from(left.id().to_string());
         let from_orient = orient(left.is_reverse());
@@ -198,8 +193,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA<BString> {
         gfa.links.push(link);
     }
 
-    for path_id in graph.paths_iter()
-    {
+    for path_id in graph.paths_iter() {
         let path_name: BString = graph.path_handle_to_name(path_id).into();
         let mut segment_names: Vec<String> = Vec::new();
         for step in graph.steps_iter(path_id) {
@@ -264,9 +258,9 @@ mod test {
     #[test]
     #[ignore]
     fn can_convert_big_graph_to_gfa() {
-        // Convert graph to GFA:
+        // Convert graph to GFA: Duration { seconds: 147, nanoseconds: 274328400 }
         let parser: Parser = Parser::new();
-        match parser.parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa") {
+        match parser.parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa2") {
             Ok(g) => {
                 let start = Instant::now();
                 let mut _file: GFA<BString> = GFA::new();
