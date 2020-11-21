@@ -36,10 +36,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                     .map(BString::from)
                     .collect::<BString>();
 
-                let header = Header {
-                    version,
-                    tag,
-                };
+                let header = Header { version, tag };
                 gfa2.headers.push(header);
             }
             "S" => {

@@ -100,10 +100,26 @@ fn clear_big_graph() {
 fn ditto() {
     let mut graph = read_ditto();
     //graph.print_graph();
-    let node: NodeId = 13.into();
+    let node = 3 as u64;
+    let start = Instant::now();
     match graph.remove_handle(node) {
-        Ok(_) => graph.print_graph(),
-        Err(why) => println!("Error {}", why),
+        Ok(_) => {
+            //graph.print_graph();
+            println!("{:?}", start.elapsed());
+        }
+        Err(why) => println!("Error: {}", why),
+    }
+
+    let left = Handle::new(1, Orientation::Forward);
+    let right = Handle::new(6, Orientation::Forward);
+    let edge = Edge(left, right);
+    let start = Instant::now();
+    match graph.remove_edge(edge) {
+        Ok(_) => {
+            //graph.print_graph();
+            println!("{:?}", start.elapsed());
+        }
+        Err(why) => println!("Error: {}", why),
     }
 }
 
@@ -145,37 +161,56 @@ fn mod_graph_from_medium_gfa1() {
     println!("remove 1000 nodes from graph: {:?}", start.elapsed());
 
     // add nodes, edges and paths
-    for i in 1..1001 {
+    for i in 0..1_001 {
         match graph.create_handle(b"TEST_SEQUENCE", 5000 + i as u64) {
             Ok(_) => (),
             Err(why) => println!("Error: {}", why),
         };
     }
-    for i in 1..1001 {
-        if i > 1 {
-            let left = Handle::new(5000 + i - 1, Orientation::Forward);
-            let right = Handle::new(5000 + i, Orientation::Forward);
-            let edge = Edge(left, right);
-            match graph.create_edge(edge) {
-                Ok(_) => (),
-                Err(why) => println!("Error: {}", why),
-            };
-        }
+
+    for i in 1..1_001 {
+        let left = Handle::new(5000 + i - 1, Orientation::Forward);
+        let right = Handle::new(5000 + i, Orientation::Forward);
+        let edge = Edge(left, right);
+        match graph.create_edge(edge) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
     }
 
     let start = Instant::now();
-    for i in 1..1001 {
-        if i > 1 {
-            let left = Handle::new(5000 + i - 1, Orientation::Forward);
-            let right = Handle::new(5000 + i, Orientation::Forward);
-            let edge = Edge(left, right);
-            match graph.remove_edge(edge) {
-                Ok(_) => (),
-                Err(why) => println!("Error: {}", why),
-            };
-        }
+    for i in 1..1_001 {
+        let left = Handle::new(5000 + i - 1, Orientation::Forward);
+        let right = Handle::new(5000 + i, Orientation::Forward);
+        let edge = Edge(left, right);
+        match graph.remove_edge(edge) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
     }
-    println!("remove 1000 edges: {:?}", start.elapsed());
+    println!("small edge: {:?}", start.elapsed());
+
+    for i in 1..1_001 {
+        let left = Handle::new(5000, Orientation::Forward);
+        let right = Handle::new(5000 + i, Orientation::Forward);
+        let edge = Edge(left, right);
+        match graph.create_edge(edge) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
+
+    let start = Instant::now();
+    for i in 1..1_001 {
+        let left = Handle::new(5000, Orientation::Forward);
+        let right = Handle::new(5000 + i, Orientation::Forward);
+        let edge = Edge(left, right);
+        match graph.remove_edge(edge) {
+            Ok(_) => (),
+            Err(why) => println!("Error: {}", why),
+        };
+    }
+    println!("big edge: {:?}", start.elapsed());
 }
 
 #[test]
