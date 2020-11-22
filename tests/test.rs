@@ -4,7 +4,7 @@ use gfahandlegraph::{
     handlegraph::*,
     hashgraph::HashGraph,
     mutablehandlegraph::*,
-    parser::*,
+    parser::parse_file_to_graph,
     pathgraph::PathHandleGraph,
 };
 use time::Instant;
@@ -12,8 +12,7 @@ use time::Instant;
 
 fn read_small_gfa2() -> HashGraph {
     let mut graph = HashGraph::new();
-    let parser: Parser = Parser::new();
-    match parser.parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
+    match parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
@@ -22,8 +21,7 @@ fn read_small_gfa2() -> HashGraph {
 
 fn read_ditto() -> HashGraph {
     let mut graph = HashGraph::new();
-    let parser: Parser = Parser::new();
-    match parser.parse_file_to_graph("./tests/gfa2_files/ditto.gfa2") {
+    match parse_file_to_graph("./tests/gfa2_files/ditto.gfa2") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
@@ -33,8 +31,7 @@ fn read_ditto() -> HashGraph {
 fn read_medium_gfa2() -> HashGraph {
     let start = Instant::now();
     let mut graph = HashGraph::new();
-    let parser: Parser = Parser::new();
-    match parser.parse_file_to_graph("./tests/big_files/test.gfa2") {
+    match parse_file_to_graph("./tests/big_files/test.gfa2") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
@@ -50,8 +47,7 @@ fn read_medium_gfa2() -> HashGraph {
 fn read_medium_gfa1() -> HashGraph {
     let start = Instant::now();
     let mut graph = HashGraph::new();
-    let parser: Parser = Parser::new();
-    match parser.parse_file_to_graph("./tests/big_files/test.gfa") {
+    match parse_file_to_graph("./tests/big_files/test.gfa") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
@@ -62,8 +58,7 @@ fn read_medium_gfa1() -> HashGraph {
 fn read_big_gfa2() -> HashGraph {
     let start = Instant::now();
     let mut graph = HashGraph::new();
-    let parser: Parser = Parser::new();
-    match parser.parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa2") {
+    match parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa2") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
@@ -74,8 +69,7 @@ fn read_big_gfa2() -> HashGraph {
 fn read_big_gfa1() -> HashGraph {
     let start = Instant::now();
     let mut graph = HashGraph::new();
-    let parser: Parser = Parser::new();
-    match parser.parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa") {
+    match parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa") {
         Ok(g) => graph = g,
         Err(why) => println!("Error {}", why),
     }
@@ -217,7 +211,7 @@ fn mod_graph_from_medium_gfa1() {
 }
 
 #[test]
-#[ignore]
+//#[ignore]
 fn create_big_graph() {
     /*
     Read file ape-4-0.10b.gfa: Duration { seconds: 0, nanoseconds: 65500 }
@@ -247,13 +241,14 @@ fn create_big_graph() {
 }
 
 #[test]
-//#[ignore]
+#[ignore]
 fn mod_graph_from_big_gfa1() {
     /*
-    Create graph from file: Duration { seconds: 500, nanoseconds: 658882600 }
-    remove 100 nodes from graph: Duration { seconds: 410, nanoseconds: 65483800 }
-    add 100 nodes and edges: Duration { seconds: 0, nanoseconds: 347800 }
-    add 100 paths: Duration { seconds: 0, nanoseconds: 219300 }
+    Create graph from file: Duration { seconds: 505, nanoseconds: 571391900 }
+    remove 100 nodes from graph: Duration { seconds: 359, nanoseconds: 621004900 }
+    add 100 nodes and edges: Duration { seconds: 0, nanoseconds: 503600 }
+    add 100 paths: Duration { seconds: 0, nanoseconds: 227600 }
+    remove 100 edges: Duration { seconds: 357, nanoseconds: 169029400 }
     */
     let mut graph = read_big_gfa1();
 
