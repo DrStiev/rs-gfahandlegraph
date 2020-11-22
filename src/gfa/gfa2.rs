@@ -2,7 +2,7 @@
 use crate::gfa::orientation::*;
 use crate::gfa::segment_id::*;
 
-use bstr::{BStr, BString, ByteSlice};
+use bstr::{BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -67,17 +67,17 @@ impl fmt::Display for Header {
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct Segment<N> {
-    pub id: N,
+pub struct Segment {
+    pub id: usize,
     pub len: BString,
     pub sequence: BString,
     pub tag: BString,
 }
 
-impl Segment<BString> {
-    pub fn new(id: &[u8], len: &[u8], sequence: &[u8], tag: &[u8]) -> Self {
+impl Segment {
+    pub fn new(id: usize, len: &[u8], sequence: &[u8], tag: &[u8]) -> Self {
         Segment {
-            id: BString::from(id),
+            id,
             len: BString::from(len),
             sequence: BString::from(sequence),
             tag: BString::from(tag),
@@ -85,14 +85,14 @@ impl Segment<BString> {
     }
 }
 
-impl<N: SegmentId> fmt::Display for Segment<N> {
+impl fmt::Display for Segment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "S\t{}\t{}\t{}\t{}",
             self.id,
-            self.len.as_bstr(),
-            self.sequence.as_bstr(),
+            self.len,
+            self.sequence,
             self.tag,
         )
     }
@@ -132,9 +132,9 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct Fragment<N> {
-    pub id: N,
-    pub ext_ref: N, // orientation as final char (+-)
+pub struct Fragment {
+    pub id: usize,
+    pub ext_ref: usize, // orientation as final char (+-)
     pub sbeg: BString,
     pub send: BString, // dollar character as optional final char
     pub fbeg: BString,
@@ -143,10 +143,10 @@ pub struct Fragment<N> {
     pub tag: BString,
 }
 
-impl Fragment<BString> {
+impl Fragment {
     pub fn new(
-        id: &[u8],
-        ext_ref: &[u8],
+        id: usize,
+        ext_ref: usize,
         sbeg: &[u8],
         send: &[u8],
         fbeg: &[u8],
@@ -155,8 +155,8 @@ impl Fragment<BString> {
         tag: &[u8],
     ) -> Self {
         Fragment {
-            id: BString::from(id),
-            ext_ref: BString::from(ext_ref),
+            id,
+            ext_ref,
             sbeg: sbeg.into(),
             send: send.into(),
             fbeg: fbeg.into(),
@@ -167,18 +167,28 @@ impl Fragment<BString> {
     }
 }
 
-impl<N: SegmentId> fmt::Display for Fragment<N> {
+impl fmt::Display for Fragment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+
+        let len = self.ext_ref.to_string().len() - 2;
+        let ext_ref = self.ext_ref.to_string()[..len].to_string();
+        let sgn = match self.ext_ref.to_string()[len..].to_string().as_str() {
+            "43" => "+",
+            "45" => "-",
+            _ => panic!("Orientation not found!"),
+        };
+
         write!(
             f,
-            "F\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "F\t{}\t{}{}\t{}\t{}\t{}\t{}\t{}\t{}",
             self.id,
-            self.ext_ref,
-            self.sbeg.as_bstr(),
-            self.send.as_bstr(),
-            self.fbeg.as_bstr(),
-            self.fend.as_bstr(),
-            self.alignment.as_bstr(),
+            ext_ref,
+            sgn,
+            self.sbeg,
+            self.send,
+            self.fbeg,
+            self.fend,
+            self.alignment,
             self.tag,
         )
     }
@@ -220,10 +230,10 @@ impl<N: SegmentId> fmt::Display for Fragment<N> {
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct Edge<N> {
-    pub id: N,   // optional id, can be either * or id tag
-    pub sid1: N, // orientation as final char (+-)
-    pub sid2: N, // orientation as final char (+-)
+pub struct Edge {
+    pub id: usize,   // optional id, can be either * or id tag
+    pub sid1: usize, // orientation as final char (+-)
+    pub sid2: usize, // orientation as final char (+-)
     pub beg1: BString,
     pub end1: BString, // dollar character as optional final char
     pub beg2: BString,
@@ -232,11 +242,11 @@ pub struct Edge<N> {
     pub tag: BString,
 }
 
-impl Edge<BString> {
+impl Edge {
     pub fn new(
-        id: &[u8],
-        sid1: &[u8],
-        sid2: &[u8],
+        id: usize,
+        sid1: usize,
+        sid2: usize,
         beg1: &[u8],
         end1: &[u8],
         beg2: &[u8],
@@ -245,9 +255,9 @@ impl Edge<BString> {
         tag: &[u8],
     ) -> Self {
         Edge {
-            id: BString::from(id),
-            sid1: BString::from(sid1),
-            sid2: BString::from(sid2),
+            id,
+            sid1,
+            sid2,
             beg1: beg1.into(),
             end1: end1.into(),
             beg2: beg2.into(),
@@ -258,19 +268,38 @@ impl Edge<BString> {
     }
 }
 
-impl<N: SegmentId> fmt::Display for Edge<N> {
+impl fmt::Display for Edge {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+
+        let len = self.sid1.to_string().len() - 2;
+        let sid1 = self.sid1.to_string()[..len].to_string();
+        let sgn1 = match self.sid1.to_string()[len..].to_string().as_str() {
+            "43" => "+",
+            "45" => "-",
+            _ => panic!("Orientation not found!"),
+        };
+
+        let len = self.sid2.to_string().len() - 2;
+        let sid2 = self.sid2.to_string()[..len].to_string();
+        let sgn2 = match self.sid2.to_string()[len..].to_string().as_str() {
+            "43" => "+",
+            "45" => "-",
+            _ => panic!("Orientation not found!"),
+        };
+
         write!(
             f,
-            "E\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            "E\t{}\t{}{}\t{}{}\t{}\t{}\t{}\t{}\t{}\t{}",
             self.id,
-            self.sid1,
-            self.sid2,
-            self.beg1.as_bstr(),
-            self.end1.as_bstr(),
-            self.beg2.as_bstr(),
-            self.end2.as_bstr(),
-            self.alignment.as_bstr(),
+            sid1,
+            sgn1,
+            sid2,
+            sgn2,
+            self.beg1,
+            self.end1,
+            self.beg2,
+            self.end2,
+            self.alignment,
             self.tag,
         )
     }
@@ -304,21 +333,21 @@ impl<N: SegmentId> fmt::Display for Edge<N> {
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct Gap<N> {
-    pub id: N,   // optional id, can be either * or id tag
-    pub sid1: N, // orientation as final char (+-)
-    pub sid2: N, // orientation as final char (+-)
+pub struct Gap {
+    pub id: usize,   // optional id, can be either * or id tag
+    pub sid1: usize, // orientation as final char (+-)
+    pub sid2: usize, // orientation as final char (+-)
     pub dist: BString,
     pub var: BString,
     pub tag: BString,
 }
 
-impl Gap<BString> {
-    pub fn new(id: &[u8], sid1: &[u8], sid2: &[u8], dist: &[u8], var: &[u8], tag: &[u8]) -> Self {
+impl Gap {
+    pub fn new(id: usize, sid1: usize, sid2: usize, dist: &[u8], var: &[u8], tag: &[u8]) -> Self {
         Gap {
-            id: BString::from(id),
-            sid1: BString::from(sid1),
-            sid2: BString::from(sid2),
+            id,
+            sid1,
+            sid2,
             dist: dist.into(),
             var: var.into(),
             tag: tag.into(),
@@ -326,16 +355,35 @@ impl Gap<BString> {
     }
 }
 
-impl<N: SegmentId> fmt::Display for Gap<N> {
+impl fmt::Display for Gap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+
+        let len = self.sid1.to_string().len() - 2;
+        let sid1 = self.sid1.to_string()[..len].to_string();
+        let sgn1 = match self.sid1.to_string()[len..].to_string().as_str() {
+            "43" => "+",
+            "45" => "-",
+            _ => panic!("Orientation not found!"),
+        };
+
+        let len = self.sid2.to_string().len() - 2;
+        let sid2 = self.sid2.to_string()[..len].to_string();
+        let sgn2 = match self.sid2.to_string()[len..].to_string().as_str() {
+            "43" => "+",
+            "45" => "-",
+            _ => panic!("Orientation not found!"),
+        };
+
         write!(
             f,
-            "G\t{}\t{}\t{}\t{}\t{}\t{}",
+            "G\t{}\t{}{}\t{}{}\t{}\t{}\t{}",
             self.id,
-            self.sid1,
-            self.sid2,
-            self.dist.as_bstr(),
-            self.var.as_bstr(),
+            sid1,
+            sgn1,
+            sid2,
+            sgn2,
+            self.dist,
+            self.var,
             self.tag,
         )
     }
@@ -362,29 +410,25 @@ impl<N: SegmentId> fmt::Display for Gap<N> {
 /// );
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct GroupO<N> {
+pub struct GroupO {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
     pub id: BString,        // optional id, can be either * or id tag
     pub var_field: BString, // "array" of ref (from 1 to n)
     pub tag: BString,
-    _segment_names: std::marker::PhantomData<N>,
 }
 
-impl<N: SegmentId> GroupO<N> {
+impl GroupO {
     pub fn new(id: BString, var_field: BString, tag: &[u8]) -> Self {
         GroupO {
             id,
             var_field,
             tag: tag.into(),
-            _segment_names: std::marker::PhantomData,
         }
     }
-}
 
-impl<N: SegmentId> GroupO<N> {
     /// parses (and copies) a segment ID in the group segment list
-    fn parse_segment_id(input: &[u8]) -> Option<(N, Orientation)> {
+    fn parse_segment_id(input: &[u8]) -> Option<(usize, Orientation)> {
         use Orientation::*;
         let last = input.len() - 1;
         let orient = match input[last] {
@@ -393,12 +437,10 @@ impl<N: SegmentId> GroupO<N> {
             _ => panic!("Group O segment did not include orientation"),
         };
         let seg = &input[..last];
-        let id = N::parse_id(IdType::ID(), seg)?;
+        let id = usize::parse_id(IdType::ID(), seg)?;
         Some((id, orient))
     }
-}
 
-impl GroupO<usize> {
     /// Produces an iterator over the usize segments of the given group
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
         self.var_field
@@ -407,34 +449,13 @@ impl GroupO<usize> {
     }
 }
 
-impl GroupO<BString> {
-    /// Produces an iterator over the segments of the given group,
-    /// parsing the orientation and producing a slice to each segment
-    /// name
-    pub fn iter(&self) -> impl Iterator<Item = (&'_ BStr, Orientation)> {
-        self.var_field.split_str(b" ").map(Self::segment_id_ref)
-    }
-
-    fn segment_id_ref(input: &[u8]) -> (&'_ BStr, Orientation) {
-        use Orientation::*;
-        let last = input.len() - 1;
-        let orient = match input[last] {
-            b'+' => Forward,
-            b'-' => Backward,
-            _ => panic!("Group O segment did not include orientation"),
-        };
-        let seg = &input[..last];
-        (seg.as_ref(), orient)
-    }
-}
-
-impl<N: SegmentId> fmt::Display for GroupO<N> {
+impl fmt::Display for GroupO {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "O\t{}\t{}\t{}",
             self.id,
-            self.var_field.as_bstr().to_string(),
+            self.var_field,
             self.tag,
         )
     }
@@ -461,37 +482,29 @@ impl<N: SegmentId> fmt::Display for GroupO<N> {
 /// );
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct GroupU<N> {
+pub struct GroupU {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
     pub id: BString,        // optional id, can be either * or id tag
     pub var_field: BString, // "array" of id (from 1 to n)
     pub tag: BString,
-    _segment_names: std::marker::PhantomData<N>,
 }
 
-impl<N: SegmentId> GroupU<N> {
+impl GroupU {
     pub fn new(id: BString, var_field: BString, tag: &[u8]) -> Self {
         GroupU {
             id,
             var_field,
             tag: tag.into(),
-            _segment_names: std::marker::PhantomData,
         }
     }
-}
 
-// U-Group do not have any orientations on the segment ids that they contained
-// so I used as "deafult orientation" the Forward one ('+')
-impl<N: SegmentId> GroupU<N> {
     /// parses (and copies) a segment ID in the group segment list
-    fn parse_segment_id(input: &[u8]) -> Option<N> {
-        let id = N::parse_id(IdType::OPTIONALID(), input)?;
+    fn parse_segment_id(input: &[u8]) -> Option<usize> {
+        let id = usize::parse_id(IdType::OPTIONALID(), input)?;
         Some(id)
     }
-}
 
-impl GroupU<usize> {
     /// Produces an iterator over the usize segments of the given group
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = usize> + 'a {
         self.var_field
@@ -500,28 +513,13 @@ impl GroupU<usize> {
     }
 }
 
-// U-Group do not have any orientations on the segment ids that they contained
-// so I used as "deafult orientation" the Forward one ('+')
-impl GroupU<BString> {
-    /// Produces an iterator over the segments of the given group,
-    /// parsing the orientation and producing a slice to each segment
-    /// name
-    pub fn iter(&self) -> impl Iterator<Item = &'_ BStr> {
-        self.var_field.split_str(b" ").map(Self::segment_id_ref)
-    }
-
-    fn segment_id_ref(input: &[u8]) -> &'_ BStr {
-        input.as_ref()
-    }
-}
-
-impl<N: SegmentId> fmt::Display for GroupU<N> {
+impl fmt::Display for GroupU {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "U\t{}\t{}\t{}",
             self.id,
-            self.var_field.as_bstr().to_string(),
+            self.var_field,
             self.tag,
         )
     }
@@ -575,33 +573,33 @@ impl<N: SegmentId> fmt::Display for GroupU<N> {
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct GFA2<N> {
+pub struct GFA2 {
     // OptFields is used to encode the <tag>* item
     // struct to hold the results of parsing a file; not actually a graph
     pub headers: Vec<Header>,
-    pub segments: Vec<Segment<N>>,
-    pub fragments: Vec<Fragment<N>>,
-    pub edges: Vec<Edge<N>>,
-    pub gaps: Vec<Gap<N>>,
-    pub groups_o: Vec<GroupO<N>>,
-    pub groups_u: Vec<GroupU<N>>,
+    pub segments: Vec<Segment>,
+    pub fragments: Vec<Fragment>,
+    pub edges: Vec<Edge>,
+    pub gaps: Vec<Gap>,
+    pub groups_o: Vec<GroupO>,
+    pub groups_u: Vec<GroupU>,
 }
 
 /// Enum containing the different kinds of GFA2 lines.
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub enum Line<N> {
+pub enum Line {
     Header(Header),
-    Segment(Segment<N>),
-    Fragment(Fragment<N>),
-    Edge(Edge<N>),
-    Gap(Gap<N>),
-    GroupO(GroupO<N>),
-    GroupU(GroupU<N>),
+    Segment(Segment),
+    Fragment(Fragment),
+    Edge(Edge),
+    Gap(Gap),
+    GroupO(GroupO),
+    GroupU(GroupU),
 }
 
 macro_rules! some_line_fn {
     ($name:ident, $tgt:ty, $variant:path) => {
-        impl<N> Line<N> {
+        impl Line {
             pub fn $name(self) -> Option<$tgt> {
                 if let $variant(x) = self {
                     Some(x)
@@ -614,27 +612,27 @@ macro_rules! some_line_fn {
 }
 
 some_line_fn!(some_header, Header, Line::Header);
-some_line_fn!(some_segment, Segment<N>, Line::Segment);
-some_line_fn!(some_fragment, Fragment<N>, Line::Fragment);
-some_line_fn!(some_edge, Edge<N>, Line::Edge);
-some_line_fn!(some_gap, Gap<N>, Line::Gap);
-some_line_fn!(some_ogroup, GroupO<N>, Line::GroupO);
-some_line_fn!(some_ugroup, GroupU<N>, Line::GroupU);
+some_line_fn!(some_segment, Segment, Line::Segment);
+some_line_fn!(some_fragment, Fragment, Line::Fragment);
+some_line_fn!(some_edge, Edge, Line::Edge);
+some_line_fn!(some_gap, Gap, Line::Gap);
+some_line_fn!(some_ogroup, GroupO, Line::GroupO);
+some_line_fn!(some_ugroup, GroupU, Line::GroupU);
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub enum LineRef<'a, N> {
+pub enum LineRef<'a> {
     Header(&'a Header),
-    Segment(&'a Segment<N>),
-    Fragment(&'a Fragment<N>),
-    Edge(&'a Edge<N>),
-    Gap(&'a Gap<N>),
-    GroupO(&'a GroupO<N>),
-    GroupU(&'a GroupU<N>),
+    Segment(&'a Segment),
+    Fragment(&'a Fragment),
+    Edge(&'a Edge),
+    Gap(&'a Gap),
+    GroupO(&'a GroupO),
+    GroupU(&'a GroupU),
 }
 
 macro_rules! some_line_ref_fn {
     ($name:ident, $tgt:ty, $variant:path) => {
-        impl<'a, N> LineRef<'a, N> {
+        impl<'a> LineRef<'a> {
             pub fn $name(self) -> Option<&'a $tgt> {
                 if let $variant(x) = self {
                     Some(x)
@@ -647,23 +645,23 @@ macro_rules! some_line_ref_fn {
 }
 
 some_line_ref_fn!(some_header, Header, LineRef::Header);
-some_line_ref_fn!(some_segment, Segment<N>, LineRef::Segment);
-some_line_ref_fn!(some_fragment, Fragment<N>, LineRef::Fragment);
-some_line_ref_fn!(some_edge, Edge<N>, LineRef::Edge);
-some_line_ref_fn!(some_gap, Gap<N>, LineRef::Gap);
-some_line_ref_fn!(some_ogroup, GroupO<N>, LineRef::GroupO);
-some_line_ref_fn!(some_ugroup, GroupU<N>, LineRef::GroupU);
+some_line_ref_fn!(some_segment, Segment, LineRef::Segment);
+some_line_ref_fn!(some_fragment, Fragment, LineRef::Fragment);
+some_line_ref_fn!(some_edge, Edge, LineRef::Edge);
+some_line_ref_fn!(some_gap, Gap, LineRef::Gap);
+some_line_ref_fn!(some_ogroup, GroupO, LineRef::GroupO);
+some_line_ref_fn!(some_ugroup, GroupU, LineRef::GroupU);
 
 /// Insert a GFA line (wrapped in the Line enum) into an existing
 /// GFA. Simply pushes it into the corresponding Vec in the GFA,
 /// or replaces the header, so there's no deduplication or sorting
 /// taking place.
-impl<N> GFA2<N> {
+impl GFA2 {
     /// Insert a GFA line (wrapped in the Line enum) into an existing
     /// GFA. Simply pushes it into the corresponding Vec in the GFA,
     /// or replaces the header, so there's no deduplication or sorting
     /// taking place.
-    pub fn insert_line(&mut self, line: Line<N>) {
+    pub fn insert_line(&mut self, line: Line) {
         use Line::*;
         match line {
             Header(h) => self.headers.push(h),
@@ -679,7 +677,7 @@ impl<N> GFA2<N> {
     /// Consume a GFA2 object to produce an iterator over all the lines
     /// contained within. The iterator first produces all headers then segments,
     /// fragments, edges, gaps, groups, comments and finally custom records
-    pub fn lines_into_iter(self) -> impl Iterator<Item = Line<N>> {
+    pub fn lines_into_iter(self) -> impl Iterator<Item = Line> {
         use Line::*;
         let heads = self.headers.into_iter().map(Header);
         let segs = self.segments.into_iter().map(Segment);
@@ -699,7 +697,7 @@ impl<N> GFA2<N> {
     }
 
     /// Return an iterator over references to the lines in the GFA2
-    pub fn lines_iter(&'_ self) -> impl Iterator<Item = LineRef<'_, N>> {
+    pub fn lines_iter(&'_ self) -> impl Iterator<Item = LineRef<'_>> {
         use LineRef::*;
         let heads = self.headers.iter().map(Header);
         let segs = self.segments.iter().map(Segment);
@@ -719,13 +717,13 @@ impl<N> GFA2<N> {
     }
 }
 
-impl<N: SegmentId> GFA2<N> {
+impl GFA2 {
     pub fn new() -> Self {
         Default::default()
     }
 }
 
-impl<N: SegmentId> fmt::Display for GFA2<N> {
+impl fmt::Display for GFA2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -761,7 +759,7 @@ mod test {
 
     #[test]
     fn o_group_iter() {
-        let ogroup_: GroupO<BString> =
+        let ogroup_: GroupO =
             GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(), b"");
         for (name, orientation) in ogroup_.iter() {
             println!("{}{}", name, orientation);
@@ -770,25 +768,8 @@ mod test {
 
     #[test]
     fn u_group_iter() {
-        let ugroup_: GroupU<BString> =
+        let ugroup_: GroupU =
             GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
-        for name in ugroup_.iter() {
-            println!("{}", name);
-        }
-    }
-
-    #[test]
-    fn o_group_iter_usize() {
-        let ogroup_: GroupO<usize> =
-            GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(), b"");
-        for (name, orientation) in ogroup_.iter() {
-            println!("{}{}", name, orientation);
-        }
-    }
-
-    #[test]
-    fn u_group_iter_usize() {
-        let ugroup_: GroupU<usize> = GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
         for name in ugroup_.iter() {
             println!("{}", name);
         }

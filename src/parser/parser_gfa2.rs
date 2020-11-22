@@ -1,10 +1,228 @@
 /// This file provides the function to parse all the fields of a GFA2 file
 use crate::gfa::{gfa2::*, segment_id::*};
+use crate::parser::error::ParserTolerance;
 use crate::parser::{error::*, parse_tag::*};
 
-use bstr::BString;
+use bstr::{BStr, ByteSlice, BString};
 use lazy_static::lazy_static;
 use regex::bytes::Regex;
+
+/// Builder struct for GFAParsers
+pub struct ParserBuilder {
+    pub headers: bool,
+    pub segments: bool,
+    pub fragments: bool,
+    pub edges: bool,
+    pub gaps: bool,
+    pub groups_o: bool,
+    pub groups_u: bool,
+    pub tolerance: ParserTolerance,
+}
+
+impl ParserBuilder {
+    /// Parse no GFA lines, useful if you only want to parse one line type.
+    pub fn none() -> Self {
+        ParserBuilder {
+            headers: false,
+            segments: false,
+            fragments: false,
+            edges: false,
+            gaps: false,
+            groups_o: false,
+            groups_u: false,
+            tolerance: Default::default(),
+        }
+    }
+
+    /// Parse all GFA lines.
+    pub fn all() -> Self {
+        ParserBuilder {
+            headers: true,
+            segments: true,
+            fragments: true,
+            edges: true,
+            gaps: true,
+            groups_o: true,
+            groups_u: true,
+            tolerance: Default::default(),
+        }
+    }
+
+    pub fn ignore_errors(mut self) -> Self {
+        self.tolerance = ParserTolerance::IgnoreAll;
+        self
+    }
+
+    pub fn ignore_safe_errors(mut self) -> Self {
+        self.tolerance = ParserTolerance::Safe;
+        self
+    }
+
+    pub fn pedantic_errors(mut self) -> Self {
+        self.tolerance = ParserTolerance::Pedantic;
+        self
+    }
+
+    pub fn build(self) -> GFA2Parser {
+        GFA2Parser {
+            headers: self.headers,
+            segments: self.segments,
+            fragments: self.fragments,
+            edges: self.edges,
+            gaps: self.gaps,
+            groups_o: self.groups_o,
+            groups_u: self.groups_u,
+            tolerance: self.tolerance,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct GFA2Parser {
+    headers: bool,
+    segments: bool,
+    fragments: bool,
+    edges: bool,
+    gaps: bool,
+    groups_o: bool,
+    groups_u: bool,
+    tolerance: ParserTolerance,
+}
+
+impl Default for GFA2Parser {
+    fn default() -> Self {
+        let config = ParserBuilder::all();
+        config.build()
+    }
+}
+
+impl GFA2Parser {
+    /// Create a new GFAParser that will parse all four GFA line
+    /// types, and use the optional fields parser and storage `T`.
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    fn parse_gfa_line(&self, bytes: &[u8]) -> ParserResult<Line> {
+        let line: &BStr = bytes.trim().as_ref();
+
+        let mut fields = line.split_str(b"\t");
+        let hdr = fields.next().ok_or(ParseError::EmptyLine)?;
+
+        let invalid_line = |e: ParseFieldError| ParseError::invalid_line(e, bytes);
+
+        let line = match hdr {
+            b"H" if self.headers => Header::parse_line(fields).map(Header::wrap),
+            b"S" if self.segments => Segment::parse_line(fields).map(Segment::wrap),
+            b"F" if self.fragments => Fragment::parse_line(fields).map(Fragment::wrap),
+            b"E" if self.edges => Edge::parse_line(fields).map(Edge::wrap),
+            b"G" if self.gaps => Gap::parse_line(fields).map(Gap::wrap),
+            b"O" if self.groups_o => GroupO::parse_line(fields).map(GroupO::wrap),
+            b"U" if self.groups_u => GroupU::parse_line(fields).map(GroupU::wrap),
+            _ => return Err(ParseError::UnknownLineType),
+        }
+        .map_err(invalid_line)?;
+        Ok(line)
+    }
+
+    pub fn parse_lines<I>(&self, lines: I) -> ParserResult<GFA2>
+    where
+        I: Iterator,
+        I::Item: AsRef<[u8]>,
+    {
+        let mut gfa2 = GFA2::new();
+
+        for line in lines {
+            match self.parse_gfa_line(line.as_ref()) {
+                Ok(parsed) => gfa2.insert_line(parsed),
+                Err(err) if err.can_safely_continue(&self.tolerance) => (),
+                Err(err) => return Err(err),
+            };
+        }
+
+        Ok(gfa2)
+    }
+
+    /// Function that return a ```Result<GFA2<N, T>, ParseError>``` object\
+    /// ```N = GFA2 type```\
+    /// ```T = OptionalFields or ()```
+    /// # Examples
+    /// ```ignore
+    /// use gfa2::parser_gfa2::GFA2Parser;
+    /// use gfa2::gfa2::GFA2;
+    ///
+    /// let parser: GFA2Parser<BString, ()> = GFA2Parser::new();
+    /// let gfa2: GFA2<BString, ()> =
+    ///     parser.parse_file(&"./tests/gfa2_files/data.gfa").unwrap();
+    ///
+    /// println!("{}", gfa2);
+    ///
+    /// /*
+    /// H       aa:i:15
+    /// H       VN:Z:2.0    TS:i:15
+    /// S       3       21      TGCAACGTATAGACTTGTCAC   RC:i:4  KC:i:485841 LN:i:1329
+    /// E       *       1+      2+      3       8$      0       5       0,2,4TS:i:2  zz:Z:tag    vo:J:{"labels":false}
+    /// */
+    ///
+    /// ```
+    pub fn parse_file<P: AsRef<std::path::Path>>(
+        &self,
+        path: P,
+    ) -> Result<GFA2, ParseError> {
+        use {
+            bstr::io::BufReadExt,
+            std::{fs::File, io::BufReader},
+        };
+
+        let file = File::open(path.as_ref())?;
+        let lines = BufReader::new(file).byte_lines();
+        let mut gfa2 = GFA2::new();
+
+        for line in lines {
+            let line = line?;
+            match self.parse_gfa_line(line.as_ref()) {
+                Ok(parsed) => gfa2.insert_line(parsed),
+                Err(err) if err.can_safely_continue(&self.tolerance) => (),
+                Err(err) => return Err(err),
+            };
+        }
+
+        Ok(gfa2)
+    }
+}
+
+pub struct GFA2ParserLineIter<I>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    parser: GFA2Parser,
+    iter: I,
+}
+
+impl<I> GFA2ParserLineIter<I>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    pub fn from_parser(parser: GFA2Parser, iter: I) -> Self {
+        Self { parser, iter }
+    }
+}
+
+impl<I> Iterator for GFA2ParserLineIter<I>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    type Item = ParserResult<Line>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let next_line = self.iter.next()?;
+        let result = self.parser.parse_gfa_line(next_line.as_ref());
+        Some(result)
+    }
+}
 
 fn next_field<I, P>(mut input: I) -> ParserFieldResult<P>
 where
@@ -36,7 +254,7 @@ where
 /// ```H {VN:Z:2.0} {TS:i:<trace spacing>} <tag>*```
 impl Header {
     #[inline]
-    pub fn wrap<N: SegmentId>(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::Header(self)
     }
 
@@ -92,9 +310,9 @@ where
 
 /// function that parses the SEGMENT element
 /// ```<segment> <- S <sid:id> <slen:int> <sequence> <tag>*```
-impl<N: SegmentId> Segment<N> {
+impl Segment {
     #[inline]
-    pub fn wrap(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::Segment(self)
     }
 
@@ -104,7 +322,7 @@ impl<N: SegmentId> Segment<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = N::parse_next(&mut input, IdType::ID())?;
+        let id = usize::parse_next(&mut input, IdType::ID())?;
         let len = parse_slen(&mut input)?;
         let sequence = parse_sequence(&mut input)?;
         let mut tag: BString = OptionalFields::parse_tag(input)
@@ -158,9 +376,9 @@ where
 
 /// function that parses the FRAGMENT element
 /// ```<fragment> <- F <sid:id> <external:ref> <sbeg:pos> <send:pos> <fbeg:pos> <fend:pos> <alignment> <tag>*```
-impl<N: SegmentId> Fragment<N> {
+impl Fragment {
     #[inline]
-    pub fn wrap(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::Fragment(self)
     }
 
@@ -170,8 +388,8 @@ impl<N: SegmentId> Fragment<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = N::parse_next(&mut input, IdType::ID())?;
-        let ext_ref = N::parse_next(&mut input, IdType::REFERENCEID())?;
+        let id = usize::parse_next(&mut input, IdType::ID())?;
+        let ext_ref = usize::parse_next(&mut input, IdType::REFERENCEID())?;
         let sbeg = parse_pos(&mut input)?;
         let send = parse_pos(&mut input)?;
         let fbeg = parse_pos(&mut input)?;
@@ -197,9 +415,9 @@ impl<N: SegmentId> Fragment<N> {
 
 /// function that parses the EDGE element
 /// ```<edge> <- E <eid:opt_id> <sid1:ref> <sid2:ref> <beg1:pos> <end1:pos> <beg2:pos> <end2:pos> <alignment> <tag>*```
-impl<N: SegmentId> Edge<N> {
+impl Edge {
     #[inline]
-    pub fn wrap(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::Edge(self)
     }
 
@@ -209,9 +427,9 @@ impl<N: SegmentId> Edge<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = N::parse_next(&mut input, IdType::OPTIONALID())?;
-        let sid1 = N::parse_next(&mut input, IdType::OPTIONALID())?;
-        let sid2 = N::parse_next(&mut input, IdType::OPTIONALID())?;
+        let id = usize::parse_next(&mut input, IdType::OPTIONALID())?;
+        let sid1 = usize::parse_next(&mut input, IdType::OPTIONALID())?;
+        let sid2 = usize::parse_next(&mut input, IdType::OPTIONALID())?;
         let beg1 = parse_pos(&mut input)?;
         let end1 = parse_pos(&mut input)?;
         let beg2 = parse_pos(&mut input)?;
@@ -272,9 +490,9 @@ where
 
 /// function that parses the GAP element
 /// ```<gap> <- G <gid:opt_id> <sid1:ref> <sid2:ref> <dist:int> (* | <var:int>) <tag>*```
-impl<N: SegmentId> Gap<N> {
+impl Gap {
     #[inline]
-    pub fn wrap(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::Gap(self)
     }
 
@@ -284,9 +502,9 @@ impl<N: SegmentId> Gap<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = N::parse_next(&mut input, IdType::OPTIONALID())?;
-        let sid1 = N::parse_next(&mut input, IdType::REFERENCEID())?;
-        let sid2 = N::parse_next(&mut input, IdType::REFERENCEID())?;
+        let id = usize::parse_next(&mut input, IdType::OPTIONALID())?;
+        let sid1 = usize::parse_next(&mut input, IdType::REFERENCEID())?;
+        let sid2 = usize::parse_next(&mut input, IdType::REFERENCEID())?;
         let dist = parse_dist(&mut input)?;
         let var = parse_var(&mut input)?;
         let mut tag: BString = OptionalFields::parse_tag(input)
@@ -339,28 +557,11 @@ where
         .ok_or(ParseFieldError::InvalidField("Id Group Id"))
 }
 
-/// function that parses the optional id tag of the o group element
-/// ```<id> <- *|[!-~]+```
-fn parse_optional_id<I>(input: &mut I) -> ParserFieldResult<BString>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)\*|[!-~]+").unwrap();
-    }
-
-    let next = next_field(input)?;
-    RE.find(next.as_ref())
-        .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Optional Id"))
-}
-
 /// function that parses the GROUPO element
 /// ```<o_group> <- O <oid:opt_id> <ref>([ ]<ref>)* <tag>*```
-impl<N: SegmentId> GroupO<N> {
+impl GroupO {
     #[inline]
-    pub fn wrap(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::GroupO(self)
     }
 
@@ -370,7 +571,7 @@ impl<N: SegmentId> GroupO<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = parse_optional_id(&mut input)?;
+        let id = BString::parse_next(&mut input, IdType::OPTIONALID())?;
         let var_field = parse_group_ref(&mut input)?;
         let mut tag: BString = OptionalFields::parse_tag(input)
             .into_iter()
@@ -383,9 +584,9 @@ impl<N: SegmentId> GroupO<N> {
 
 /// function that parses the GROUPO element
 /// ```<u_group> <- U <uid:opt_id>  <id>([ ]<id>)*  <tag>*```
-impl<N: SegmentId> GroupU<N> {
+impl GroupU {
     #[inline]
-    pub fn wrap(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::GroupU(self)
     }
 
@@ -395,7 +596,7 @@ impl<N: SegmentId> GroupU<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = parse_optional_id(&mut input)?;
+        let id = BString::parse_next(&mut input, IdType::OPTIONALID())?;
         let var_field = parse_group_id(&mut input)?;
         let mut tag: BString = OptionalFields::parse_tag(input)
             .into_iter()
@@ -453,8 +654,8 @@ mod tests {
     #[test]
     fn can_parse_segment() {
         let segment = "A\t10\tAAAAAAACGT";
-        let segment_: Segment<BString> = Segment {
-            id: "A".into(),
+        let segment_  = Segment {
+            id: convert_to_usize(b"A").unwrap(),
             len: "10".into(),
             sequence: "AAAAAAACGT".into(),
             tag: BString::from(""),
@@ -472,9 +673,9 @@ mod tests {
     #[test]
     fn can_parse_fragment() {
         let fragment = "15\tr1-\t10\t10\t20\t20\t*";
-        let fragment_: Fragment<BString> = Fragment {
-            id: "15".into(),
-            ext_ref: "r1-".into(),
+        let fragment_: Fragment = Fragment {
+            id: 15,
+            ext_ref: convert_to_usize(b"r1-").unwrap(),
             sbeg: "10".into(),
             send: "10".into(),
             fbeg: "20".into(),
@@ -495,10 +696,10 @@ mod tests {
     #[test]
     fn can_parse_edge() {
         let edge = "*\t2+\t45+\t2531\t2591$\t0\t60\t60M";
-        let edge_: Edge<BString> = Edge {
-            id: "*".into(),
-            sid1: "2+".into(),
-            sid2: "45+".into(),
+        let edge_: Edge = Edge {
+            id: convert_to_usize(b"*").unwrap(),
+            sid1: convert_to_usize(b"2+").unwrap(),
+            sid2: convert_to_usize(b"45+").unwrap(),
             beg1: "2531".into(),
             end1: "2591$".into(),
             beg2: "0".into(),
@@ -519,10 +720,10 @@ mod tests {
     #[test]
     fn can_parse_gap() {
         let gap = "g1\t7+\t22+\t10\t*";
-        let gap_: Gap<BString> = Gap {
-            id: "g1".into(),
-            sid1: "7+".into(),
-            sid2: "22+".into(),
+        let gap_: Gap = Gap {
+            id: convert_to_usize(b"g1").unwrap(),
+            sid1: convert_to_usize(b"7+").unwrap(),
+            sid2: convert_to_usize(b"22+").unwrap(),
             dist: "10".into(),
             var: "*".into(),
             tag: BString::from(""),
@@ -540,7 +741,7 @@ mod tests {
     #[test]
     fn can_parse_ogroup() {
         let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
-        let ogroup_: GroupO<BString> =
+        let ogroup_: GroupO =
             GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(), b"");
 
         let fields = ogroup.split_terminator('\t');
@@ -558,7 +759,7 @@ mod tests {
     #[test]
     fn can_parse_ugroup() {
         let ugroup = "SG1\t16 24 SG2 51_24 16_24";
-        let ugroup_: GroupU<BString> =
+        let ugroup_: GroupU =
             GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
 
         let fields = ugroup.split_terminator('\t');
@@ -648,5 +849,12 @@ mod tests {
                 println!("{}", u);
             }
         }
+    }
+
+    #[test]
+    fn can_print_human_readable_file() {
+        let parser = GFA2Parser::default();
+        let gfa2 = parser.parse_file("./tests/gfa2_files/spec_q7.gfa2").unwrap();
+        println!("{}", gfa2);
     }
 }

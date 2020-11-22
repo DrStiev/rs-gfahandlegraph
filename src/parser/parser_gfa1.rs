@@ -2,9 +2,238 @@
 use crate::gfa::{gfa1::*, orientation::Orientation, segment_id::*};
 use crate::parser::{error::*, parse_tag::*};
 
-use bstr::{BString, ByteSlice};
+use bstr::{BString, ByteSlice, BStr};
 use lazy_static::lazy_static;
 use regex::bytes::Regex;
+
+/// Builder struct for GFAParsers
+pub struct ParserBuilder {
+    pub headers: bool,
+    pub segments: bool,
+    pub links: bool,
+    pub containments: bool,
+    pub paths: bool,
+    pub tolerance: ParserTolerance,
+}
+
+impl ParserBuilder {
+    /// Parse no GFA lines, useful if you only want to parse one line type.
+    pub fn none() -> Self {
+        ParserBuilder {
+            headers: false,
+            segments: false,
+            links: false,
+            containments: false,
+            paths: false,
+            tolerance: Default::default(),
+        }
+    }
+
+    /// Parse all GFA lines.
+    pub fn all() -> Self {
+        ParserBuilder {
+            headers: true,
+            segments: true,
+            links: true,
+            containments: true,
+            paths: true,
+            tolerance: Default::default(),
+        }
+    }
+
+    pub fn segments(&mut self, include: bool) -> &mut Self {
+        self.segments = include;
+        self
+    }
+
+    pub fn links(&mut self, include: bool) -> &mut Self {
+        self.links = include;
+        self
+    }
+
+    pub fn error_tolerance(&mut self, tol: ParserTolerance) -> &mut Self {
+        self.tolerance = tol;
+        self
+    }
+
+    pub fn ignore_errors(&mut self) -> &mut Self {
+        self.tolerance = ParserTolerance::IgnoreAll;
+        self
+    }
+
+    pub fn ignore_safe_errors(&mut self) -> &mut Self {
+        self.tolerance = ParserTolerance::Safe;
+        self
+    }
+
+    pub fn pedantic_errors(&mut self) -> &mut Self {
+        self.tolerance = ParserTolerance::Pedantic;
+        self
+    }
+
+    pub fn build(self) -> GFAParser {
+        GFAParser {
+            headers: self.headers,
+            segments: self.segments,
+            links: self.links,
+            containments: self.containments,
+            paths: self.paths,
+            tolerance: self.tolerance,
+        }
+    }
+}
+
+/// Return a GFAParser object
+/// # Examples
+/// ```ignore
+/// // create a parser
+/// let parser: GFAParser<bstr::BString, ()> = GFAParser::new();
+/// // create a gfa object to store the result of the parsing
+/// let gfa: GFA<BString, ()> = parser.parse_file(&"./test/gfa1_files/lil.gfa"). unwrap();
+/// ```
+#[derive(Clone)]
+pub struct GFAParser {
+    headers: bool,
+    segments: bool,
+    links: bool,
+    containments: bool,
+    paths: bool,
+    tolerance: ParserTolerance,
+}
+
+impl Default for GFAParser {
+    fn default() -> Self {
+        let config = ParserBuilder::all();
+        config.build()
+    }
+}
+
+impl GFAParser {
+    /// Create a new GFAParser that will parse all four GFA line
+    /// types, and use the optional fields parser and storage `T`.
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn parse_gfa_line(&self, bytes: &[u8]) -> ParserResult<Line> {
+        let line: &BStr = bytes.trim().as_ref();
+
+        let mut fields = line.split_str(b"\t");
+        let hdr = fields.next().ok_or(ParseError::EmptyLine)?;
+
+        let invalid_line = |e: ParseFieldError| ParseError::invalid_line(e, bytes);
+
+        let line = match hdr {
+            b"H" => Header::parse_line(fields).map(Header::wrap),
+            b"S" if self.segments => Segment::parse_line(fields).map(Segment::wrap),
+            b"L" if self.links => Link::parse_line(fields).map(Link::wrap),
+            b"C" if self.containments => Containment::parse_line(fields).map(Containment::wrap),
+            b"P" if self.paths => Path::parse_line(fields).map(Path::wrap),
+            _ => return Err(ParseError::UnknownLineType),
+        }
+        .map_err(invalid_line)?;
+        Ok(line)
+    }
+
+    pub fn parse_lines<I>(&self, lines: I) -> ParserResult<GFA>
+    where
+        I: Iterator,
+        I::Item: AsRef<[u8]>,
+    {
+        let mut gfa = GFA::new();
+
+        for line in lines {
+            match self.parse_gfa_line(line.as_ref()) {
+                Ok(parsed) => gfa.insert_line(parsed),
+                Err(err) if err.can_safely_continue(&self.tolerance) => (),
+                Err(err) => return Err(err),
+            };
+        }
+
+        Ok(gfa)
+    }
+
+    /// Function that return a ```Result<GFA<N, T>, ParseError>``` object\
+    /// ```N = GFA type```\
+    /// ```T = OptionalFields or ()```
+    /// # Examples
+    /// ```ignore
+    /// use gfa2::parser_gfa1::GFAParser;
+    /// use gfa2::gfa1::GFA;
+    ///
+    /// let parser: GFAParser<BString, ()> = GFAParser::new();
+    /// let gfa: GFA<BString, ()> =
+    ///     parser.parse_file(&"./tests/gfa_files/data.gfa").unwrap();
+    ///
+    /// println!("{}", gfa);
+    ///
+    /// /*
+    /// H	VN:Z:1.0
+    /// S	11	ACCTT
+    /// S	12	TCAAGG
+    /// S	13	CTTGATT
+    /// L	11	+	12	-	4M
+    /// L	12	-	13	+	5M
+    /// L	11	+	13	+	3M
+    /// P	14	11+,12-,13+	4M,5M
+    /// */
+    ///
+    /// ```
+    pub fn parse_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<GFA, ParseError> {
+        use {
+            bstr::io::BufReadExt,
+            std::{fs::File, io::BufReader},
+        };
+
+        let file = File::open(path.as_ref())?;
+        let lines = BufReader::new(file).byte_lines();
+        let mut gfa = GFA::new();
+
+        for line in lines {
+            let line = line?;
+            match self.parse_gfa_line(line.as_ref()) {
+                Ok(parsed) => gfa.insert_line(parsed),
+                Err(err) if err.can_safely_continue(&self.tolerance) => (),
+                Err(err) => return Err(err),
+            };
+        }
+
+        Ok(gfa)
+    }
+}
+
+pub struct GFAParserLineIter<I>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    parser: GFAParser,
+    iter: I,
+}
+
+impl<I> GFAParserLineIter<I>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    pub fn from_parser(parser: GFAParser, iter: I) -> Self {
+        Self { parser, iter }
+    }
+}
+
+impl<I> Iterator for GFAParserLineIter<I>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    type Item = ParserResult<Line>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let next_line = self.iter.next()?;
+        let result = self.parser.parse_gfa_line(next_line.as_ref());
+        Some(result)
+    }
+}
 
 fn next_field<I, P>(mut input: I) -> ParserFieldResult<P>
 where
@@ -44,7 +273,7 @@ where
 
 impl Header {
     #[inline]
-    pub fn wrap<N: SegmentId>(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::Header(self)
     }
 
@@ -96,9 +325,9 @@ where
         .ok_or(ParseFieldError::InvalidField("Sequence"))
 }
 
-impl<N: SegmentId> Segment<N> {
+impl Segment {
     #[inline]
-    pub fn wrap(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::Segment(self)
     }
 
@@ -108,7 +337,7 @@ impl<N: SegmentId> Segment<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let name = N::parse_next(&mut input, IdType::ID())?;
+        let name = usize::parse_next(&mut input, IdType::ID())?;
         let sequence = parse_sequence(&mut input)?;
         let mut optional: BString = OptionalFields::parse_tag(input)
             .into_iter()
@@ -123,9 +352,9 @@ impl<N: SegmentId> Segment<N> {
     }
 }
 
-impl<N: SegmentId> Link<N> {
+impl Link {
     #[inline]
-    pub fn wrap(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::Link(self)
     }
 
@@ -135,9 +364,9 @@ impl<N: SegmentId> Link<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let from_segment = N::parse_next(&mut input, IdType::ID())?;
+        let from_segment = usize::parse_next(&mut input, IdType::ID())?;
         let from_orient = parse_orientation(&mut input)?;
-        let to_segment = N::parse_next(&mut input, IdType::ID())?;
+        let to_segment = usize::parse_next(&mut input, IdType::ID())?;
         let to_orient = parse_orientation(&mut input)?;
         let overlap = parse_overlap(&mut input)?;
         let mut optional: BString = OptionalFields::parse_tag(input)
@@ -156,9 +385,9 @@ impl<N: SegmentId> Link<N> {
     }
 }
 
-impl<N: SegmentId> Containment<N> {
+impl Containment {
     #[inline]
-    pub fn wrap(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::Containment(self)
     }
 
@@ -168,9 +397,9 @@ impl<N: SegmentId> Containment<N> {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let container_name = N::parse_next(&mut input, IdType::ID())?;
+        let container_name = usize::parse_next(&mut input, IdType::ID())?;
         let container_orient = parse_orientation(&mut input)?;
-        let contained_name = N::parse_next(&mut input, IdType::ID())?;
+        let contained_name = usize::parse_next(&mut input, IdType::ID())?;
         let contained_orient = parse_orientation(&mut input)?;
         let pos = next_field(&mut input)?;
         let pos = pos.as_ref().to_str()?.parse()?;
@@ -228,9 +457,9 @@ where
         .ok_or(ParseFieldError::InvalidField("Segment names"))
 }
 
-impl<N: SegmentId> Path<N> {
+impl Path {
     #[inline]
-    pub fn wrap(self) -> Line<N> {
+    pub fn wrap(self) -> Line {
         Line::Path(self)
     }
 
@@ -295,8 +524,8 @@ mod tests {
     #[test]
     fn can_parse_segment() {
         let segment = "A\tAAAAAAACGT";
-        let segment_: Segment<BString> = Segment {
-            name: "A".into(),
+        let segment_: Segment = Segment {
+            name: convert_to_usize(b"A").unwrap(),
             sequence: "AAAAAAACGT".into(),
             optional: BString::from(""),
         };
@@ -313,10 +542,10 @@ mod tests {
     #[test]
     fn can_parse_link() {
         let link = "15\t-\t10\t+\t20M";
-        let link_: Link<BString> = Link {
-            from_segment: "15".into(),
+        let link_: Link = Link {
+            from_segment: 15,
             from_orient: Orientation::Backward,
-            to_segment: "10".into(),
+            to_segment: 10,
             to_orient: Orientation::Forward,
             overlap: "20M".into(),
             optional: BString::from(""),
@@ -334,10 +563,10 @@ mod tests {
     #[test]
     fn can_parse_containments() {
         let containment = "15\t-\t10\t+\t4\t20M";
-        let containment_: Containment<BString> = Containment {
-            container_name: "15".into(),
+        let containment_: Containment = Containment {
+            container_name: 15,
             container_orient: Orientation::Backward,
-            contained_name: "10".into(),
+            contained_name: 10,
             contained_orient: Orientation::Forward,
             pos: 4,
             overlap: "20M".into(),
@@ -356,7 +585,7 @@ mod tests {
     #[test]
     fn can_parse_path() {
         let path = "14\t11+,12-,13+\t4M,5M";
-        let path_: Path<BString> =
+        let path_: Path =
             Path::new("14".into(), "11+,12-,13+".into(), "4M,5M".into(), b"");
 
         let fields = path.split_terminator('\t');

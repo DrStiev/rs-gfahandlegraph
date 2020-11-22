@@ -2,7 +2,7 @@
 use crate::gfa::orientation::*;
 use crate::gfa::segment_id::*;
 
-use bstr::{BStr, BString, ByteSlice};
+use bstr::{BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
@@ -16,7 +16,7 @@ use std::fmt;
 ///
 /// ## Parameter
 ///
-/// * ```GFA<N>``` - ```N``` can be [`bstring`][bstring] or [`usize`][usize]
+/// * ```GFA``` - ```N``` can be [`bstring`][bstring] or [`usize`][usize]
 ///
 /// ## Arguments
 ///
@@ -47,15 +47,15 @@ use std::fmt;
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct GFA<N> {
+pub struct GFA {
     pub headers: Vec<Header>,
-    pub segments: Vec<Segment<N>>,
-    pub links: Vec<Link<N>>,
-    pub containments: Vec<Containment<N>>,
-    pub paths: Vec<Path<N>>,
+    pub segments: Vec<Segment>,
+    pub links: Vec<Link>,
+    pub containments: Vec<Containment>,
+    pub paths: Vec<Path>,
 }
 
-impl<N: SegmentId> fmt::Display for GFA<N> {
+impl fmt::Display for GFA {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -81,17 +81,17 @@ impl<N: SegmentId> fmt::Display for GFA<N> {
 
 /// Enum containing the different kinds of GFA lines.
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub enum Line<N> {
+pub enum Line {
     Header(Header),
-    Segment(Segment<N>),
-    Link(Link<N>),
-    Containment(Containment<N>),
-    Path(Path<N>),
+    Segment(Segment),
+    Link(Link),
+    Containment(Containment),
+    Path(Path),
 }
 
 macro_rules! some_line_fn {
     ($name:ident, $tgt:ty, $variant:path) => {
-        impl<N> Line<N> {
+        impl Line {
             pub fn $name(self) -> Option<$tgt> {
                 if let $variant(x) = self {
                     Some(x)
@@ -104,14 +104,14 @@ macro_rules! some_line_fn {
 }
 
 some_line_fn!(some_header, Header, Line::Header);
-some_line_fn!(some_segment, Segment<N>, Line::Segment);
-some_line_fn!(some_link, Link<N>, Line::Link);
-some_line_fn!(some_containment, Containment<N>, Line::Containment);
-some_line_fn!(some_path, Path<N>, Line::Path);
+some_line_fn!(some_segment, Segment, Line::Segment);
+some_line_fn!(some_link, Link, Line::Link);
+some_line_fn!(some_containment, Containment, Line::Containment);
+some_line_fn!(some_path, Path, Line::Path);
 
 macro_rules! some_line_ref_fn {
     ($name:ident, $tgt:ty, $variant:path) => {
-        impl<'a, N> LineRef<'a, N> {
+        impl<'a> LineRef<'a> {
             pub fn $name(self) -> Option<&'a $tgt> {
                 if let $variant(x) = self {
                     Some(x)
@@ -124,26 +124,26 @@ macro_rules! some_line_ref_fn {
 }
 
 some_line_ref_fn!(some_header, Header, LineRef::Header);
-some_line_ref_fn!(some_segment, Segment<N>, LineRef::Segment);
-some_line_ref_fn!(some_link, Link<N>, LineRef::Link);
-some_line_ref_fn!(some_containment, Containment<N>, LineRef::Containment);
-some_line_ref_fn!(some_path, Path<N>, LineRef::Path);
+some_line_ref_fn!(some_segment, Segment, LineRef::Segment);
+some_line_ref_fn!(some_link, Link, LineRef::Link);
+some_line_ref_fn!(some_containment, Containment, LineRef::Containment);
+some_line_ref_fn!(some_path, Path, LineRef::Path);
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub enum LineRef<'a, N> {
+pub enum LineRef<'a> {
     Header(&'a Header),
-    Segment(&'a Segment<N>),
-    Link(&'a Link<N>),
-    Containment(&'a Containment<N>),
-    Path(&'a Path<N>),
+    Segment(&'a Segment),
+    Link(&'a Link),
+    Containment(&'a Containment),
+    Path(&'a Path),
 }
 
-impl<N> GFA<N> {
+impl GFA {
     /// Insert a GFA line (wrapped in the Line enum) into an existing
     /// GFA. Simply pushes it into the corresponding Vec in the GFA,
     /// or replaces the header, so there's no deduplication or sorting
     /// taking place.
-    pub fn insert_line(&mut self, line: Line<N>) {
+    pub fn insert_line(&mut self, line: Line) {
         use Line::*;
         match line {
             Header(h) => self.headers.push(h),
@@ -157,7 +157,7 @@ impl<N> GFA<N> {
     /// Consume a GFA object to produce an iterator over all the lines
     /// contained within. The iterator first produces all segments, then
     /// links, then containments, and finally paths.
-    pub fn lines_into_iter(self) -> impl Iterator<Item = Line<N>> {
+    pub fn lines_into_iter(self) -> impl Iterator<Item = Line> {
         use Line::*;
         let heads = self.headers.into_iter().map(Header);
         let segs = self.segments.into_iter().map(Segment);
@@ -169,7 +169,7 @@ impl<N> GFA<N> {
     }
 
     /// Return an iterator over references to the lines in the GFA
-    pub fn lines_iter(&'_ self) -> impl Iterator<Item = LineRef<'_, N>> {
+    pub fn lines_iter(&'_ self) -> impl Iterator<Item = LineRef<'_>> {
         use LineRef::*;
         let heads = self.headers.iter().map(Header);
         let segs = self.segments.iter().map(Segment);
@@ -181,7 +181,7 @@ impl<N> GFA<N> {
     }
 }
 
-impl<N: SegmentId> GFA<N> {
+impl GFA {
     pub fn new() -> Self {
         Default::default()
     }
@@ -246,29 +246,29 @@ impl fmt::Display for Header {
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct Segment<N> {
-    pub name: N,
+pub struct Segment {
+    pub name: usize,
     pub sequence: BString,
     pub optional: BString,
 }
 
-impl Segment<BString> {
-    pub fn new(name: &[u8], sequence: &[u8], optional: &[u8]) -> Self {
+impl Segment {
+    pub fn new(name: usize, sequence: &[u8], optional: &[u8]) -> Self {
         Segment {
-            name: BString::from(name),
+            name,
             sequence: BString::from(sequence),
             optional: optional.into(),
         }
     }
 }
 
-impl<N: SegmentId> fmt::Display for Segment<N> {
+impl fmt::Display for Segment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "S\t{}\t{}\t{}",
             self.name,
-            self.sequence.as_bstr(),
+            self.sequence,
             self.optional
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
@@ -304,28 +304,28 @@ impl<N: SegmentId> fmt::Display for Segment<N> {
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct Link<N> {
-    pub from_segment: N,
+pub struct Link {
+    pub from_segment: usize,
     pub from_orient: Orientation,
-    pub to_segment: N,
+    pub to_segment: usize,
     pub to_orient: Orientation,
     pub overlap: BString,
     pub optional: BString,
 }
 
-impl Link<BString> {
+impl Link {
     pub fn new(
-        from_segment: &[u8],
+        from_segment: usize,
         from_orient: Orientation,
-        to_segment: &[u8],
+        to_segment: usize,
         to_orient: Orientation,
         overlap: &[u8],
         optional: &[u8],
-    ) -> Link<BString> {
+    ) -> Link {
         Link {
-            from_segment: from_segment.into(),
+            from_segment,
             from_orient,
-            to_segment: to_segment.into(),
+            to_segment,
             to_orient,
             overlap: overlap.into(),
             optional: optional.into(),
@@ -333,7 +333,7 @@ impl Link<BString> {
     }
 }
 
-impl<N: SegmentId> fmt::Display for Link<N> {
+impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -378,30 +378,30 @@ impl<N: SegmentId> fmt::Display for Link<N> {
 /// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct Containment<N> {
-    pub container_name: N,
+pub struct Containment {
+    pub container_name: usize,
     pub container_orient: Orientation,
-    pub contained_name: N,
+    pub contained_name: usize,
     pub contained_orient: Orientation,
     pub pos: usize,
     pub overlap: BString,
     pub optional: BString,
 }
 
-impl Containment<BString> {
+impl Containment {
     pub fn new(
-        container_name: &[u8],
+        container_name: usize,
         container_orient: Orientation,
-        contained_name: &[u8],
+        contained_name: usize,
         contained_orient: Orientation,
         pos: usize,
         overlap: &[u8],
         optional: &[u8],
-    ) -> Containment<BString> {
+    ) -> Containment {
         Containment {
-            container_name: container_name.into(),
+            container_name,
             container_orient,
-            contained_name: contained_name.into(),
+            contained_name,
             contained_orient,
             pos,
             overlap: overlap.into(),
@@ -410,7 +410,7 @@ impl Containment<BString> {
     }
 }
 
-impl<N: SegmentId> fmt::Display for Containment<N> {
+impl fmt::Display for Containment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -449,15 +449,14 @@ impl<N: SegmentId> fmt::Display for Containment<N> {
 /// );
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub struct Path<N> {
+pub struct Path {
     pub path_name: BString,
     pub segment_names: BString,
     pub overlaps: BString,
     pub optional: BString,
-    _segment_names: std::marker::PhantomData<N>,
 }
 
-impl<N: SegmentId> Path<N> {
+impl Path {
     pub fn new(
         path_name: BString,
         segment_names: BString,
@@ -469,14 +468,11 @@ impl<N: SegmentId> Path<N> {
             segment_names,
             overlaps,
             optional: optional.into(),
-            _segment_names: std::marker::PhantomData,
         }
     }
-}
 
-impl<N: SegmentId> Path<N> {
     /// Parses (and copies!) a segment ID in the path segment list
-    fn parse_segment_id(input: &[u8]) -> Option<(N, Orientation)> {
+    fn parse_segment_id(input: &[u8]) -> Option<(usize, Orientation)> {
         use Orientation::*;
         let last = input.len() - 1;
         let orient = match input[last] {
@@ -485,33 +481,10 @@ impl<N: SegmentId> Path<N> {
             _ => panic!("Path segment did not include orientation"),
         };
         let seg = &input[..last];
-        let id = N::parse_id(IdType::ID(), seg)?;
+        let id = usize::parse_id(IdType::ID(), seg)?;
         Some((id, orient))
     }
-}
 
-impl Path<BString> {
-    /// Produces an iterator over the segments of the given path,
-    /// parsing the orientation and producing a slice to each segment
-    /// name
-    pub fn iter(&self) -> impl Iterator<Item = (&'_ BStr, Orientation)> {
-        self.segment_names.split_str(b",").map(Self::segment_id_ref)
-    }
-
-    fn segment_id_ref(input: &[u8]) -> (&'_ BStr, Orientation) {
-        use Orientation::*;
-        let last = input.len() - 1;
-        let orient = match input[last] {
-            b'+' => Forward,
-            b'-' => Backward,
-            _ => panic!("Path segment did not include orientation"),
-        };
-        let seg = &input[..last];
-        (seg.as_ref(), orient)
-    }
-}
-
-impl Path<usize> {
     /// Produces an iterator over the usize segments of the given
     /// path.
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
@@ -521,14 +494,14 @@ impl Path<usize> {
     }
 }
 
-impl<N: SegmentId> fmt::Display for Path<N> {
+impl fmt::Display for Path {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "P\t{}\t{}\t{}\t{}",
             self.path_name,
-            self.segment_names.as_bstr().to_string(),
-            self.overlaps.as_bstr().to_string(),
+            self.segment_names,
+            self.overlaps,
             self.optional
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),

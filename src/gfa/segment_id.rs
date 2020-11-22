@@ -90,7 +90,7 @@ impl SegmentId for BString {
     }
 }
 
-fn convert_to_usize(input: &[u8]) -> Option<usize> {
+pub fn convert_to_usize(input: &[u8]) -> Option<usize> {
     let len = input.len();
     let my_vec: Vec<char> = input.to_str().unwrap().chars().collect();
     let mut x = 0;
