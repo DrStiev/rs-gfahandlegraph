@@ -8,5 +8,4 @@ pub mod mutablehandlegraph;
 pub mod pathgraph;
 pub mod pathhandlegraph;
 
-pub mod packed;
 pub mod util;

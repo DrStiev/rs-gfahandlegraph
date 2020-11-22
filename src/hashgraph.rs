@@ -230,7 +230,7 @@ impl SubtractiveHandleGraph for HashGraph {
     }
 
     fn remove_edge(&mut self, Edge(l, r): Edge) -> Result<bool, GraphError> {
-        // delete all the occurrencies of edge found in graph        
+        // delete all the occurrencies of edge found in graph
         if self.has_edge(l, r) {
             if l.is_reverse() {
                 if let Some(left) = self.graph.get_mut(&l.id()) {
@@ -251,7 +251,7 @@ impl SubtractiveHandleGraph for HashGraph {
                         if let Some(rl) = right.left_edges.iter().position(|x| x.id() == l.id()) {
                             right.left_edges.remove(rl);
                         }
-                    } 
+                    }
                 }
             } else {
                 if let Some(left) = self.graph.get_mut(&l.id()) {

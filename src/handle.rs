@@ -8,8 +8,6 @@ use std::ops::Add;
 #[repr(transparent)]
 pub struct NodeId(u64);
 
-crate::impl_space_usage_stack_newtype!(NodeId);
-
 impl std::fmt::Display for NodeId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
@@ -78,20 +76,6 @@ impl From<Handle> for NodeId {
     #[inline]
     fn from(h: Handle) -> NodeId {
         h.id()
-    }
-}
-
-/// A `Handle` can be packed for use in a packed collection -- it is
-/// already a packed `u64`.
-impl crate::packed::PackedElement for Handle {
-    #[inline]
-    fn unpack(v: u64) -> Self {
-        Handle(v)
-    }
-
-    #[inline]
-    fn pack(self) -> u64 {
-        self.0
     }
 }
 

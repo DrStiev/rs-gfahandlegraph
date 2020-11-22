@@ -5,20 +5,6 @@ use crate::handle::Handle;
 #[repr(transparent)]
 pub struct PathId(pub u64);
 
-crate::impl_space_usage_stack_newtype!(PathId);
-
-impl crate::packed::PackedElement for PathId {
-    #[inline]
-    fn unpack(v: u64) -> Self {
-        PathId(v)
-    }
-
-    #[inline]
-    fn pack(self) -> u64 {
-        self.0
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum StepUpdate<StepIx: Sized + Copy + Eq> {
     Insert { handle: Handle, step: StepIx },
