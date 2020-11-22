@@ -464,9 +464,7 @@ fn modify_path() {
 }
 */
 fn can_create_graph_from_gfa2_file() {
-    match
-        parse_file_to_graph("D:\\GitHub\\rs-gfahandlegraph\\tests\\gfa2_files\\spec_q7.gfa2")
-    {
+    match parse_file_to_graph("D:\\GitHub\\rs-gfahandlegraph\\tests\\gfa2_files\\spec_q7.gfa2") {
         Ok(g) => g.print_graph(),
         Err(why) => println!("Error {}", why),
     }

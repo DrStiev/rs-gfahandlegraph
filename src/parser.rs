@@ -39,9 +39,7 @@ use crate::hashgraph::HashGraph;
 /// }
 /// */
 /// ```
-pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(
-    path: P,
-) -> Result<HashGraph, ParseError> {
+pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(path: P) -> Result<HashGraph, ParseError> {
     use crate::hashgraph::graph::FileType;
     use std::ffi::OsStr;
 

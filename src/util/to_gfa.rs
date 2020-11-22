@@ -72,11 +72,15 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
 
         let sid1_id: String = left.id().to_string();
         let sid1_orient = orient(left.is_reverse());
-        let sid1 = format!("{}{}", sid1_id, sid1_orient).parse::<usize>().unwrap();
+        let sid1 = format!("{}{}", sid1_id, sid1_orient)
+            .parse::<usize>()
+            .unwrap();
 
         let sid2_id: String = right.id().to_string();
         let sid2_orient = orient(right.is_reverse());
-        let sid2 = format!("{}{}", sid2_id, sid2_orient).parse::<usize>().unwrap();
+        let sid2 = format!("{}{}", sid2_id, sid2_orient)
+            .parse::<usize>()
+            .unwrap();
 
         let edge = GFA2Edge {
             // placeholder id
@@ -185,7 +189,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA {
 
     for edge in graph.all_edges() {
         let Edge(left, right) = edge;
-        let from_segment :usize = usize::from(left.id());
+        let from_segment: usize = usize::from(left.id());
         let from_orient = orient(left.is_reverse());
         let to_segment: usize = usize::from(right.id());
         let to_orient = orient(right.is_reverse());
@@ -221,8 +225,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA {
         // remove the last comma "," otherwise it will produce an error
         // that could break everything (overflow and other bad stuff)
         segment_names.pop();
-        let path: Path =
-            Path::new(path_name, BString::from(segment_names), "0M".into(), b"");
+        let path: Path = Path::new(path_name, BString::from(segment_names), "0M".into(), b"");
 
         gfa.paths.push(path);
     }

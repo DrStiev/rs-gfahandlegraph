@@ -3,7 +3,7 @@ use crate::gfa::{gfa2::*, segment_id::*};
 use crate::parser::error::ParserTolerance;
 use crate::parser::{error::*, parse_tag::*};
 
-use bstr::{BStr, ByteSlice, BString};
+use bstr::{BStr, BString, ByteSlice};
 use lazy_static::lazy_static;
 use regex::bytes::Regex;
 
@@ -165,10 +165,7 @@ impl GFA2Parser {
     /// */
     ///
     /// ```
-    pub fn parse_file<P: AsRef<std::path::Path>>(
-        &self,
-        path: P,
-    ) -> Result<GFA2, ParseError> {
+    pub fn parse_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<GFA2, ParseError> {
         use {
             bstr::io::BufReadExt,
             std::{fs::File, io::BufReader},
@@ -654,7 +651,7 @@ mod tests {
     #[test]
     fn can_parse_segment() {
         let segment = "A\t10\tAAAAAAACGT";
-        let segment_  = Segment {
+        let segment_ = Segment {
             id: convert_to_usize(b"A").unwrap(),
             len: "10".into(),
             sequence: "AAAAAAACGT".into(),
@@ -759,8 +756,7 @@ mod tests {
     #[test]
     fn can_parse_ugroup() {
         let ugroup = "SG1\t16 24 SG2 51_24 16_24";
-        let ugroup_: GroupU =
-            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
+        let ugroup_: GroupU = GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
 
         let fields = ugroup.split_terminator('\t');
         let result = GroupU::parse_line(fields);
@@ -854,7 +850,9 @@ mod tests {
     #[test]
     fn can_print_human_readable_file() {
         let parser = GFA2Parser::default();
-        let gfa2 = parser.parse_file("./tests/gfa2_files/spec_q7.gfa2").unwrap();
+        let gfa2 = parser
+            .parse_file("./tests/gfa2_files/spec_q7.gfa2")
+            .unwrap();
         println!("{}", gfa2);
     }
 }

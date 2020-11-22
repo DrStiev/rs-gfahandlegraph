@@ -90,10 +90,7 @@ impl fmt::Display for Segment {
         write!(
             f,
             "S\t{}\t{}\t{}\t{}",
-            self.id,
-            self.len,
-            self.sequence,
-            self.tag,
+            self.id, self.len, self.sequence, self.tag,
         )
     }
 }
@@ -169,7 +166,6 @@ impl Fragment {
 
 impl fmt::Display for Fragment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-
         let len = self.ext_ref.to_string().len() - 2;
         let ext_ref = self.ext_ref.to_string()[..len].to_string();
         let sgn = match self.ext_ref.to_string()[len..].to_string().as_str() {
@@ -270,7 +266,6 @@ impl Edge {
 
 impl fmt::Display for Edge {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-
         let len = self.sid1.to_string().len() - 2;
         let sid1 = self.sid1.to_string()[..len].to_string();
         let sgn1 = match self.sid1.to_string()[len..].to_string().as_str() {
@@ -357,7 +352,6 @@ impl Gap {
 
 impl fmt::Display for Gap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-
         let len = self.sid1.to_string().len() - 2;
         let sid1 = self.sid1.to_string()[..len].to_string();
         let sgn1 = match self.sid1.to_string()[len..].to_string().as_str() {
@@ -377,14 +371,7 @@ impl fmt::Display for Gap {
         write!(
             f,
             "G\t{}\t{}{}\t{}{}\t{}\t{}\t{}",
-            self.id,
-            sid1,
-            sgn1,
-            sid2,
-            sgn2,
-            self.dist,
-            self.var,
-            self.tag,
+            self.id, sid1, sgn1, sid2, sgn2, self.dist, self.var, self.tag,
         )
     }
 }
@@ -451,13 +438,7 @@ impl GroupO {
 
 impl fmt::Display for GroupO {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "O\t{}\t{}\t{}",
-            self.id,
-            self.var_field,
-            self.tag,
-        )
+        write!(f, "O\t{}\t{}\t{}", self.id, self.var_field, self.tag,)
     }
 }
 
@@ -515,13 +496,7 @@ impl GroupU {
 
 impl fmt::Display for GroupU {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "U\t{}\t{}\t{}",
-            self.id,
-            self.var_field,
-            self.tag,
-        )
+        write!(f, "U\t{}\t{}\t{}", self.id, self.var_field, self.tag,)
     }
 }
 
@@ -768,8 +743,7 @@ mod test {
 
     #[test]
     fn u_group_iter() {
-        let ugroup_: GroupU =
-            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
+        let ugroup_: GroupU = GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
         for name in ugroup_.iter() {
             println!("{}", name);
         }

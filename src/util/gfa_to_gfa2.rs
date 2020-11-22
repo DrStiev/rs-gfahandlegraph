@@ -69,9 +69,11 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                 let id = convert_to_usize(b"*").unwrap();
 
                 let from_node = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
-                let from_node_orient = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
+                let from_node_orient =
+                    convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
                 let to_node = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
-                let to_node_orient = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
+                let to_node_orient =
+                    convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
                 let alignment = BString::from(line_split.next().unwrap());
 
                 // placeholder values
@@ -119,8 +121,12 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
 
                 let edge = Edge {
                     id,
-                    sid1: format!("{}{}", from_node, from_node_orient).parse::<usize>().unwrap(),
-                    sid2: format!("{}{}", to_node, to_node_orient).parse::<usize>().unwrap(),
+                    sid1: format!("{}{}", from_node, from_node_orient)
+                        .parse::<usize>()
+                        .unwrap(),
+                    sid2: format!("{}{}", to_node, to_node_orient)
+                        .parse::<usize>()
+                        .unwrap(),
                     beg1,
                     end1,
                     beg2,
@@ -175,10 +181,7 @@ mod test {
         let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
         println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
         let start = Instant::now();
-        match save_on_file(
-            ObjectType::GFA2(gfa2),
-            Some(format!("{}{}", path, "2")),
-        ) {
+        match save_on_file(ObjectType::GFA2(gfa2), Some(format!("{}{}", path, "2"))) {
             Ok(_) => println!("Save big gfa2 file {:?}", start.elapsed()),
             Err(why) => println!("Error: {}", why),
         }
@@ -192,10 +195,7 @@ mod test {
         let path: String = "./tests/big_files/test.gfa".to_string();
         let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
         println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
-        match save_on_file(
-            ObjectType::GFA2(gfa2),
-            Some(format!("{}{}", path, "2")),
-        ) {
+        match save_on_file(ObjectType::GFA2(gfa2), Some(format!("{}{}", path, "2"))) {
             Ok(_) => println!("File converted and saved correctly!"),
             Err(why) => println!("Error: {}", why),
         }

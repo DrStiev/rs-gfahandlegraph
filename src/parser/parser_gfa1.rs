@@ -2,7 +2,7 @@
 use crate::gfa::{gfa1::*, orientation::Orientation, segment_id::*};
 use crate::parser::{error::*, parse_tag::*};
 
-use bstr::{BString, ByteSlice, BStr};
+use bstr::{BStr, BString, ByteSlice};
 use lazy_static::lazy_static;
 use regex::bytes::Regex;
 
@@ -585,8 +585,7 @@ mod tests {
     #[test]
     fn can_parse_path() {
         let path = "14\t11+,12-,13+\t4M,5M";
-        let path_: Path =
-            Path::new("14".into(), "11+,12-,13+".into(), "4M,5M".into(), b"");
+        let path_: Path = Path::new("14".into(), "11+,12-,13+".into(), "4M,5M".into(), b"");
 
         let fields = path.split_terminator('\t');
         let result = Path::parse_line(fields);

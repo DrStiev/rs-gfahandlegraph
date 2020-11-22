@@ -201,7 +201,8 @@ impl SubtractiveHandleGraph for HashGraph {
                         if let Some(ll) = left.left_edges.iter().position(|x| x.id() == node_id) {
                             left.left_edges.remove(ll);
                         }
-                    } else if let Some(lr) = left.right_edges.iter().position(|x| x.id() == node_id) {
+                    } else if let Some(lr) = left.right_edges.iter().position(|x| x.id() == node_id)
+                    {
                         left.right_edges.remove(lr);
                     }
                 }
@@ -212,7 +213,8 @@ impl SubtractiveHandleGraph for HashGraph {
                         if let Some(rr) = right.right_edges.iter().position(|x| x.id() == node_id) {
                             right.right_edges.remove(rr);
                         }
-                    } else if let Some(rl) = right.left_edges.iter().position(|x| x.id() == node_id) {
+                    } else if let Some(rl) = right.left_edges.iter().position(|x| x.id() == node_id)
+                    {
                         right.left_edges.remove(rl);
                     }
                 }
