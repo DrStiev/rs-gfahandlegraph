@@ -94,39 +94,39 @@ fn criterion_benchmark(c: &mut Criterion) {
 
 fn criterion_benchmark(c: &mut Criterion) {
     /*
-    Benchmarking CREATE GRAPH FROM MID GFA: Collecting 100 samples in estimated 9.5548 s (100
-                                CREATE GRAPH FROM MID GFA
-                        time:   [96.306 ms 96.463 ms 96.637 ms]
-                        change: [+0.1448% +0.5174% +0.8456%] (p = 0.00 < 0.05)
-                        Change within noise threshold.
+    CREATE GRAPH FROM MID GFA
+                        time:   [95.681 ms 95.800 ms 95.927 ms]
+                        change: [-11.472% -9.1310% -7.1120%] (p = 0.00 < 0.05)
+                        Performance has improved.
     Found 11 outliers among 100 measurements (11.00%)
-    6 (6.00%) high mild
-    5 (5.00%) high severe
+      8 (8.00%) high mild
+      3 (3.00%) high severe
     */
     c.bench_function("CREATE GRAPH FROM MID GFA", |b| {
         b.iter(|| create_graph_from_medium_gfa1())
     });
 
     /*
-    Benchmarking CREATE GRAPH FROM MID GFA2: Collecting 100 samples in estimated 11.821 s (10
-                                CREATE GRAPH FROM MID GFA2
-                        time:   [118.63 ms 118.85 ms 119.10 ms]
-                        change: [-0.2065% +0.0743% +0.3776%] (p = 0.60 > 0.05)
-                        No change in performance detected.
-    Found 9 outliers among 100 measurements (9.00%)
-    4 (4.00%) high mild
-    5 (5.00%) high severe
+    CREATE GRAPH FROM MID GFA2
+                        time:   [120.03 ms 120.24 ms 120.47 ms]
+                        change: [-1.0457% -0.8151% -0.5716%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+    Found 5 outliers among 100 measurements (5.00%)
+      3 (3.00%) high mild
+      2 (2.00%) high severe
     */
     c.bench_function("CREATE GRAPH FROM MID GFA2", |b| {
         b.iter(|| create_graph_from_medium_gfa2())
     });
 
     /*
-    Benchmarking MODIFY GRAPH FROM MID GFA2: Collecting 100 samples in estimated 92.361 s (10
-                                MODIFY GRAPH FROM MID GFA2
-                        time:   [926.50 ms 928.46 ms 930.40 ms]
-                        change: [-1.2915% -0.3089% +0.4993%] (p = 0.54 > 0.05)
-                        No change in performance detected.
+    MODIFY GRAPH FROM MID GFA2
+                        time:   [918.60 ms 924.81 ms 935.88 ms]
+                        change: [-4.3606% -3.5932% -2.3255%] (p = 0.00 < 0.05)
+                        Performance has improved.
+    Found 3 outliers among 100 measurements (3.00%)
+      2 (2.00%) high mild
+      1 (1.00%) high severe
     */
     c.bench_function("MODIFY GRAPH FROM MID GFA2", |b| {
         b.iter(|| mod_graph_from_medium_gfa2())
