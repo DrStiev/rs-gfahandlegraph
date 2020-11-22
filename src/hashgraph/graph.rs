@@ -44,8 +44,8 @@ impl Default for HashGraph {
 }
 
 pub enum FileType {
-    GFA(GFA<usize>),
-    GFA2(GFA2<usize>),
+    GFA(GFA),
+    GFA2(GFA2),
 }
 
 impl HashGraph {

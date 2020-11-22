@@ -3,12 +3,13 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 use crate::gfa::gfa2::{Edge, GroupO, Header, Segment, GFA2};
+use crate::gfa::segment_id::*;
 
 /// Very BASIC converter from GFA1 format to GFA2 format.\
 /// For now it consider only S-, L- and P- lines.
 /// ignoring all the others.
 /// WIP
-pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
+pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
     let mut gfa2 = GFA2::default();
     let file = File::open(path).unwrap();
     let reader = BufReader::new(file);
@@ -40,7 +41,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                 gfa2.headers.push(header);
             }
             "S" => {
-                let id = BString::from(line_split.next().unwrap());
+                let id = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
                 let sequence = BString::from(line_split.next().unwrap());
                 let len = BString::from(sequence.len().to_string());
 
@@ -65,12 +66,12 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
             }
             "L" => {
                 // placeholder value
-                let id = BString::from("*");
+                let id = convert_to_usize(b"*").unwrap();
 
-                let from_node = BString::from(line_split.next().unwrap());
-                let from_node_orient = BString::from(line_split.next().unwrap());
-                let to_node = BString::from(line_split.next().unwrap());
-                let to_node_orient = BString::from(line_split.next().unwrap());
+                let from_node = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
+                let from_node_orient = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
+                let to_node = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
+                let to_node_orient = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
                 let alignment = BString::from(line_split.next().unwrap());
 
                 // placeholder values
@@ -83,20 +84,20 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
                     let len = alignment.len() - 1;
                     let dist = alignment[..len].to_str().unwrap().parse::<i64>().unwrap();
 
-                    if from_node_orient == "+" && to_node_orient == "+" {
+                    if from_node_orient == 43 && to_node_orient == 43 {
                         let x = (100 - dist).abs();
                         beg1 = BString::from(x.to_string());
                         end1 = BString::from("100$");
                         end2 = BString::from(dist.to_string());
-                    } else if from_node_orient == "-" && to_node_orient == "-" {
+                    } else if from_node_orient == 45 && to_node_orient == 45 {
                         let x = (100 - dist).abs();
                         end1 = BString::from(dist.to_string());
                         beg2 = BString::from(x.to_string());
                         end2 = BString::from("100$");
-                    } else if from_node_orient == "-" && to_node_orient == "+" {
+                    } else if from_node_orient == 45 && to_node_orient == 43 {
                         end1 = BString::from(dist.to_string());
                         end2 = BString::from(dist.to_string());
-                    } else if from_node_orient == "+" && to_node_orient == "-" {
+                    } else if from_node_orient == 43 && to_node_orient == 45 {
                         let x = (100 - dist).abs();
                         beg1 = BString::from(x.to_string());
                         end1 = BString::from("100$");
@@ -118,8 +119,8 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2<BString> {
 
                 let edge = Edge {
                     id,
-                    sid1: BString::from(format!("{}{}", from_node, from_node_orient)),
-                    sid2: BString::from(format!("{}{}", to_node, to_node_orient)),
+                    sid1: format!("{}{}", from_node, from_node_orient).parse::<usize>().unwrap(),
+                    sid2: format!("{}{}", to_node, to_node_orient).parse::<usize>().unwrap(),
                     beg1,
                     end1,
                     beg2,
@@ -171,11 +172,11 @@ mod test {
         */
         let start = Instant::now();
         let path: String = "./tests/big_files/ape-4-0.10b.gfa".to_string();
-        let gfa2: GFA2<BString> = gfa_file_to_gfa2(path.clone());
+        let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
         println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
         let start = Instant::now();
         match save_on_file(
-            ObjectType::GFA2BSTRING(gfa2),
+            ObjectType::GFA2(gfa2),
             Some(format!("{}{}", path, "2")),
         ) {
             Ok(_) => println!("Save big gfa2 file {:?}", start.elapsed()),
@@ -189,10 +190,10 @@ mod test {
         // Convert file from GFA to GFA2: Duration { seconds: 0, nanoseconds: 184460400 }
         let start = Instant::now();
         let path: String = "./tests/big_files/test.gfa".to_string();
-        let gfa2: GFA2<BString> = gfa_file_to_gfa2(path.clone());
+        let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
         println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
         match save_on_file(
-            ObjectType::GFA2BSTRING(gfa2),
+            ObjectType::GFA2(gfa2),
             Some(format!("{}{}", path, "2")),
         ) {
             Ok(_) => println!("File converted and saved correctly!"),

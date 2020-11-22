@@ -2,16 +2,13 @@ use crate::gfa::{gfa1::GFA, gfa2::GFA2};
 use crate::hashgraph::HashGraph;
 use crate::util::to_gfa::*;
 
-use bstr::BString;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
 
 pub enum ObjectType {
-    GFABSTRING(GFA<BString>),
-    GFAUSIZE(GFA<usize>),
-    GFA2BSTRING(GFA2<BString>),
-    GFA2USIZE(GFA2<usize>),
+    GFA(GFA),
+    GFA2(GFA2),
     JSON(String),
     BINCODE(Vec<u8>),
     FROMGFA1GRAPH(HashGraph),
@@ -50,7 +47,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.sync_all()?;
             Ok(())
         }
-        ObjectType::GFAUSIZE(x) => {
+        ObjectType::GFA(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_usize.gfa")
             });
@@ -60,29 +57,9 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             file.sync_all()?;
             Ok(())
         }
-        ObjectType::GFA2USIZE(x) => {
+        ObjectType::GFA2(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/file_usize.gfa2")
-            });
-            let path = Path::new(&path);
-            let mut file = File::create(path)?;
-            file.write_all(format!("{}", x).as_bytes())?;
-            file.sync_all()?;
-            Ok(())
-        }
-        ObjectType::GFABSTRING(x) => {
-            let path = path.unwrap_or_else(|| {
-                String::from("./tests/output_files/default_path/file_bstring.gfa")
-            });
-            let path = Path::new(&path);
-            let mut file = File::create(path)?;
-            file.write_all(format!("{}", x).as_bytes())?;
-            file.sync_all()?;
-            Ok(())
-        }
-        ObjectType::GFA2BSTRING(x) => {
-            let path = path.unwrap_or_else(|| {
-                String::from("./tests/output_files/default_path/file_bstring.gfa2")
             });
             let path = Path::new(&path);
             let mut file = File::create(path)?;
@@ -96,7 +73,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             });
             let path = Path::new(&path);
             let mut file = File::create(path)?;
-            let gfa_file: GFA<BString> = to_gfa(&g);
+            let gfa_file: GFA = to_gfa(&g);
             file.write_all(format!("{}", gfa_file).as_bytes())?;
             file.sync_all()?;
             Ok(())
@@ -107,7 +84,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
             });
             let path = Path::new(&path);
             let mut file = File::create(path)?;
-            let gfa_file: GFA2<BString> = to_gfa2(&g);
+            let gfa_file: GFA2 = to_gfa2(&g);
             file.write_all(format!("{}", gfa_file).as_bytes())?;
             file.sync_all()?;
             Ok(())

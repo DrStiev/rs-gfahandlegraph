@@ -48,7 +48,6 @@ pub trait SubtractiveHandleGraph {
     /// Function that clears the graph and set max_id to 0 and min_id to u64::MAX
     /// like the Default implementation fore HashGraph
     fn clear_graph(&mut self);
-
 }
 
 pub trait AdditiveHandleGraph {
