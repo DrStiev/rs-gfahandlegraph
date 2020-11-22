@@ -99,19 +99,21 @@ fn clear_big_graph() {
 #[test]
 fn ditto() {
     let mut graph = read_ditto();
+    println!("{:#?}", graph);
     //graph.print_graph();
-    let node = 3 as u64;
+    let node = 1 as u64;
     let start = Instant::now();
     match graph.remove_handle(node) {
         Ok(_) => {
-            //graph.print_graph();
             println!("{:?}", start.elapsed());
+            //println!("{:#?}", graph);
+            //graph.print_graph();
         }
         Err(why) => println!("Error: {}", why),
     }
 
-    let left = Handle::new(1, Orientation::Forward);
-    let right = Handle::new(6, Orientation::Forward);
+    let left = Handle::new(7, Orientation::Forward);
+    let right = Handle::new(8, Orientation::Forward);
     let edge = Edge(left, right);
     let start = Instant::now();
     match graph.remove_edge(edge) {
@@ -145,9 +147,10 @@ fn create_medium_graph() {
 #[test]
 fn mod_graph_from_medium_gfa1() {
     /*
-    Create graph from file: Duration { seconds: 0, nanoseconds: 904378300 }
-    remove 1000 nodes from graph: Duration { seconds: 6, nanoseconds: 262859100 }
-    remove 1000 edges: Duration { seconds: 6, nanoseconds: 404936100 }
+    Create graph from file: Duration { seconds: 0, nanoseconds: 935853800 }
+    remove 1000 nodes from graph: Duration { seconds: 6, nanoseconds: 734149100 }
+    remove 1000 small edges: Duration { seconds: 6, nanoseconds: 785180600 }
+    remove 1 big edge (form of 1000 edges): Duration { seconds: 6, nanoseconds: 777967100 }
     */
     let mut graph = read_medium_gfa1();
 
@@ -244,7 +247,7 @@ fn create_big_graph() {
 }
 
 #[test]
-#[ignore]
+//#[ignore]
 fn mod_graph_from_big_gfa1() {
     /*
     Create graph from file: Duration { seconds: 500, nanoseconds: 658882600 }

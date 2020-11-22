@@ -197,21 +197,27 @@ impl SubtractiveHandleGraph for HashGraph {
             // delete all the occurrencies in the edge list of node.id()
             for i in l.iter() {
                 if let Some(left) = self.graph.get_mut(&i.id()) {
-                    if let Some(lr) = left.right_edges.iter().position(|x| x.id() == node_id) {
-                        left.right_edges.remove(lr);
-                    } else if let Some(ll) = left.left_edges.iter().position(|x| x.id() == node_id)
-                    {
-                        left.left_edges.remove(ll);
+                    if i.is_reverse() {
+                        if let Some(ll) = left.left_edges.iter().position(|x| x.id() == node_id) {
+                            left.left_edges.remove(ll);
+                        }
+                    } else {
+                        if let Some(lr) = left.right_edges.iter().position(|x| x.id() == node_id) {
+                            left.right_edges.remove(lr);
+                        }
                     }
                 }
             }
             for i in r.iter() {
                 if let Some(right) = self.graph.get_mut(&i.id()) {
-                    if let Some(rr) = right.right_edges.iter().position(|x| x.id() == node_id) {
-                        right.right_edges.remove(rr);
-                    } else if let Some(rl) = right.left_edges.iter().position(|x| x.id() == node_id)
-                    {
-                        right.left_edges.remove(rl);
+                    if i.is_reverse() {
+                        if let Some(rr) = right.right_edges.iter().position(|x| x.id() == node_id) {
+                            right.right_edges.remove(rr);
+                        }                        
+                    } else {
+                        if let Some(rl) = right.left_edges.iter().position(|x| x.id() == node_id) {
+                            right.left_edges.remove(rl);
+                        }
                     }
                 }
             }
@@ -232,25 +238,11 @@ impl SubtractiveHandleGraph for HashGraph {
     fn remove_edge(&mut self, Edge(l, r): Edge) -> Result<bool, GraphError> {
         // delete all the occurrencies of edge found in graph
         if self.has_edge(l, r) {
+           
             if l.is_reverse() {
                 if let Some(left) = self.graph.get_mut(&l.id()) {
                     if let Some(ll) = left.left_edges.iter().position(|x| x.id() == r.id()) {
                         left.left_edges.remove(ll);
-                    }
-                }
-                if r.is_reverse() {
-                    //print!("--");
-                    if let Some(right) = self.graph.get_mut(&r.id()) {
-                        if let Some(rr) = right.right_edges.iter().position(|x| x.id() == l.id()) {
-                            right.right_edges.remove(rr);
-                        }
-                    }
-                } else {
-                    //print!("-+");
-                    if let Some(right) = self.graph.get_mut(&r.id()) {
-                        if let Some(rl) = right.left_edges.iter().position(|x| x.id() == l.id()) {
-                            right.left_edges.remove(rl);
-                        }
                     }
                 }
             } else {
@@ -259,19 +251,18 @@ impl SubtractiveHandleGraph for HashGraph {
                         left.right_edges.remove(lr);
                     }
                 }
-                if r.is_reverse() {
-                    //print!("+-");
-                    if let Some(right) = self.graph.get_mut(&r.id()) {
-                        if let Some(rr) = right.right_edges.iter().position(|x| x.id() == l.id()) {
-                            right.right_edges.remove(rr);
-                        }
+            }
+
+            if r.is_reverse() {
+                if let Some(right) = self.graph.get_mut(&r.id()) {
+                    if let Some(rr) = right.right_edges.iter().position(|x| x.id() == l.id()) {
+                        right.right_edges.remove(rr);
                     }
-                } else {
-                    //print!("++");
-                    if let Some(right) = self.graph.get_mut(&r.id()) {
-                        if let Some(rl) = right.left_edges.iter().position(|x| x.id() == l.id()) {
-                            right.left_edges.remove(rl);
-                        }
+                }
+            } else {
+                if let Some(right) = self.graph.get_mut(&r.id()) {
+                    if let Some(rl) = right.left_edges.iter().position(|x| x.id() == l.id()) {
+                        right.left_edges.remove(rl);
                     }
                 }
             }
