@@ -1,6 +1,7 @@
 use bstr::{BString, ByteSlice};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::str;
 
 use crate::gfa::gfa2::{Edge, GroupO, Header, Segment, GFA2};
 use crate::gfa::segment_id::*;
@@ -8,7 +9,6 @@ use crate::gfa::segment_id::*;
 /// Very BASIC converter from GFA1 format to GFA2 format.\
 /// For now it consider only S-, L- and P- lines.
 /// ignoring all the others.
-/// WIP
 pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
     let mut gfa2 = GFA2::default();
     let file = File::open(path).unwrap();
@@ -34,7 +34,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(BString::from)
+                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
                     .collect::<BString>();
 
                 let header = Header { version, tag };
@@ -53,7 +53,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(BString::from)
+                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
                     .collect::<BString>();
 
                 let segment = Segment {
@@ -116,7 +116,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(BString::from)
+                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
                     .collect::<BString>();
 
                 let edge = Edge {
@@ -149,7 +149,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(BString::from)
+                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
                     .collect::<BString>();
 
                 let ogroup = GroupO::new(id, res, &tag);
@@ -173,24 +173,34 @@ mod test {
     #[ignore]
     fn can_parse_and_write_big_file() {
         /*
-        Convert file from GFA to GFA2: Duration { seconds: 288, nanoseconds: 430953600 }
-        Save big gfa2 file: Duration { seconds: 69, nanoseconds: 178859800 }
+        Convert file from GFA to GFA2 Duration { seconds: 350, nanoseconds: 671452100 }
+        Save file Duration { seconds: 55, nanoseconds: 875581000 }
+        Convert file from GFA to GFA2 Duration { seconds: 285, nanoseconds: 260840200 }
+        Save file Duration { seconds: 32, nanoseconds: 348270800 }
+        Convert file from GFA to GFA2 Duration { seconds: 263, nanoseconds: 999098400 }
+        Save file Duration { seconds: 29, nanoseconds: 484974600 }
         */
-        let start = Instant::now();
-        let path: String = "./tests/big_files/ape-4-0.10b.gfa".to_string();
-        let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
-        println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
-        let start = Instant::now();
-        match save_on_file(ObjectType::GFA2(gfa2), Some(format!("{}{}", path, "2"))) {
-            Ok(_) => println!("Save big gfa2 file {:?}", start.elapsed()),
-            Err(why) => println!("Error: {}", why),
+        const FILES: [&str; 3] = [
+            "./tests/big_files/ape-4-0.10b.gfa",
+            "./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa",
+            "./tests/big_files/GRCh38-20-0.10b.gfa",
+        ];
+        for i in 0..3 {
+            let start = Instant::now();
+            let path: String = FILES[i].to_string();
+            let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
+            println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
+            let start = Instant::now();
+            match save_on_file(ObjectType::GFA2(gfa2), Some(format!("{}{}", path, "2"))) {
+                Ok(_) => println!("Save file {:?}", start.elapsed()),
+                Err(why) => println!("Error: {}", why),
+            }
         }
     }
 
     #[test]
-    //#[ignore]
-    fn can_parse_and_wirte_file_with_tags() {
-        // Convert file from GFA to GFA2: Duration { seconds: 0, nanoseconds: 184460400 }
+    fn can_parse_and_write_file_with_tags() {
+        // Convert file from GFA to GFA2: Duration { seconds: 0, nanoseconds: 456816000 }
         let start = Instant::now();
         let path: String = "./tests/big_files/test.gfa".to_string();
         let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
@@ -198,6 +208,25 @@ mod test {
         match save_on_file(ObjectType::GFA2(gfa2), Some(format!("{}{}", path, "2"))) {
             Ok(_) => println!("File converted and saved correctly!"),
             Err(why) => println!("Error: {}", why),
+        }
+    }
+
+    #[test]
+    fn convert_files() {
+        const FILES: [&str; 4] = [
+            "A-3105.sort.gfa",
+            "DRB1-3123.sort.gfa",
+            "A-3105.gfa",
+            "DRB1-3123.gfa",
+        ];
+        for i in 0..4 {
+            let path = format!("{}{}", "./tests/gfa1_files/", FILES[i]);
+            let save_path: String = format!("{}{}{}", "./tests/gfa2_files/", FILES[i], "2");
+            let gfa2: GFA2 = gfa_file_to_gfa2(path);
+            match save_on_file(ObjectType::GFA2(gfa2), Some(save_path)) {
+                Ok(_) => println!("File converted and saved correctly!"),
+                Err(why) => println!("Error: {}", why),
+            }
         }
     }
 }
