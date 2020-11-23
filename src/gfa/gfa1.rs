@@ -14,32 +14,28 @@ use std::fmt;
 /// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
 /// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
 ///
-/// ## Parameter
-///
-/// * ```GFA``` - ```N``` can be [`bstring`][bstring] or [`usize`][usize]
-///
 /// ## Arguments
 ///
-/// * `headers` - A [`vector of Header`][vec].
-/// * `segments` - A [`vector of Segment`][vec].
-/// * `links` - A [`vector of Link`][vec].
-/// * `containments` - A [`vector of Containment`][vec].
-/// * `paths` - A [`vector of Path`][vec].
+/// * `headers` - A [`vector`][vec] of Header.
+/// * `segments` - A [`vector`][vec] of Segment.
+/// * `links` - A [`vector`][vec] of Link.
+/// * `containments` - A [`vector`][vec] of Containment.
+/// * `paths` - A [`vector`][vec] of Path.
 ///
 /// ## Examples
 /// ```ignore
-/// let gfa: GFA<BString> = GFA {
+/// let gfa: GFA = GFA {
 ///     headers: vec![
 ///         Header::new("VN:Z:1.0".into(), b""),
 ///     ],
 ///     segments: vec![
-///         Segment::new(b"A", b"AAAAAAACGT", b""),
+///         Segment::new(65, b"AAAAAAACGT", b""),
 ///     ],
 ///     links: vec![
-///         Link::new(b"15", Orientation::Backward, b"10", Orientation::Forward, b"4M", b""),
+///         Link::new(15, Orientation::Backward, 10, Orientation::Forward, b"4M", b""),
 ///     ],
 ///     containments: vec![
-///         Containmnet::new(b"1", Orientation::Backward, b"2", Orientation::Forward, b"110", b"100M", b""),
+///         Containmnet::new(1, Orientation::Backward, 2, Orientation::Forward, b"110", b"100M", b""),
 ///     ],
 ///     paths: vec![
 ///         Path::new(b"14", b"11+,12-,13+", vec![b"4M", b"5M"], b""),
@@ -232,15 +228,15 @@ impl fmt::Display for Header {
 ///
 /// ## Arguments
 ///
-/// * `name` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `name` - An [`usize`][usize] identifier
 /// * `sequence` - A [`bstring`][bstring] slice.
 /// * `optional field` - A [`bstring`][bstring] slice.
 ///
 /// ## Examples
 /// ```ignore
 /// let segment = "1\tAAAAAAACGT";
-/// let segment_: Segment<BString> = Segment {
-///     name: "1".into(),
+/// let segment_: Segment = Segment {
+///     name: 1,
 ///     sequence: "AAAAAAACGT".into(),
 ///     optional: b"",
 /// };
@@ -284,9 +280,9 @@ impl fmt::Display for Segment {
 ///
 /// ## Arguments
 ///
-/// * `from_segment` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `from_segment` - An [`usize`][usize] identifier
 /// * `from_orient` - An orientation identifier, it can be Forward or Backward (+-)
-/// * `to_segment` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `to_segment` - An [`usize`][usize] identifier
 /// * `to_orient` - An orientation identifier, it can be Forward or Backward (+-)
 /// * `overlap` - A [`bstring`][bstring] slice encoding a [`CIGAR`][cigar] alignment
 /// * `optional field` - A [`bstring`][bstring] slice.
@@ -294,10 +290,10 @@ impl fmt::Display for Segment {
 /// ## Examples
 /// ```ignore
 /// let link = "15\t-\t10\t+\t20M";
-/// let link_: Link<BString> = Link {
-///     from_segment: "15".into(),
+/// let link_: Link = Link {
+///     from_segment: 15,
 ///     from_orient: Orientation::Backward,
-///     to_segment: "10".into(),
+///     to_segment: 10,
 ///     to_orient: Orientation::Forward,
 ///     overlap: 20M
 ///     optional: b"",
@@ -356,9 +352,9 @@ impl fmt::Display for Link {
 ///
 /// ## Arguments
 ///
-/// * `container_name` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `container_name` - An [`usize`][usize] identifier
 /// * `container_orient` - An orientation identifier, it can be Forward or Backward (+-)
-/// * `contained_name` - A [`bstring`][bstring] or [`usize`][usize] identifier
+/// * `contained_name` - An [`usize`][usize] identifier
 /// * `contained_orient` - An orientation identifier, it can be Forward or Backward (+-)
 /// * `pos` - An [`usize`][usize] identifier
 /// * `overlap` - A [`bstring`][bstring] slice encoding a [`CIGAR`][cigar] alignment
@@ -367,10 +363,10 @@ impl fmt::Display for Link {
 /// ## Examples
 /// ```ignore
 /// let containment = "15\t-\t10\t+\t4\t20M";
-/// let containment_: Containment<BString> = Containment {
-///     container_name: "15".into(),
+/// let containment_: Containment = Containment {
+///     container_name: 15,
 ///     container_orient: Orientation::Backward,
-///     contained_name: "10".into(),
+///     contained_name: 10,
 ///     contained_orient: Orientation::Forward,
 ///     pos: 4
 ///     overlap: 20M

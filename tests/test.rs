@@ -142,9 +142,9 @@ fn create_medium_graph() {
 fn mod_graph_from_medium_gfa1() {
     /*
     Create graph from file: Duration { seconds: 0, nanoseconds: 935853800 }
-    remove 1000 nodes from graph: Duration { seconds: 6, nanoseconds: 734149100 }
-    remove 1000 small edges: Duration { seconds: 6, nanoseconds: 785180600 }
-    remove 1 big edge (form of 1000 edges): Duration { seconds: 6, nanoseconds: 777967100 }
+    remove 1000 nodes from graph: Duration { seconds: 6, nanoseconds: 353309800 }
+    remove 1000 small edges: Duration { seconds: 6, nanoseconds: 421742700 }
+    remove 1 big edge (form of 1000 edges): Duration { seconds: 6, nanoseconds: 370942500 }
     */
     let mut graph = read_medium_gfa1();
 
@@ -211,7 +211,7 @@ fn mod_graph_from_medium_gfa1() {
 }
 
 #[test]
-//#[ignore]
+#[ignore]
 fn create_big_graph() {
     /*
     Read file ape-4-0.10b.gfa: Duration { seconds: 0, nanoseconds: 65500 }

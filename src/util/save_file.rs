@@ -15,13 +15,14 @@ pub enum ObjectType {
     FROMGFA2GRAPH(HashGraph),
 }
 
-/// Function that save a GFA1(2), a JSON or an HashGraph Object on a file
+/// Function that save a GFA1, GFA2, JSON, BINCODE or HASHGRAPH Object on a file
 /// on a specific or default location
 /// # Example
 /// ```ignore
-/// save_on_file(ObjectType::FROMGFA2GRAPH(graph), Some(String::from("./tests/output_files/graph_to_file.gfa")));
-/// save_on_file(ObjectType::GFAUSIZE(gfa), Some(String::from("./tests/output_files/gfa_to_file.gfa")));
-/// save_on_file(ObjectType::GFA2BSTRING(gfa2), Some(String::from("./tests/output_files/gfa2_to_file.gfa")));
+/// save_on_file(ObjectType::FROMGFA1GRAPH(graph), Some(String::from("./tests/output_files/graph_to_file.gfa")));
+/// save_on_file(ObjectType::FROMGFA2GRAPH(graph), Some(String::from("./tests/output_files/graph_to_file.gfa2")));
+/// save_on_file(ObjectType::GFA(gfa), Some(String::from("./tests/output_files/gfa_to_file.gfa")));
+/// save_on_file(ObjectType::GFA2(gfa2), Some(String::from("./tests/output_files/gfa2_to_file.gfa")));
 /// save_on_file(ObjectType::JSON(json), Some(String::from("./tests/output_files/json_to_file.gfa")));
 /// save_on_file(ObjectType::BINCODE(bincode), Some(String::from("./tests/output_files/bincode_to_file.gfa")));
 /// ```
@@ -39,7 +40,7 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
         }
         ObjectType::BINCODE(x) => {
             let path = path.unwrap_or_else(|| {
-                String::from("./tests/output_files/default_path/bincode_file.txt")
+                String::from("./tests/output_files/default_path/bincode_file.bin")
             });
             let path = Path::new(&path);
             let mut file = File::create(path)?;

@@ -9,3 +9,6 @@ tests/gfa1_files/diatom.gfa
 tests/output_files/ape-4-0.10b.json
 tests/output_files/ape-4-0.10b.gfa2.json
 tests/output_files/ape-4-0.10b.gfa2.txt
+tests/output_files/default_path/bincode_file.bin
+tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2
+tests/big_files/GRCh38-20-0.10b.gfa2

@@ -51,8 +51,8 @@ impl fmt::Display for Header {
 ///
 /// ## Arguments
 ///
-/// * `id` - A [`bstring`][bstring] or [`usize`][usize] identifier
-/// * `len` - An [`usize`][usize] identifier
+/// * `id` - An [`usize`][usize] identifier.
+/// * `len` - A [`bstring`][bstring] slice.
 /// * `sequence` - A [`bstring`][bstring] slice.
 /// * `tag` - A [`bstring`][bstring] slice.
 ///
@@ -60,7 +60,7 @@ impl fmt::Display for Header {
 /// ```ignore
 /// let segment = "A\t10\tAAAAAAACGT";
 /// let segment_: Segment<BString> = Segment {
-///     id: "A".into(),
+///     id: 65, // 'A' -> 65 ASCII CODE
 ///     len: "10".into(),
 ///     sequence: "AAAAAAACGT".into(),
 ///     tag: b"",
@@ -104,8 +104,8 @@ impl fmt::Display for Segment {
 ///
 /// ## Arguments
 ///
-/// * `id` - A [`bstring`][bstring] or [`usize`][usize] identifier
-/// * `ext_ref` - A [`bstring`][bstring] or [`usize`][usize] identifier followed by an Orientation character (+-) or (43-45)
+/// * `id` - An [`usize`][usize] identifier
+/// * `ext_ref` - An [`usize`][usize] identifier followed by an Orientation character (43-45)
 /// * `sbeg` - A [`bstring`][bstring] slice followed by an optional terminator ($)
 /// * `send` - A [`bstring`][bstring] slice followed by an optional terminator ($)
 /// * `fbeg` - A [`bstring`][bstring] slice followed by an optional terminator ($)
@@ -117,9 +117,9 @@ impl fmt::Display for Segment {
 ///
 /// ```ignore
 /// let fragment = "15\tr1-\t10\t10\t20\t20\t*";
-/// let fragment_: Fragment<BString> = Fragment {
-///     id: "15".into(),
-///     ext_ref: "r1-".into(),
+/// let fragment_: Fragment = Fragment {
+///     id: 15,
+///     ext_ref: convert_to_usize(b"r1-").unwrap(),
 ///     sbeg: "10".into(),
 ///     send: "10".into(),
 ///     fbeg: "20".into(),
@@ -199,9 +199,9 @@ impl fmt::Display for Fragment {
 ///
 /// ## Arguments
 ///
-/// * `id` - A [`bstring`][bstring] or [`usize`][usize] identifier
-/// * `sid1` - A [`bstring`][bstring] or [`usize`][usize] identifier followed by an Orientation character (+-) or (43-45)
-/// * `sid2` - A [`bstring`][bstring] or [`usize`][usize] identifier followed by an Orientation character (+-) or (43-45)
+/// * `id` - An [`usize`][usize] identifier
+/// * `sid1` - An [`usize`][usize] identifier followed by an Orientation character (43-45)
+/// * `sid2` - An [`usize`][usize] identifier followed by an Orientation character (43-45)
 /// * `beg1` - A [`bstring`][bstring] slice followed by an optional terminator ($)
 /// * `end1` - A [`bstring`][bstring] slice followed by an optional terminator ($)
 /// * `beg2` - A [`bstring`][bstring] slice followed by an optional terminator ($)
@@ -213,10 +213,10 @@ impl fmt::Display for Fragment {
 ///
 /// ```ignore
 /// let edge = "*\t2+\t45+\t2531\t2591$\t0\t60\t60M";
-/// let edge_: Edge<BString> = Edge {
-///     id: "*".into(),
-///     sid1: "2+".into(),
-///     sid2: "45+".into(),
+/// let edge_: Edge = Edge {
+///     id: 42, // '*' -> 42 ASCII CODE
+///     sid1: 243, // '2+' -> 243 ('+' = 43 ASCII CODE)
+///     sid2: 4543, // '45+' -> 4543 ('+' = 43 ASCII CODE)
 ///     beg1: "2531".into(),
 ///     end1: "2591$".into(),
 ///     beg2: "0".into(),
@@ -307,9 +307,9 @@ impl fmt::Display for Edge {
 ///
 /// ## Arguments
 ///
-/// * `id` - A [`bstring`][bstring] or [`usize`][usize] identifier
-/// * `sid1` - A [`bstring`][bstring] or [`usize`][usize] identifier followed by an Orientation character (+-) or (43-45)
-/// * `sid2` - A [`bstring`][bstring] or [`usize`][usize] identifier followed by an Orientation character (+-) or (43-45)
+/// * `id` - An [`usize`][usize] identifier
+/// * `sid1` - An [`usize`][usize] identifier followed by an Orientation character (43-45)
+/// * `sid2` - An [`usize`][usize] identifier followed by an Orientation character (43-45)
 /// * `dist` - A [`bstring`][bstring] slice.
 /// * `var` - A [`bstring`][bstring] slice.
 /// * `tag` - A [`bstring`][bstring] slice.
@@ -318,10 +318,10 @@ impl fmt::Display for Edge {
 ///
 /// ```ignore
 /// let gap = "g1\t7+\t22+\t10\t*";
-/// let gap_: Gap<BString> = Gap {
-///     id: "g1".into(),
-///     sid1: "7+".into(),
-///     sid2: "22+".into(),
+/// let gap_: Gap = Gap {
+///     id: convert_to_usize(b"g1").unwrap(),
+///     sid1: 743, // '7+' -> 743 ('+' = 43 ASCII CODE)
+///     sid2: 2243, // '22+' -> 2243 ('+' = 43 ASCII CODE)
 ///     dist: "10".into(),
 ///     var: "*".into(),
 ///     tag: b"",
@@ -390,7 +390,7 @@ impl fmt::Display for Gap {
 ///
 /// ```ignore
 /// let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
-/// let ogroup_: GroupO<BString> = GroupO::new(
+/// let ogroup_: GroupO = GroupO::new(
 ///     "P1".into(),
 ///     "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
 ///     b"",
@@ -456,7 +456,7 @@ impl fmt::Display for GroupO {
 ///
 /// ```ignore
 /// let ugroup = "SG1\t16 24 SG2 51_24 16_24";
-/// let ugroup_: GroupU<BString> = GroupU::new(
+/// let ugroup_: GroupU = GroupU::new(
 ///     "SG1".into(),
 ///     "16 24 SG2 51_24 16_24".into(),
 ///     b"",
@@ -506,38 +506,34 @@ impl fmt::Display for GroupU {
 /// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
 /// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
 ///
-/// ## Parameter
-///
-/// * ```GFA2<N>``` - ```N``` can be [`bstring`][bstring] or [`usize`][usize]
-///
 /// ## Arguments
 ///
-/// * `headers` - A [`vector of Header`][vec].
-/// * `segments` - A [`vector of Segment`][vec].
-/// * `fragments` - A [`vector of Fragment`][vec].
-/// * `edges` - A [`vector of Edge`][vec].
-/// * `gaps` - A [`vector of Gap`][vec].
-/// * `o groups` - A [`vector of OGroup`][vec].
-/// * `u groups` - A [`vector of UGroup`][vec].
+/// * `headers` - A [`vector`][vec] of Header.
+/// * `segments` - A [`vector`][vec] of Segment.
+/// * `fragments` - A [`vector`][vec] of Fragment.
+/// * `edges` - A [`vector`][vec] of Edge.
+/// * `gaps` - A [`vector`][vec] of Gap.
+/// * `o groups` - A [`vector`][vec] of OGroup.
+/// * `u groups` - A [`vector`][vec] of UGroup.
 ///
 /// ## Examples
 ///
 /// ```ignore
-/// let gfa2: GFA2<BString> = GFA2 {
+/// let gfa2: GFA2 = GFA2 {
 ///     headers: vec![
 ///         Header::new("VN:Z:2.0".into(), b""),
 ///     ],
 ///     segments: vec![
-///         Segment::new(b"A", b"10", b"AAAAAAACGT", b""),
+///         Segment::new(65, b"10", b"AAAAAAACGT", b""),
 ///     ],
 ///     fragments: vec![
-///         Fragment::new(b"15", b"r1-", b"10", b"10", b"20", b"20", b"*", b""),
+///         Fragment::new(15, convert_to_usize(b"r1-").unwrap(), b"10", b"10", b"20", b"20", b"*", b""),
 ///     ],
 ///     edges: vec![
-///         Edge::new(b"*", b"2+", b"45+", b"2531", b"2591$", b"0", b"60", b"60M", b""),
+///         Edge::new(42, 243, 4543, b"2531", b"2591$", b"0", b"60", b"60M", b""),
 ///     ],
 ///     gaps: vec![
-///         Gap::new(b"g1", b"7+", b"22+", b"10", b"*", b""),
+///         Gap::new(convert_to_usize(b"g1").unwrap(), 743, 2243, b"10", b"*", b""),
 ///     ],
 ///     groups_o: vec![
 ///         GroupO::new(b"P1", b"36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-", b""),

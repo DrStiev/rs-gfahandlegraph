@@ -95,12 +95,13 @@ fn criterion_benchmark(c: &mut Criterion) {
 fn criterion_benchmark(c: &mut Criterion) {
     /*
     CREATE GRAPH FROM MID GFA
-                        time:   [95.681 ms 95.800 ms 95.927 ms]
-                        change: [-11.472% -9.1310% -7.1120%] (p = 0.00 < 0.05)
-                        Performance has improved.
-    Found 11 outliers among 100 measurements (11.00%)
-      8 (8.00%) high mild
-      3 (3.00%) high severe
+                        time:   [95.183 ms 95.269 ms 95.356 ms]
+                        change: [-0.7161% -0.5547% -0.3996%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+    Found 6 outliers among 100 measurements (6.00%)
+      2 (2.00%) low mild
+      3 (3.00%) high mild
+      1 (1.00%) high severe
     */
     c.bench_function("CREATE GRAPH FROM MID GFA", |b| {
         b.iter(|| create_graph_from_medium_gfa1())
@@ -108,11 +109,11 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     /*
     CREATE GRAPH FROM MID GFA2
-                        time:   [120.03 ms 120.24 ms 120.47 ms]
-                        change: [-1.0457% -0.8151% -0.5716%] (p = 0.00 < 0.05)
+                        time:   [119.58 ms 119.71 ms 119.86 ms]
+                        change: [-0.6557% -0.4369% -0.2326%] (p = 0.00 < 0.05)
                         Change within noise threshold.
-    Found 5 outliers among 100 measurements (5.00%)
-      3 (3.00%) high mild
+    Found 6 outliers among 100 measurements (6.00%)
+      4 (4.00%) high mild
       2 (2.00%) high severe
     */
     c.bench_function("CREATE GRAPH FROM MID GFA2", |b| {
@@ -121,12 +122,9 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     /*
     MODIFY GRAPH FROM MID GFA2
-                        time:   [918.60 ms 924.81 ms 935.88 ms]
-                        change: [-4.3606% -3.5932% -2.3255%] (p = 0.00 < 0.05)
-                        Performance has improved.
-    Found 3 outliers among 100 measurements (3.00%)
-      2 (2.00%) high mild
-      1 (1.00%) high severe
+                        time:   [908.09 ms 909.66 ms 911.30 ms]
+                        change: [-2.8493% -1.6381% -0.9226%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
     */
     c.bench_function("MODIFY GRAPH FROM MID GFA2", |b| {
         b.iter(|| mod_graph_from_medium_gfa2())

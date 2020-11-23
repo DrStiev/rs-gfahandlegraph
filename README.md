@@ -17,8 +17,7 @@ development proceeds.
 ## Usage
 To create a Graph from a GFA file:
 ```rust
-let parser: Parser = Parser::new();
-match parser.parse_file_to_graph("./tests/gfa2_files/irl.gfa2") {
+match parse_file_to_graph("./tests/gfa2_files/irl.gfa2") {
 	Ok(g) => g.print_graph(),
 	Err(why) => println!("Error {}", why),
 }
@@ -56,11 +55,10 @@ Graph: {
 ```
 To convert a Graph back into a GFA file:
 ```rust
-let parser: Parser = Parser::new();
-match parser.parse_file_to_graph("./tests/gfa2_files/irl.gfa2") {
+match parse_file_to_graph("./tests/gfa2_files/irl.gfa2") {
 	Ok(g) => {
 		g.print_graph();
-		let mut _file: GFA2<BString> = GFA2::new();
+		let mut _file: GFA2 = GFA2::new();
 		_file = to_gfa2(&g);
 		println!("{}", _file);
 	}
@@ -92,9 +90,9 @@ H       VN:Z:2.0
 S       65      10      AAAAAAACGT
 S       88      10      ACGTCCACGT
 S       66      10      ACGTGGGGGG
-E       *       65+     88+     0       0$      0       0$      0M
-E       *       65+     88-     0       0$      0       0$      0M
-E       *       66-     88-     0       0$      0       0$      0M
+E       42       65+     88+     0       0$      0       0$      0M
+E       42       65+     88-     0       0$      0       0$      0M
+E       42       66-     88-     0       0$      0       0$      0M
 O       2       65+ 88- 66+
 O       1       65+ 88+ 66+
 ```

@@ -80,10 +80,10 @@ mod tests {
 
     fn convert_big_gfa_to_bincode() {
         /* GOOD FOR BIG FILES, mantain the same dimension and the conversion it's very fast
-        Create graph from file: Duration { seconds: 510, nanoseconds: 346637600 }
-        Convert graph to GFAObject: Duration { seconds: 149, nanoseconds: 42329000 }
-        Convert GFAObject to BINCODEObject: Duration { seconds: 6, nanoseconds: 368061400 }
-        Save BINCODEObject to file: Duration { seconds: 21, nanoseconds: 613434800 }
+        Create graph from file: Duration { seconds: 526, nanoseconds: 791021400 }
+        Convert graph to GFAObject: Duration { seconds: 151, nanoseconds: 572864700 }
+        Convert GFAObject to BINCODEObject: Duration { seconds: 5, nanoseconds: 665128800 }
+        Save BINCODEObject to file: Duration { seconds: 21, nanoseconds: 500720900 }
         */
         let start = Instant::now();
         let mut gfa2: GFA2 = GFA2::new();
@@ -114,10 +114,10 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
+    //#[ignore]
     fn big_files() {
         convert_big_gfa_to_bincode();
-        convert_big_gfa_to_json();
+        //convert_big_gfa_to_json();
     }
 
     #[test]

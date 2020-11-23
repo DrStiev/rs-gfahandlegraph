@@ -143,16 +143,12 @@ impl GFA2Parser {
         Ok(gfa2)
     }
 
-    /// Function that return a ```Result<GFA2<N, T>, ParseError>``` object\
-    /// ```N = GFA2 type```\
-    /// ```T = OptionalFields or ()```
+    /// Function that return a ```Result<GFA2, ParseError>``` object
+    ///
     /// # Examples
     /// ```ignore
-    /// use gfa2::parser_gfa2::GFA2Parser;
-    /// use gfa2::gfa2::GFA2;
-    ///
-    /// let parser: GFA2Parser<BString, ()> = GFA2Parser::new();
-    /// let gfa2: GFA2<BString, ()> =
+    /// let parser: GFA2Parser = GFA2Parser::new();
+    /// let gfa2: GFA2 =
     ///     parser.parse_file(&"./tests/gfa2_files/data.gfa").unwrap();
     ///
     /// println!("{}", gfa2);
@@ -161,7 +157,7 @@ impl GFA2Parser {
     /// H       aa:i:15
     /// H       VN:Z:2.0    TS:i:15
     /// S       3       21      TGCAACGTATAGACTTGTCAC   RC:i:4  KC:i:485841 LN:i:1329
-    /// E       *       1+      2+      3       8$      0       5       0,2,4TS:i:2  zz:Z:tag    vo:J:{"labels":false}
+    /// E       42       1+      2+      3       8$      0       5       0,2,4  TS:i:2  zz:Z:tag    vo:J:{"labels":false}
     /// */
     ///
     /// ```

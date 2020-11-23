@@ -153,16 +153,12 @@ impl GFAParser {
         Ok(gfa)
     }
 
-    /// Function that return a ```Result<GFA<N, T>, ParseError>``` object\
-    /// ```N = GFA type```\
-    /// ```T = OptionalFields or ()```
+    /// Function that return a ```Result<GFA, ParseError>``` object
+    ///
     /// # Examples
     /// ```ignore
-    /// use gfa2::parser_gfa1::GFAParser;
-    /// use gfa2::gfa1::GFA;
-    ///
-    /// let parser: GFAParser<BString, ()> = GFAParser::new();
-    /// let gfa: GFA<BString, ()> =
+    /// let parser: GFAParser = GFAParser::new();
+    /// let gfa: GFA =
     ///     parser.parse_file(&"./tests/gfa_files/data.gfa").unwrap();
     ///
     /// println!("{}", gfa);
