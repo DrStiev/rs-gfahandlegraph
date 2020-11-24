@@ -15,17 +15,14 @@ pub type OptionalFields = Vec<OptField>;
 pub type NoOptionalFields = ();
 
 /// An optional field a la SAM. Identified by its tag, which is any
-/// two characters matching [A-Za-z][A-Za-z0-9].
+/// two characters matching [A-Za-z0-9][A-Za-z0-9].
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct OptField {
     pub tag: [u8; 2],
     pub value: OptFieldVal,
 }
 
-/// enum for representing each of the SAM optional field types. The
-/// `B` type, which denotes either an integer or float array, is split
-/// in two variants, and they ignore the size modifiers in the spec,
-/// instead always holding i64 or f32.
+/// enum for representing each of the SAM optional field types.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum OptFieldVal {
     Z(BString),

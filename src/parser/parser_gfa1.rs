@@ -153,7 +153,9 @@ impl GFAParser {
         Ok(gfa)
     }
 
-    /// Function that return a ```Result<GFA, ParseError>``` object
+    /// Function that return a Result<
+    /// [`GFA`](/gfahandlegraph/gfa/gfa1/struct.GFA.html),
+    /// [`ParseError`](../error/enum.ParseError.html)> Object
     ///
     /// # Examples
     /// ```ignore

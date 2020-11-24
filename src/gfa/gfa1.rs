@@ -16,11 +16,11 @@ use std::fmt;
 ///
 /// ## Arguments
 ///
-/// * `headers` - A [`vector`][vec] of Header.
-/// * `segments` - A [`vector`][vec] of Segment.
-/// * `links` - A [`vector`][vec] of Link.
-/// * `containments` - A [`vector`][vec] of Containment.
-/// * `paths` - A [`vector`][vec] of Path.
+/// * `headers` - A [`vector`][vec] of [`Header`](struct.Header.html).
+/// * `segments` - A [`vector`][vec] of [`Segment`](struct.Segment.html).
+/// * `links` - A [`vector`][vec] of [`Link`](struct.Link.html).
+/// * `containments` - A [`vector`][vec] of [`Containment`](struct.Containment.html).
+/// * `paths` - A [`vector`][vec] of [`Path`](struct.Path.html).
 ///
 /// ## Examples
 /// ```ignore
@@ -437,12 +437,12 @@ impl fmt::Display for Containment {
 /// ## Examples
 /// ```ignore
 /// let path = "14\t11+,12-,13+\t4M,5M";
-/// let path_: Path<BString> = Path::new(
-///     "14".into(),
-///     "11+,12-,13+".into(),
-///     "4M,5M".into(),
-///     b"",
-/// );
+/// let path_: Path = Path {
+///     path_name: "14".into(),
+///     segment_names: "11+,12-,13+".into(),
+///     overlaps: "4M,5M".into(),
+///     optional: "".into(),
+/// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Path {

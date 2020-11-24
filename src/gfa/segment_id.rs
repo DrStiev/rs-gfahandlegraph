@@ -6,6 +6,17 @@ use bstr::{BString, ByteSlice};
 use lazy_static::lazy_static;
 use regex::bytes::Regex;
 
+/// enum representing the type of ID that is going to be parsed
+/// ```ignore
+/// pub enum IdType {
+///     ID(),          // this ID it's required and cannot
+///                    // be undeclared
+///     OPTIONALID(), // this ID it' optional so it can be
+///                   // undeclared using the character '*'
+///     REFERENCEID(), // this ID is referred to another ID so
+///                   // it required the orientation character [+-]
+/// }
+/// ```
 pub enum IdType {
     ID(),
     OPTIONALID(),
@@ -90,6 +101,24 @@ impl SegmentId for BString {
     }
 }
 
+/// This function will convert any
+/// [printable]
+/// input into the corresponding [ASCII CODE].\
+/// Remember! if the input it's already a `Number` it will be returned as it is.
+///
+/// [printable]: https://flaviocopes.com/printable-ascii-characters/
+/// [ASCII CODE]: https://www.ascii-code.com/
+///
+/// ## Example
+/// ```ignore
+/// let a = b"a";
+/// let a_: usize = 97;
+/// assert_eq!(a_, get_code_from_char(a));
+///
+/// let number = b"7";
+/// let number_: usize = 7;
+/// assert_eq!(number_, get_code_from_char(number));
+/// ```
 pub fn convert_to_usize(input: &[u8]) -> Option<usize> {
     let len = input.len();
     let my_vec: Vec<char> = input.to_str().unwrap().chars().collect();
@@ -131,7 +160,7 @@ const CHARS: [&str; 128] = [
 /// function that performs the conversion from a symbol to the associated ascii code
 /// # Example
 /// ```ignore
-///  let a: &str = "a";
+/// let a: &str = "a";
 /// let a_: usize = 97;
 /// assert_eq!(a_, get_code_from_char(a));
 /// ```

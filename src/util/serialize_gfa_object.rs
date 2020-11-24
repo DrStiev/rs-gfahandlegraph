@@ -7,7 +7,10 @@ pub enum GFAType {
     GFA2(GFA2),
 }
 
-/// Function that convert a GFA object into a JSON file
+/// Function that convert a
+/// [`GFA`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa1/struct.GFA.html),
+/// [`GFA2`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa2/struct.GFA2.html),
+/// object into a [`JSON`](https://docs.serde.rs/serde_json/) file
 pub fn to_json(gfa: GFAType) -> Result<String> {
     match gfa {
         GFAType::GFA(g) => {
@@ -21,7 +24,10 @@ pub fn to_json(gfa: GFAType) -> Result<String> {
     }
 }
 
-/// Function that convert a GFA object into a  BINCODE file
+/// Function that convert a
+/// [`GFA`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa1/struct.GFA.html),
+/// [`GFA2`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa2/struct.GFA2.html),
+/// object into a  [`BINCODE`](https://docs.rs/bincode/1.3.1/bincode/) file
 pub fn to_bincode(gfa: GFAType) -> Result<Vec<u8>> {
     match gfa {
         GFAType::GFA(g) => {
@@ -100,7 +106,7 @@ mod tests {
                         let start = Instant::now();
                         match save_on_file(
                             ObjectType::BINCODE(b),
-                            Some("./tests/output_files/ape-4-0.10b.gfa2.txt".to_string()),
+                            Some("./tests/output_files/ape-4-0.10b.gfa2.bin".to_string()),
                         ) {
                             Ok(_) => println!("Save BINCODEObject to file: {:?}", start.elapsed()),
                             Err(why) => println!("Error: {}", why),
@@ -114,10 +120,10 @@ mod tests {
     }
 
     #[test]
-    //#[ignore]
+    #[ignore]
     fn big_files() {
         convert_big_gfa_to_bincode();
-        //convert_big_gfa_to_json();
+        convert_big_gfa_to_json();
     }
 
     #[test]

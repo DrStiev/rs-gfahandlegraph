@@ -10,12 +10,16 @@ pub use self::parser_gfa2::*;
 use crate::gfa::{gfa1::GFA, gfa2::GFA2};
 use crate::hashgraph::HashGraph;
 
-/// Function that given a ```GFA``` or ```GFA2``` file as input, creates the
-/// corresponding HashGraph.
+/// Function that given a
+/// [`GFA`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa1/struct.GFA.html)
+/// or
+/// [`GFA2`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa2/struct.GFA2.html)
+/// file as input, creates the
+/// corresponding
+/// [`HashGraph`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/graph/struct.HashGraph.html).
 /// # Example
 /// ```ignore
-/// let parser: Parser = Parser::new();
-/// match parser.parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
+/// match parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
 ///     Ok(g) => g.print_graph(),
 ///     Err(why) => println!("Error {}", why),
 /// }

@@ -3,6 +3,12 @@ use crate::parser::ParseFieldError;
 use serde::{Deserialize, Serialize};
 
 /// Represents segment orientation/strand
+/// ```ignore
+/// pub enum Orientation {
+///     Forward, // represents the '+' sign
+///     Backward, // represents the '-' sign
+/// }
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Hash)]
 pub enum Orientation {
     Forward,

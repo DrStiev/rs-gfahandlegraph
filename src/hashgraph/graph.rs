@@ -151,7 +151,7 @@ impl HashGraph {
         }
     }
 
-    /// Print an HashGraph object in a simplified way
+    /// Print an [`HashGraph`](struct.HashGraph.html) object in a simplified way
     /// # Example
     /// ```ignore
     /// graph.print_simple_graph();
@@ -287,7 +287,7 @@ impl HashGraph {
     }
 
     /// Function that returns a reference to the value corresponding to the key.\
-    /// The reference is a Node object wrapped in Option
+    /// The reference is a [`Node`](../node/struct.Node.html) object wrapped in Option
     /// # Examples
     /// ```ignore
     /// println!("{:?}", graph.get_node(&11));
@@ -308,7 +308,7 @@ impl HashGraph {
     }
 
     /// Function that returns a reference to the value corresponding to the key.\
-    /// The reference is a Path object wrapped in Option
+    /// The reference is a [`Path`](../path/struct.Path.html) object wrapped in Option
     /// # Examples
     /// ```ignore
     /// println!("{:?}", graph.get_path(&0));

@@ -36,6 +36,15 @@ impl PathStep {
     }
 }
 
+///```ignore
+/// #[derive(Debug, Clone)]
+/// pub struct Path {
+///     pub path_id: PathId,
+///     pub name: BString,
+///     pub is_circular: bool,
+///     pub nodes: Vec<Handle>,
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub struct Path {
     pub path_id: PathId,

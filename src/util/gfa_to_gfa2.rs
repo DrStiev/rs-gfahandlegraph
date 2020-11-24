@@ -6,8 +6,10 @@ use std::str;
 use crate::gfa::gfa2::{Edge, GroupO, Header, Segment, GFA2};
 use crate::gfa::segment_id::*;
 
-/// Very BASIC converter from GFA1 format to GFA2 format.\
-/// For now it consider only S-, L- and P- lines.
+/// Very BASIC converter from
+/// [`GFA`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa1/struct.GFA.html) format to
+/// [`GFA2`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa2/struct.GFA2.html) format.\
+/// For now it consider only S-, L- and P- lines,
 /// ignoring all the others.
 pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
     let mut gfa2 = GFA2::default();
@@ -152,7 +154,11 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                     .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
                     .collect::<BString>();
 
-                let ogroup = GroupO::new(id, res, &tag);
+                let ogroup = GroupO {
+                    id,
+                    var_field: res,
+                    tag,
+                };
                 gfa2.groups_o.push(ogroup);
             }
             // ignore all the other lines (typically C- and comment-lines)
@@ -212,18 +218,18 @@ mod test {
     }
 
     #[test]
+    #[ignore]
     fn convert_files() {
         const FILES: [&str; 4] = [
-            "A-3105.sort.gfa",
-            "DRB1-3123.sort.gfa",
-            "A-3105.gfa",
-            "DRB1-3123.gfa",
+            "./tests/big_files/A-3105.sort.gfa",
+            "./tests/big_files/DRB1-3123.sort.gfa",
+            "./tests/big_files/A-3105.gfa",
+            "./tests/big_files/DRB1-3123.gfa",
         ];
         for i in 0..4 {
-            let path = format!("{}{}", "./tests/gfa1_files/", FILES[i]);
-            let save_path: String = format!("{}{}{}", "./tests/gfa2_files/", FILES[i], "2");
-            let gfa2: GFA2 = gfa_file_to_gfa2(path);
-            match save_on_file(ObjectType::GFA2(gfa2), Some(save_path)) {
+            let path = FILES[i].to_string();
+            let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
+            match save_on_file(ObjectType::GFA2(gfa2), Some(format!("{}{}", path, "2"))) {
                 Ok(_) => println!("File converted and saved correctly!"),
                 Err(why) => println!("Error: {}", why),
             }

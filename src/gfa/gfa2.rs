@@ -390,11 +390,11 @@ impl fmt::Display for Gap {
 ///
 /// ```ignore
 /// let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
-/// let ogroup_: GroupO = GroupO::new(
-///     "P1".into(),
-///     "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-///     b"",
-/// );
+/// let ogroup_: GroupO = GroupO {
+///     id: "P1".into(),
+///     var_field: "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+///     tag: "".into(),
+/// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GroupO {
@@ -456,11 +456,11 @@ impl fmt::Display for GroupO {
 ///
 /// ```ignore
 /// let ugroup = "SG1\t16 24 SG2 51_24 16_24";
-/// let ugroup_: GroupU = GroupU::new(
-///     "SG1".into(),
-///     "16 24 SG2 51_24 16_24".into(),
-///     b"",
-/// );
+/// let ugroup_: GroupU = GroupU {
+///     id: "SG1".into(),
+///     var_field: "16 24 SG2 51_24 16_24".into(),
+///     tag: "".into(),
+/// };
 /// ```
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GroupU {
@@ -508,13 +508,13 @@ impl fmt::Display for GroupU {
 ///
 /// ## Arguments
 ///
-/// * `headers` - A [`vector`][vec] of Header.
-/// * `segments` - A [`vector`][vec] of Segment.
-/// * `fragments` - A [`vector`][vec] of Fragment.
-/// * `edges` - A [`vector`][vec] of Edge.
-/// * `gaps` - A [`vector`][vec] of Gap.
-/// * `o groups` - A [`vector`][vec] of OGroup.
-/// * `u groups` - A [`vector`][vec] of UGroup.
+/// * `headers` - A [`vector`][vec] of [`Header`](struct.Header.html).
+/// * `segments` - A [`vector`][vec] of [`Segment`](struct.Segment.html).
+/// * `fragments` - A [`vector`][vec] of [`Fragment`](struct.Fragment.html).
+/// * `edges` - A [`vector`][vec] of [`Edge`](struct.Edge.html).
+/// * `gaps` - A [`vector`][vec] of [`Gap`](struct.Gap.html).
+/// * `o groups` - A [`vector`][vec] of [`OGroup`](struct.GroupO.html).
+/// * `u groups` - A [`vector`][vec] of [`UGroup`](struct.GroupU.html).
 ///
 /// ## Examples
 ///

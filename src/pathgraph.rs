@@ -105,7 +105,11 @@ pub trait PathHandleGraph {
         path: &'a Self::PathHandle,
     ) -> Box<dyn Iterator<Item = Self::StepHandle> + 'a>;
 
-    /// Function that removes a node (and all it's occurrencies) from a path
+    /// Function that removes a
+    /// [`Node`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/node/struct.Node.html)
+    /// (and all it's occurrencies) from a
+    /// [`Path`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/path/struct.Path.html)
+    ///
     /// # Example
     /// ```ignore
     /// let path = b"14";
@@ -122,7 +126,10 @@ pub trait PathHandleGraph {
         node: T,
     ) -> Result<bool, GraphError>;
 
-    /// Function that modifies a node (and all it's occurrencies) from a path
+    /// Function that modifies a
+    /// [`Node`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/node/struct.Node.html)
+    /// (and all it's occurrencies) from a
+    /// [`Path`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/path/struct.Path.html)
     /// # Example
     /// ```ignore
     /// let path = b"14";

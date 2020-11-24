@@ -3,9 +3,23 @@ use bstr::ByteSlice;
 /// define a custom error for the GFA2 format
 use std::{error, fmt};
 
+/// New type defining the [Result] obtained after parsing a line of a file
+///
+/// [Result]: https://doc.rust-lang.org/std/result/
 pub type ParserFieldResult<T> = Result<T, ParseFieldError>;
+/// New type defining the [Result] obtained after parsing a file
+///
+/// [Result]: https://doc.rust-lang.org/std/result/
 pub type ParserResult<T> = Result<T, ParseError>;
 
+/// Type encapsulating the kind of error encountered
+/// ```ignore
+/// pub enum ParserTolerance {
+///     IgnoreAll,
+///     Safe,
+///     Pedantic,
+/// }
+/// ```
 #[derive(Debug, Clone, Copy)]
 pub enum ParserTolerance {
     IgnoreAll,
@@ -19,6 +33,18 @@ impl Default for ParserTolerance {
     }
 }
 
+/// Type encapsulating different kinds of GFA fields parsing errors
+/// ```ignore
+/// pub enum ParseFieldError {
+///     UintIdError,
+///     Utf8Error,
+///     ParseFromStringError,
+///     OrientationError,
+///     InvalidField(&'static str),
+///     MissingFields,
+///     Unknown,
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub enum ParseFieldError {
     /// A segment ID couldn't be parsed as a u64. Can only happen
@@ -82,6 +108,18 @@ impl fmt::Display for ParseFieldError {
 impl error::Error for ParseFieldError {}
 
 /// Type encapsulating different kinds of GFA parsing errors
+/// ```ignore
+/// pub enum ParseError {
+///     UnknownLineType,
+///     EmptyLine,
+///     InvalidLine(ParseFieldError, String),
+///     InvalidField(ParseFieldError),
+///     IOError(std::io::Error),
+///     ExtensionError(),
+///     ConversionGFAToGraph(String),
+///     Unknown,
+/// }
+/// ```
 #[derive(Debug)]
 pub enum ParseError {
     /// The line type was something other than 'H', 'S', 'F', 'E',

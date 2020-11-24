@@ -8,10 +8,14 @@ use crate::gfa::{
 };
 use bstr::BString;
 
-/// Function that takes a HashGraph object as input and return a GFA2 object
+/// Function that takes a
+/// [`HASHGRAPH`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/graph/struct.HashGraph.html)
+/// object as input and return a
+/// [`GFA2`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa2/struct.GFA2.html)
+/// object as result
 /// # Example
 /// ```ignore
-/// let gfa_out: GFA2<BString> = to_gfa2(&graph);
+/// let gfa_out: GFA2 = to_gfa2(&graph);
 /// /* hashgraph to gfa2:
 /// H   VN:Z:2.0
 /// S   13  7   CTTGATT
@@ -125,16 +129,25 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
 
         // remove the last whitespace " "
         segment_names.pop();
-        let ogroup: GroupO = GroupO::new(path_name, BString::from(segment_names), b"");
+
+        let ogroup: GroupO = GroupO {
+            id: path_name,
+            var_field: BString::from(segment_names),
+            tag: BString::from(""),
+        };
         file.groups_o.push(ogroup);
     }
     file
 }
 
-/// Function that takes a HashGraph object as input and return a GFA object
+/// Function that takes a
+/// [`HASHGRAPH`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/graph/struct.HashGraph.html)
+/// object as input and return a
+/// [`GFA2`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa1/struct.GFA.html)
+/// object as result
 /// # Example
 /// ```ignore
-/// let gfa_out: GFA<BString> = to_gfa(&graph);
+/// let gfa_out: GFA = to_gfa(&graph);
 ///  
 /// /* hashgraph to gfa:
 /// H   VN:Z:1.0
@@ -225,7 +238,13 @@ pub fn to_gfa(graph: &HashGraph) -> GFA {
         // remove the last comma "," otherwise it will produce an error
         // that could break everything (overflow and other bad stuff)
         segment_names.pop();
-        let path: Path = Path::new(path_name, BString::from(segment_names), "0M".into(), b"");
+
+        let path: Path = Path {
+            path_name,
+            segment_names: BString::from(segment_names),
+            overlaps: "0M".into(),
+            optional: "".into(),
+        };
 
         gfa.paths.push(path);
     }
@@ -259,6 +278,7 @@ mod test {
                 let mut _file: GFA2 = GFA2::new();
                 _file = to_gfa2(&g);
                 println!("{}", _file);
+                println!("{:#?}", _file);
             }
             Err(why) => println!("Error {}", why),
         }
