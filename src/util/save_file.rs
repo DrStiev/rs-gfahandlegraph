@@ -109,9 +109,9 @@ mod tests {
     #[test]
     fn can_save_handlegraph_as_gfa2_file() {
         let mut graph = HashGraph::new();
-        let h1 = graph.create_handle(b"ACCTT", 11).unwrap();
-        let h2 = graph.create_handle(b"TCAAGG", 12).unwrap();
-        let h3 = graph.create_handle(b"CTTGATT", 13).unwrap();
+        let h1 = graph.create_handle(11, b"ACCTT").unwrap();
+        let h2 = graph.create_handle(12, b"TCAAGG").unwrap();
+        let h3 = graph.create_handle(13, b"CTTGATT").unwrap();
 
         // use .flip() to apply reverse complement to the node
         graph.apply_orientation(h2.flip());
@@ -157,9 +157,9 @@ mod tests {
     #[test]
     fn can_save_handlegraph_as_gfa2_file_default_path() {
         let mut graph = HashGraph::new();
-        let h1 = graph.create_handle(b"ACCTT", 11).unwrap();
-        let h2 = graph.create_handle(b"TCAAGG", 12).unwrap();
-        let h3 = graph.create_handle(b"CTTGATT", 13).unwrap();
+        let h1 = graph.create_handle(11, b"ACCTT").unwrap();
+        let h2 = graph.create_handle(12, b"TCAAGG").unwrap();
+        let h3 = graph.create_handle(13, b"CTTGATT").unwrap();
 
         // use .flip() to apply reverse complement to the node
         graph.apply_orientation(h2.flip());
@@ -202,9 +202,9 @@ mod tests {
     #[test]
     fn can_save_handlegraph_as_gfa1_file() {
         let mut graph = HashGraph::new();
-        let h1 = graph.create_handle(b"ACCTT", 11).unwrap();
-        let h2 = graph.create_handle(b"TCAAGG", 12).unwrap();
-        let h3 = graph.create_handle(b"CTTGATT", 13).unwrap();
+        let h1 = graph.create_handle(11, b"ACCTT").unwrap();
+        let h2 = graph.create_handle(12, b"TCAAGG").unwrap();
+        let h3 = graph.create_handle(13, b"CTTGATT").unwrap();
 
         // use .flip() to apply reverse complement to the node
         graph.apply_orientation(h2.flip());
@@ -250,9 +250,9 @@ mod tests {
     #[test]
     fn can_save_handlegraph_as_gfa1_file_default_path() {
         let mut graph = HashGraph::new();
-        let h1 = graph.create_handle(b"ACCTT", 11).unwrap();
-        let h2 = graph.create_handle(b"TCAAGG", 12).unwrap();
-        let h3 = graph.create_handle(b"CTTGATT", 13).unwrap();
+        let h1 = graph.create_handle(11, b"ACCTT").unwrap();
+        let h2 = graph.create_handle(12, b"TCAAGG").unwrap();
+        let h3 = graph.create_handle(13, b"CTTGATT").unwrap();
 
         // use .flip() to apply reverse complement to the node
         graph.apply_orientation(h2.flip());

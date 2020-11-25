@@ -141,10 +141,10 @@ fn create_medium_graph() {
 #[test]
 fn mod_graph_from_medium_gfa1() {
     /*
-    Create graph from file: Duration { seconds: 0, nanoseconds: 935853800 }
-    remove 1000 nodes from graph: Duration { seconds: 6, nanoseconds: 353309800 }
-    remove 1000 small edges: Duration { seconds: 6, nanoseconds: 421742700 }
-    remove 1 big edge (form of 1000 edges): Duration { seconds: 6, nanoseconds: 370942500 }
+    Create graph from file: Duration { seconds: 0, nanoseconds: 930164000 }
+    remove 1000 nodes from graph: Duration { seconds: 6, nanoseconds: 289402000 }
+    remove 1000 small edges: Duration { seconds: 6, nanoseconds: 276226800 }
+    remove 1 big edge (form of 1000 edges): Duration { seconds: 6, nanoseconds: 254400400 }
     */
     let mut graph = read_medium_gfa1();
 
@@ -159,7 +159,7 @@ fn mod_graph_from_medium_gfa1() {
 
     // add nodes, edges and paths
     for i in 0..1_001 {
-        match graph.create_handle(b"TEST_SEQUENCE", 5000 + i as u64) {
+        match graph.create_handle(5000 + i as u64, b"TEST_SEQUENCE") {
             Ok(_) => (),
             Err(why) => println!("Error: {}", why),
         };
@@ -265,7 +265,7 @@ fn mod_graph_from_big_gfa1() {
     let start = Instant::now();
     // add nodes, edges and paths
     for i in 1..101 {
-        match graph.create_handle(b"TEST_SEQUENCE", 42_000 + i as u64) {
+        match graph.create_handle(42_000 + i as u64, b"TEST_SEQUENCE") {
             Ok(_) => (),
             Err(why) => println!("Error: {}", why),
         };
@@ -314,7 +314,7 @@ fn add_node() {
     let node: NodeId = 42.into();
     let sequence = b"TEST_SEQUENCE";
 
-    match graph.create_handle(sequence, node) {
+    match graph.create_handle(node, sequence) {
         Ok(_) => graph.print_graph(),
         Err(why) => println!("Error {}", why),
     }
@@ -326,7 +326,7 @@ fn add_edge() {
 
     let node: NodeId = 42.into();
     let sequence = b"TEST_SEQUENCE";
-    match graph.create_handle(sequence, node) {
+    match graph.create_handle(node, sequence) {
         Ok(_) => {
             let left: Handle = Handle::new(42 as u64, Orientation::Backward);
             let right: Handle = Handle::new(13 as u64, Orientation::Forward);
@@ -348,7 +348,7 @@ fn add_path() {
 
     let node: NodeId = 42.into();
     let sequence = b"TEST_SEQUENCE";
-    match graph.create_handle(sequence, node) {
+    match graph.create_handle(node, sequence) {
         Ok(_) => {
             let left: Handle = Handle::new(42 as u64, Orientation::Backward);
             let right: Handle = Handle::new(13 as u64, Orientation::Forward);

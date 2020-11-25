@@ -1,7 +1,6 @@
 use fnv::FnvHashMap;
 
 use crate::gfa::{gfa1::GFA, gfa2::GFA2, orientation::Orientation};
-
 use crate::{
     handle::{Edge as GraphEdge, Handle, NodeId},
     handlegraph::*,
@@ -80,7 +79,7 @@ impl HashGraph {
                 let mut new_self = self.clone();
                 x.segments
                     .iter()
-                    .for_each(|s| match new_self.create_handle(&s.sequence, s.name) {
+                    .for_each(|s| match new_self.create_handle(s.name, &s.sequence) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     });
@@ -107,7 +106,7 @@ impl HashGraph {
                 let mut new_self = self.clone();
                 x.segments
                     .iter()
-                    .for_each(|s| match new_self.create_handle(&s.sequence, s.id) {
+                    .for_each(|s| match new_self.create_handle(s.id, &s.sequence) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     });
@@ -194,7 +193,6 @@ impl HashGraph {
         for handle in self.all_handles() {
             let node_id: String = handle.id().to_string();
             let sequence: BString = self.sequence_iter(handle.forward()).collect();
-
             println!("\t\t{}: {}", node_id, sequence);
         }
         println!("\t}}");

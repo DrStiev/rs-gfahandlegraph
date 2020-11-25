@@ -63,8 +63,8 @@ pub trait AdditiveHandleGraph {
 
     fn create_handle<T: Into<NodeId>>(
         &mut self,
-        seq: &[u8],
         node_id: T,
+        seq: &[u8],
     ) -> Result<Handle, GraphError>;
 
     fn create_edge(&mut self, edge: Edge) -> Result<bool, GraphError>;
