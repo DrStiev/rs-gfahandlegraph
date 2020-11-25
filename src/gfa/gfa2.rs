@@ -59,7 +59,7 @@ impl fmt::Display for Header {
 /// ## Examples
 /// ```ignore
 /// let segment = "A\t10\tAAAAAAACGT";
-/// let segment_: Segment<BString> = Segment {
+/// let segment_: Segment = Segment {
 ///     id: 65, // 'A' -> 65 ASCII CODE
 ///     len: "10".into(),
 ///     sequence: "AAAAAAACGT".into(),

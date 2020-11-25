@@ -9,6 +9,7 @@ use crate::{
 };
 
 use super::{Node, Path, PathId};
+use rayon::prelude::*;
 
 /// New type
 /// # Example
@@ -176,32 +177,81 @@ impl HashGraph {
     pub fn print_graph(&self) {
         println!("Graph: {{");
         // print all the segments
+        println!("\tNodes: {{");
         self.print_segments();
+        println!("\t}}");
         // print all the edges
+        println!("\tEdges: {{");
         self.print_edges();
+        println!("\t}}");
         // print all the paths
+        println!("\tPaths: {{");
         self.print_paths();
+        println!("\t}}");
         println!("}}");
     }
 
     /// Function that prints all the segments in a graph
     fn print_segments(&self) {
         use bstr::BString;
-
-        println!("\tNodes: {{");
         // get all the nodeid and sequence associated with them
+        /* it prints the data in a strange way
+        self.handles_par().for_each(|h| {
+            let node_id: String = h.id().to_string();
+            let sequence: BString = self.sequence_iter(h.forward()).collect();
+            println!("\t\t{}: {}", node_id, sequence);
+        });
+         */
         for handle in self.handles() {
             let node_id: String = handle.id().to_string();
             let sequence: BString = self.sequence_iter(handle.forward()).collect();
             println!("\t\t{}: {}", node_id, sequence);
         }
-        println!("\t}}");
     }
 
     /// Function that prints all the edges in a graph
     fn print_edges(&self) {
-        println!("\tEdges: {{");
         // get all the link (edge) between nodes
+        /* it prints the data in a strange way
+        self.edges_par().for_each(|e| {
+            let GraphEdge(left, right) = e;
+
+            let from_node: String = if !left.id().to_string().is_empty() {
+                left.id().to_string()
+            } else {
+                "NUL".to_string()
+            };
+            let to_node: String = if !right.id().to_string().is_empty() {
+                right.id().to_string()
+            } else {
+                "NUL".to_string()
+            };
+
+            let mut left_orient: String = "".to_string();
+            if from_node != "NUL" {
+                if left.is_reverse() {
+                    left_orient = "-".to_string();
+                } else {
+                    left_orient = "+".to_string();
+                }
+            }
+
+            let mut right_orient: String = "".to_string();
+            if to_node != "NUL" {
+                if right.is_reverse() {
+                    right_orient = "-".to_string();
+                } else {
+                    right_orient = "+".to_string();
+                }
+            }
+
+            println!(
+                "\t\t{}{} -- {}{}",
+                from_node, left_orient, to_node, right_orient
+            );
+        });
+         */
+
         for edge in self.edges() {
             let GraphEdge(left, right) = edge;
 
@@ -239,7 +289,6 @@ impl HashGraph {
                 from_node, left_orient, to_node, right_orient
             );
         }
-        println!("\t}}");
     }
 
     /// Function that prints all the paths in a graph
@@ -247,7 +296,6 @@ impl HashGraph {
         use crate::util::dna;
         use bstr::BString;
 
-        println!("\tPaths: {{");
         // get all the path
         for path_id in self.paths_iter() {
             let path = self.paths.get(&path_id).unwrap();
@@ -274,7 +322,6 @@ impl HashGraph {
             }
             println!();
         }
-        println!("\t}}");
     }
 
     pub fn print_occurrences(&self) {
