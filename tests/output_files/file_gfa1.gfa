@@ -2,7 +2,7 @@ H	VN:Z:1.0
 S	12	CCTTGA	
 S	13	CTTGATT	
 S	11	ACCTT	
-L	12	+	13	+	0M	
 L	11	+	13	+	0M	
+L	12	+	13	+	0M	
 L	11	+	12	+	0M	
 P	1	11+,12+,13+	0M	
