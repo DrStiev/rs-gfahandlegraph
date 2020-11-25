@@ -1,5 +1,5 @@
 use bstr::BString;
-use rayon::prelude::*;
+use rayon::iter::*;
 
 use crate::{
     handle::{Direction, Edge, Handle, NodeId},
@@ -37,6 +37,7 @@ impl<'a> AllHandles for &'a HashGraph {
     }
 }
 
+/// parallel version for AllHandles Iter
 impl<'a> AllHandlesPar for &'a HashGraph {
     type HandlesPar = rayon::iter::IterBridge<
         NodeIdRefHandles<'a, std::collections::hash_map::Keys<'a, NodeId, Node>>,
@@ -53,6 +54,15 @@ impl<'a> AllEdges for &'a HashGraph {
     #[inline]
     fn all_edges(self) -> Self::Edges {
         EdgesIter::new(self)
+    }
+}
+
+/// parallel version for AllEdges Iter
+impl<'a> AllEdgesPar for &'a HashGraph {
+    type EdgesPar = rayon::iter::IterBridge<EdgesIter<&'a HashGraph>>;
+
+    fn all_edges_par(self) -> Self::EdgesPar {
+        self.all_edges().par_bridge()
     }
 }
 
@@ -84,6 +94,15 @@ impl<'a> HandleNeighbors for &'a HashGraph {
     }
 }
 
+/// parallel version for HandleNeighbors Iter
+impl<'a> HandleNeighborsPar for &'a HashGraph {
+    type NeighborsPar = rayon::iter::IterBridge<NeighborIter<'a, std::slice::Iter<'a, Handle>>>;
+
+    fn neighbors_par(self, handle: Handle, dir: Direction) -> Self::NeighborsPar {
+        self.neighbors(handle, dir).par_bridge()
+    }
+}
+
 impl<'a> HandleSequences for &'a HashGraph {
     type Sequence = SequenceIter<std::iter::Copied<std::slice::Iter<'a, u8>>>;
 
@@ -105,6 +124,16 @@ impl<'a> HandleSequences for &'a HashGraph {
     #[inline]
     fn node_len(self, handle: Handle) -> usize {
         self.get_node_unchecked(&handle.id()).sequence.len()
+    }
+}
+
+/// parallel version for HandleSequence Iter
+impl<'a> HandleSequencesPar for &'a HashGraph {
+    type SequencePar =
+        rayon::iter::IterBridge<SequenceIter<std::iter::Copied<std::slice::Iter<'a, u8>>>>;
+
+    fn sequence_par_iter(self, handle: Handle) -> Self::SequencePar {
+        self.sequence_iter(handle).par_bridge()
     }
 }
 
@@ -349,13 +378,13 @@ impl SubtractiveHandleGraph for HashGraph {
 
 impl AdditiveHandleGraph for HashGraph {
     fn append_handle(&mut self, sequence: &[u8]) -> Result<Handle, GraphError> {
-        Ok(self.create_handle(sequence, self.max_id + 1))?
+        Ok(self.create_handle(self.max_id + 1, sequence))?
     }
 
     fn create_handle<T: Into<NodeId>>(
         &mut self,
-        seq: &[u8],
         node_id: T,
+        seq: &[u8],
     ) -> Result<Handle, GraphError> {
         let id: NodeId = node_id.into();
 

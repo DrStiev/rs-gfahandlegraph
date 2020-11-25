@@ -45,6 +45,12 @@ pub trait AllEdges: Sized {
     }
 }
 
+pub trait AllEdgesPar {
+    type EdgesPar: ParallelIterator<Item = Edge>;
+
+    fn all_edges_par(self) -> Self::EdgesPar;
+}
+
 /// Access to the neighbors of any handle in the given direction, and related methods.
 ///
 /// Implementors should make sure that handles are flipped correctly depending on direction, e.g. using NeighborIter
@@ -62,6 +68,12 @@ pub trait HandleNeighbors: Sized {
     fn has_edge(self, left: Handle, right: Handle) -> bool {
         self.neighbors(left, Direction::Right).any(|h| h == right)
     }
+}
+
+pub trait HandleNeighborsPar {
+    type NeighborsPar: ParallelIterator<Item = Handle>;
+
+    fn neighbors_par(self, handle: Handle, dir: Direction) -> Self::NeighborsPar;
 }
 
 /// Access to the sequence of any node, and related methods such as retrieving subsequences, individual bases, and node lengths.
@@ -92,6 +104,12 @@ pub trait HandleSequences: Sized {
     fn node_len(self, handle: Handle) -> usize {
         self.sequence_iter(handle).count()
     }
+}
+
+pub trait HandleSequencesPar {
+    type SequencePar: ParallelIterator<Item = u8>;
+
+    fn sequence_par_iter(self, handle: Handle) -> Self::SequencePar;
 }
 
 /// Trait denoting that implementors have access to all the immutable
