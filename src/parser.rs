@@ -49,7 +49,7 @@ pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(path: P) -> Result<HashGra
 
     match path.as_ref().extension().and_then(OsStr::to_str).unwrap() {
         "gfa2" => {
-            let graph = HashGraph::default();
+            let mut graph = HashGraph::default();
             let parser = GFA2Parser::default();
             let gfa2: GFA2 = parser.parse_file(path)?;
 
@@ -59,7 +59,7 @@ pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(path: P) -> Result<HashGra
             }
         }
         "gfa" => {
-            let graph = HashGraph::default();
+            let mut graph = HashGraph::default();
             let parser = GFAParser::default();
             let gfa: GFA = parser.parse_file(path)?;
 

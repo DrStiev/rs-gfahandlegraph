@@ -50,8 +50,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
     };
     file.headers.push(header);
 
-    let handle: Vec<_> = graph.handles_par().collect();
-    for h in handle {
+    for h in graph.handles_par().collect::<Vec<_>>() {
         let seq_id = usize::from(h.id());
         let sequence: BString = graph.sequence_iter(h.forward()).collect();
         let len: BString = BString::from(sequence.len().to_string());
@@ -88,8 +87,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
         }
     };
 
-    let edge: Vec<_> = graph.edges_par().collect();
-    for e in edge {
+    for e in graph.edges_par().collect::<Vec<_>>() {
         let Edge(left, right) = e;
 
         let sid1_id: String = left.id().to_string();
@@ -229,9 +227,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA {
     };
     gfa.headers.push(header);
 
-    let handle: Vec<_> = graph.handles_par().collect();
-
-    for h in handle {
+    for h in graph.handles_par().collect::<Vec<_>>() {
         let name = usize::from(h.id());
         let sequence: BString = graph.sequence_iter(h.forward()).collect();
 
@@ -263,8 +259,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA {
         }
     };
 
-    let edge: Vec<_> = graph.edges_par().collect();
-    for e in edge {
+    for e in graph.edges_par().collect::<Vec<_>>() {
         let Edge(left, right) = e;
         let from_segment: usize = usize::from(left.id());
         let from_orient = orient(left.is_reverse());
@@ -371,12 +366,16 @@ mod test {
     #[test]
     fn can_convert_medium_graph_to_gfa2() {
         // Convert graph to GFA2: Duration { seconds: 0, nanoseconds: 209741800 }
+        // Print graph: Duration { seconds: 0, nanoseconds: 108029100 }
         match parse_file_to_graph("./tests/big_files/test.gfa2") {
             Ok(g) => {
                 let start = Instant::now();
                 let mut _file: GFA2 = GFA2::new();
                 _file = to_gfa2(&g);
                 println!("Convert graph to GFA2: {:?}", start.elapsed());
+                let start = Instant::now();
+                g.print_graph();
+                println!("Print graph: {:?}", start.elapsed());
             }
             Err(why) => println!("Error {}", why),
         }

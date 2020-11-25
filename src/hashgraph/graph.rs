@@ -74,40 +74,38 @@ impl HashGraph {
     ///     Err(why) => println!("{}", why),
     /// }
     /// ```
-    pub fn create_graph(&self, file: FileType) -> Result<HashGraph, GraphError> {
+    pub fn create_graph(&mut self, file: FileType) -> Result<HashGraph, GraphError> {
         match file {
             FileType::GFA(x) => {
-                let mut new_self = self.clone();
                 x.segments
                     .iter()
-                    .for_each(|s| match new_self.create_handle(s.name, &s.sequence) {
+                    .for_each(|s| match self.create_handle(s.name, &s.sequence) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     });
                 x.links.iter().for_each(|l| {
                     let left = Handle::new(l.from_segment, l.from_orient);
                     let right = Handle::new(l.to_segment, l.to_orient);
-                    match new_self.create_edge(GraphEdge(left, right)) {
+                    match self.create_edge(GraphEdge(left, right)) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     }
                 });
                 x.paths.iter().for_each(|p| {
-                    let path_id = new_self.create_path_handle(&p.path_name, false);
+                    let path_id = self.create_path_handle(&p.path_name, false);
                     for (id, orient) in p.iter() {
-                        match new_self.append_step(&path_id, Handle::new(id as u64, orient)) {
+                        match self.append_step(&path_id, Handle::new(id as u64, orient)) {
                             Ok(_) => (),
                             Err(why) => println!("Error: {}", why),
                         };
                     }
                 });
-                Ok(new_self)
+                Ok(self.to_owned())
             }
             FileType::GFA2(x) => {
-                let mut new_self = self.clone();
                 x.segments
                     .iter()
-                    .for_each(|s| match new_self.create_handle(s.id, &s.sequence) {
+                    .for_each(|s| match self.create_handle(s.id, &s.sequence) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     });
@@ -132,21 +130,21 @@ impl HashGraph {
 
                     let left = Handle::new(l, l_orient);
                     let right = Handle::new(r, r_orient);
-                    match new_self.create_edge(GraphEdge(left, right)) {
+                    match self.create_edge(GraphEdge(left, right)) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
                     }
                 });
                 x.groups_o.iter().for_each(|o| {
-                    let path_id = new_self.create_path_handle(&o.id, false);
+                    let path_id = self.create_path_handle(&o.id, false);
                     for (id, orient) in o.iter() {
-                        match new_self.append_step(&path_id, Handle::new(id as u64, orient)) {
+                        match self.append_step(&path_id, Handle::new(id as u64, orient)) {
                             Ok(_) => (),
                             Err(why) => println!("Error: {}", why),
                         };
                     }
                 });
-                Ok(new_self)
+                Ok(self.to_owned())
             }
         }
     }
@@ -169,7 +167,7 @@ impl HashGraph {
     ///     }
     ///     Paths: {
     ///         14: ACCTT -> CTTGATT
-    ///         15: ACCTT -> CCTTGA -(TCAAGG) -> CTTGATT
+    ///         15: ACCTT -> CCTTGA -> CTTGATT
     ///     }
     /// }
     /// */
@@ -195,14 +193,7 @@ impl HashGraph {
     fn print_segments(&self) {
         use bstr::BString;
         // get all the nodeid and sequence associated with them
-        /* it prints the data in a strange way
-        self.handles_par().for_each(|h| {
-            let node_id: String = h.id().to_string();
-            let sequence: BString = self.sequence_iter(h.forward()).collect();
-            println!("\t\t{}: {}", node_id, sequence);
-        });
-         */
-        for handle in self.handles() {
+        for handle in self.handles_par().collect::<Vec<_>>() {
             let node_id: String = handle.id().to_string();
             let sequence: BString = self.sequence_iter(handle.forward()).collect();
             println!("\t\t{}: {}", node_id, sequence);
@@ -212,47 +203,7 @@ impl HashGraph {
     /// Function that prints all the edges in a graph
     fn print_edges(&self) {
         // get all the link (edge) between nodes
-        /* it prints the data in a strange way
-        self.edges_par().for_each(|e| {
-            let GraphEdge(left, right) = e;
-
-            let from_node: String = if !left.id().to_string().is_empty() {
-                left.id().to_string()
-            } else {
-                "NUL".to_string()
-            };
-            let to_node: String = if !right.id().to_string().is_empty() {
-                right.id().to_string()
-            } else {
-                "NUL".to_string()
-            };
-
-            let mut left_orient: String = "".to_string();
-            if from_node != "NUL" {
-                if left.is_reverse() {
-                    left_orient = "-".to_string();
-                } else {
-                    left_orient = "+".to_string();
-                }
-            }
-
-            let mut right_orient: String = "".to_string();
-            if to_node != "NUL" {
-                if right.is_reverse() {
-                    right_orient = "-".to_string();
-                } else {
-                    right_orient = "+".to_string();
-                }
-            }
-
-            println!(
-                "\t\t{}{} -- {}{}",
-                from_node, left_orient, to_node, right_orient
-            );
-        });
-         */
-
-        for edge in self.edges() {
+        for edge in self.edges_par().collect::<Vec<_>>() {
             let GraphEdge(left, right) = edge;
 
             let from_node: String = if !left.id().to_string().is_empty() {
@@ -315,7 +266,7 @@ impl HashGraph {
                 // print correct reverse and complement sequence to display the correct path
                 if handle.is_reverse() {
                     let rev_sequence: BString = dna::rev_comp(node.sequence.as_slice()).into();
-                    print!("{} -({})", rev_sequence, node.sequence);
+                    print!("{}", rev_sequence);
                 } else {
                     print!("{}", node.sequence);
                 }
