@@ -12,24 +12,24 @@ use rayon::prelude::*;
 /// methods.
 pub trait AllHandles: Sized {
     type Handles: Iterator<Item = Handle>;
-    fn all_handles(self) -> Self::Handles;
+    fn handles(self) -> Self::Handles;
 
     #[inline]
     fn node_count(self) -> usize {
-        self.all_handles().count()
+        self.handles().count()
     }
 
     #[inline]
     fn has_node<I: Into<NodeId>>(self, n_id: I) -> bool {
         let n_id = n_id.into();
-        self.all_handles().any(|h| h.id() == n_id)
+        self.handles().any(|h| h.id() == n_id)
     }
 }
 
 pub trait AllHandlesPar {
     type HandlesPar: ParallelIterator<Item = Handle>;
 
-    fn all_handles_par(self) -> Self::HandlesPar;
+    fn handles_par(self) -> Self::HandlesPar;
 }
 
 /// Access all the edges in the graph as an iterator, and related
@@ -37,18 +37,18 @@ pub trait AllHandlesPar {
 pub trait AllEdges: Sized {
     type Edges: Iterator<Item = Edge>;
 
-    fn all_edges(self) -> Self::Edges;
+    fn edges(self) -> Self::Edges;
 
     #[inline]
     fn edge_count(self) -> usize {
-        self.all_edges().count()
+        self.edges().count()
     }
 }
 
 pub trait AllEdgesPar {
     type EdgesPar: ParallelIterator<Item = Edge>;
 
-    fn all_edges_par(self) -> Self::EdgesPar;
+    fn edges_par(self) -> Self::EdgesPar;
 }
 
 /// Access to the neighbors of any handle in the given direction, and related methods.
@@ -122,7 +122,7 @@ pub trait HandleSequencesPar {
 /// functions that are generic over `HandleGraph` implementations.
 pub trait HandleGraphRef: AllEdges + AllHandles + HandleNeighbors + HandleSequences + Copy {
     fn total_length(self) -> usize {
-        self.all_handles().map(|h| self.node_len(h)).sum()
+        self.handles().map(|h| self.node_len(h)).sum()
     }
 }
 

@@ -190,7 +190,7 @@ impl HashGraph {
 
         println!("\tNodes: {{");
         // get all the nodeid and sequence associated with them
-        for handle in self.all_handles() {
+        for handle in self.handles() {
             let node_id: String = handle.id().to_string();
             let sequence: BString = self.sequence_iter(handle.forward()).collect();
             println!("\t\t{}: {}", node_id, sequence);
@@ -202,7 +202,7 @@ impl HashGraph {
     fn print_edges(&self) {
         println!("\tEdges: {{");
         // get all the link (edge) between nodes
-        for edge in self.all_edges() {
+        for edge in self.edges() {
             let GraphEdge(left, right) = edge;
 
             let from_node: String = if !left.id().to_string().is_empty() {
@@ -278,7 +278,7 @@ impl HashGraph {
     }
 
     pub fn print_occurrences(&self) {
-        self.all_handles().for_each(|h| {
+        self.handles().for_each(|h| {
             let node = self.get_node(&h.id()).unwrap();
             println!("{} - {:?}", node.sequence, node.occurrences);
         });

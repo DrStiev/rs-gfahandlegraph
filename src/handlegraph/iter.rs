@@ -164,7 +164,7 @@ where
     G: HandleNeighbors + AllHandles + Copy,
 {
     pub fn new(graph: G) -> Self {
-        let handles = graph.all_handles();
+        let handles = graph.handles();
         let mut edges_iter = Self {
             graph,
             handles,

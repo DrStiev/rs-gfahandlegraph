@@ -21,7 +21,7 @@ impl<'a> AllHandles for &'a HashGraph {
     type Handles = NodeIdRefHandles<'a, std::collections::hash_map::Keys<'a, NodeId, Node>>;
 
     #[inline]
-    fn all_handles(self) -> Self::Handles {
+    fn handles(self) -> Self::Handles {
         let keys = self.graph.keys();
         NodeIdRefHandles::new(keys)
     }
@@ -43,8 +43,8 @@ impl<'a> AllHandlesPar for &'a HashGraph {
         NodeIdRefHandles<'a, std::collections::hash_map::Keys<'a, NodeId, Node>>,
     >;
 
-    fn all_handles_par(self) -> Self::HandlesPar {
-        self.all_handles().par_bridge()
+    fn handles_par(self) -> Self::HandlesPar {
+        self.handles().par_bridge()
     }
 }
 
@@ -52,7 +52,7 @@ impl<'a> AllEdges for &'a HashGraph {
     type Edges = EdgesIter<&'a HashGraph>;
 
     #[inline]
-    fn all_edges(self) -> Self::Edges {
+    fn edges(self) -> Self::Edges {
         EdgesIter::new(self)
     }
 }
@@ -61,8 +61,8 @@ impl<'a> AllEdges for &'a HashGraph {
 impl<'a> AllEdgesPar for &'a HashGraph {
     type EdgesPar = rayon::iter::IterBridge<EdgesIter<&'a HashGraph>>;
 
-    fn all_edges_par(self) -> Self::EdgesPar {
-        self.all_edges().par_bridge()
+    fn edges_par(self) -> Self::EdgesPar {
+        self.edges().par_bridge()
     }
 }
 

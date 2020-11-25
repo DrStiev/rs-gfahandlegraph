@@ -124,16 +124,16 @@ fn create_medium_graph() {
     //Create graph from file: Duration { seconds: 0, nanoseconds: 930659400 }
     let g = read_medium_gfa1();
     // nodes: 4058     edges: 9498     paths: 7
-    let nodes = g.all_handles().count();
-    let edges = g.all_edges().count();
+    let nodes = g.handles().count();
+    let edges = g.edges().count();
     let paths = g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
 
     //Create graph from file: Duration { seconds: 1, nanoseconds: 231729800 }
     let g = read_medium_gfa2();
     // nodes: 4058     edges: 9498     paths: 7
-    let nodes = g.all_handles().count();
-    let edges = g.all_edges().count();
+    let nodes = g.handles().count();
+    let edges = g.edges().count();
     let paths = g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
 }
@@ -221,8 +221,8 @@ fn create_big_graph() {
     */
     let _g = read_big_gfa1();
     // nodes: 715018   edges: 985445   paths: 0
-    let nodes = _g.all_handles().count();
-    let edges = _g.all_edges().count();
+    let nodes = _g.handles().count();
+    let edges = _g.edges().count();
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
 
@@ -234,8 +234,8 @@ fn create_big_graph() {
     */
     let _g = read_big_gfa2();
     // nodes: 715018   edges: 985445   paths: 0
-    let nodes = _g.all_handles().count();
-    let edges = _g.all_edges().count();
+    let nodes = _g.handles().count();
+    let edges = _g.edges().count();
     let paths = _g.paths_iter().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
 }

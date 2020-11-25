@@ -49,7 +49,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
     };
     file.headers.push(header);
 
-    for handle in graph.all_handles() {
+    for handle in graph.handles() {
         let seq_id = usize::from(handle.id());
         let sequence: BString = graph.sequence_iter(handle.forward()).collect();
         let len: BString = BString::from(sequence.len().to_string());
@@ -71,7 +71,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
         }
     };
 
-    for edge in graph.all_edges() {
+    for edge in graph.edges() {
         let Edge(left, right) = edge;
 
         let sid1_id: String = left.id().to_string();
@@ -180,7 +180,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA {
     };
     gfa.headers.push(header);
 
-    for handle in graph.all_handles() {
+    for handle in graph.handles() {
         let name = usize::from(handle.id());
         let sequence: BString = graph.sequence_iter(handle.forward()).collect();
 
@@ -200,7 +200,7 @@ pub fn to_gfa(graph: &HashGraph) -> GFA {
         }
     };
 
-    for edge in graph.all_edges() {
+    for edge in graph.edges() {
         let Edge(left, right) = edge;
         let from_segment: usize = usize::from(left.id());
         let from_orient = orient(left.is_reverse());
