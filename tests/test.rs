@@ -126,7 +126,7 @@ fn create_medium_graph() {
     // nodes: 4058     edges: 9498     paths: 7
     let nodes = g.handles().count();
     let edges = g.edges().count();
-    let paths = g.paths_iter().count();
+    let paths = g.paths().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
 
     //Create graph from file: Duration { seconds: 1, nanoseconds: 231729800 }
@@ -134,7 +134,7 @@ fn create_medium_graph() {
     // nodes: 4058     edges: 9498     paths: 7
     let nodes = g.handles().count();
     let edges = g.edges().count();
-    let paths = g.paths_iter().count();
+    let paths = g.paths().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
 }
 
@@ -223,7 +223,7 @@ fn create_big_graph() {
     // nodes: 715018   edges: 985445   paths: 0
     let nodes = _g.handles().count();
     let edges = _g.edges().count();
-    let paths = _g.paths_iter().count();
+    let paths = _g.paths().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
 
     /*
@@ -236,7 +236,7 @@ fn create_big_graph() {
     // nodes: 715018   edges: 985445   paths: 0
     let nodes = _g.handles().count();
     let edges = _g.edges().count();
-    let paths = _g.paths_iter().count();
+    let paths = _g.paths().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
 }
 

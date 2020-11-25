@@ -89,18 +89,18 @@ pub trait PathHandleGraph {
     ) -> (Self::StepHandle, Self::StepHandle);
 
     /// Returns an iterator over all path identifiers in the graph
-    fn paths_iter<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::PathHandle> + 'a>;
+    fn paths<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::PathHandle> + 'a>;
 
     /// Returns an iterator over all the steps that
     /// cross through the given node handle, across all the paths in
     /// the graph
-    fn occurrences_iter<'a>(
+    fn occurrences<'a>(
         &'a self,
         handle: Handle,
     ) -> Box<dyn Iterator<Item = Self::StepHandle> + 'a>;
 
     /// Returns an iterator over all the steps in a path
-    fn steps_iter<'a>(
+    fn steps<'a>(
         &'a self,
         path: &'a Self::PathHandle,
     ) -> Box<dyn Iterator<Item = Self::StepHandle> + 'a>;

@@ -297,7 +297,7 @@ impl HashGraph {
         use bstr::BString;
 
         // get all the path
-        for path_id in self.paths_iter() {
+        for path_id in self.paths() {
             let path = self.paths.get(&path_id).unwrap();
             //get the id or path name of a path
             let name = &path.name;

@@ -272,7 +272,7 @@ impl SubtractiveHandleGraph for HashGraph {
                 }
             }
 
-            for path in self.clone().paths_iter() {
+            for path in self.clone().paths() {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;
                 if nodes.iter().any(|x| x.id() == node_id) {
                     self.paths.remove(&path);
@@ -330,7 +330,7 @@ impl SubtractiveHandleGraph for HashGraph {
                 }
             }
 
-            for path in self.clone().paths_iter() {
+            for path in self.clone().paths() {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;
                 if let Some(l) = nodes.iter().position(|x| x.id() == l.id()) {
                     if let Some(r) = nodes.iter().position(|x| x.id() == r.id()) {
@@ -870,11 +870,11 @@ impl PathHandleGraph for HashGraph {
         (PathStep::Step(path_id, l), PathStep::Step(path_id, r))
     }
 
-    fn paths_iter<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::PathHandle> + 'a> {
+    fn paths<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::PathHandle> + 'a> {
         Box::new(self.paths.keys())
     }
 
-    fn occurrences_iter<'a>(
+    fn occurrences<'a>(
         &'a self,
         handle: Handle,
     ) -> Box<dyn Iterator<Item = Self::StepHandle> + 'a> {
@@ -882,7 +882,7 @@ impl PathHandleGraph for HashGraph {
         Box::new(node.occurrences.iter().map(|(k, v)| PathStep::Step(*k, *v)))
     }
 
-    fn steps_iter<'a>(
+    fn steps<'a>(
         &'a self,
         path_handle: &'a Self::PathHandle,
     ) -> Box<dyn Iterator<Item = Self::StepHandle> + 'a> {

@@ -158,11 +158,11 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
         }
     };
 
-    for path_id in graph.paths_iter() {
+    for path_id in graph.paths() {
         let path_name: BString = graph.path_handle_to_name(path_id).into();
         let mut segment_names: Vec<String> = Vec::new();
 
-        for step in graph.steps_iter(path_id) {
+        for step in graph.steps(path_id) {
             let handle = graph.handle_of_step(&step).unwrap();
             let segment: String = handle.id().to_string();
             let orientation = o_orient(handle.is_reverse());
@@ -303,10 +303,10 @@ pub fn to_gfa(graph: &HashGraph) -> GFA {
     }
     */
 
-    for path_id in graph.paths_iter() {
+    for path_id in graph.paths() {
         let path_name: BString = graph.path_handle_to_name(path_id).into();
         let mut segment_names: Vec<String> = Vec::new();
-        for step in graph.steps_iter(path_id) {
+        for step in graph.steps(path_id) {
             let handle = graph.handle_of_step(&step).unwrap();
             let segment: String = handle.id().to_string();
             let orientation = orient(handle.is_reverse());
