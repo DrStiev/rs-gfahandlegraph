@@ -69,9 +69,9 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
 
     let orient = |rev: bool| {
         if rev {
-            45 as usize
+            45_usize
         } else {
-            43 as usize
+            43_usize
         }
     };
 
