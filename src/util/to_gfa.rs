@@ -92,7 +92,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
 
         let edge = GFA2Edge {
             // placeholder id
-            id: 42, // 42 is the ASCII CODE for the character '*'
+            id: 42_usize, // 42 is the ASCII CODE for the character '*'
             sid1,
             sid2,
             beg1: "0".into(),  // placeholder value

@@ -97,10 +97,9 @@ impl HashGraph {
                 x.paths.into_iter().for_each(|p| {
                     let path_id = self.create_path_handle(&p.path_name, false);
                     for (id, orient) in p.iter() {
-                        match self.append_step(
-                            &path_id,
-                            Handle::new(id as u64, orient),
-                        ) {
+                        match self
+                            .append_step(&path_id, Handle::new(id, orient))
+                        {
                             Ok(_) => (),
                             Err(why) => println!("Error: {}", why),
                         };
@@ -142,10 +141,9 @@ impl HashGraph {
                 x.groups_o.into_iter().for_each(|o| {
                     let path_id = self.create_path_handle(&o.id, false);
                     for (id, orient) in o.iter() {
-                        match self.append_step(
-                            &path_id,
-                            Handle::new(id as u64, orient),
-                        ) {
+                        match self
+                            .append_step(&path_id, Handle::new(id, orient))
+                        {
                             Ok(_) => (),
                             Err(why) => println!("Error: {}", why),
                         };
@@ -200,18 +198,18 @@ impl HashGraph {
     fn print_segments(&self) {
         use bstr::BString;
         // get all the nodeid and sequence associated with them
-        for handle in self.handles_par().collect::<Vec<_>>() {
+        self.handles_par().for_each(|handle| {
             let node_id: String = handle.id().to_string();
             let sequence: BString =
                 self.sequence_iter(handle.forward()).collect();
             println!("\t\t{}: {}", node_id, sequence);
-        }
+        });
     }
 
     /// Function that prints all the edges in a graph
     fn print_edges(&self) {
         // get all the link (edge) between nodes
-        for edge in self.edges_par().collect::<Vec<_>>() {
+        self.edges_par().for_each(|edge| {
             let GraphEdge(left, right) = edge;
 
             let orient = |rev: bool| {
@@ -232,7 +230,7 @@ impl HashGraph {
                 "\t\t{}{} -- {}{}",
                 from_node, left_orient, to_node, right_orient
             );
-        }
+        });
     }
 
     /// Function that prints all the paths in a graph

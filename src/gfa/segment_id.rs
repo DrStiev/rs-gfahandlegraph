@@ -43,19 +43,7 @@ pub trait SegmentId: std::fmt::Display + Sized + Default {
         I::Item: AsRef<[u8]>,
     {
         let next = input.next().ok_or(ParseFieldError::MissingFields)?;
-        match id {
-            IdType::ID() => {
-                Self::parse_id(IdType::ID(), next.as_ref()).ok_or(Self::ERROR)
-            }
-            IdType::OPTIONALID() => {
-                Self::parse_id(IdType::OPTIONALID(), next.as_ref())
-                    .ok_or(Self::ERROR)
-            }
-            IdType::REFERENCEID() => {
-                Self::parse_id(IdType::REFERENCEID(), next.as_ref())
-                    .ok_or(Self::ERROR)
-            }
-        }
+        Self::parse_id(id, next.as_ref()).ok_or(Self::ERROR)
     }
 }
 
@@ -173,7 +161,7 @@ const CHARS: [&str; 128] = [
 /// assert_eq!(a_, get_code_from_char(a));
 /// ```
 fn get_code_from_char(c: &str) -> usize {
-    if c.parse::<u64>().is_ok() {
+    if c.parse::<usize>().is_ok() {
         c.parse::<usize>().unwrap()
     } else {
         CHARS.iter().position(|&x| x == c).unwrap()

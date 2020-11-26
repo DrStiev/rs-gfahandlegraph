@@ -153,12 +153,11 @@ mod tests {
         Save JSONObject to file: Duration { seconds: 0, nanoseconds: 49159200 }
         */
         let start = Instant::now();
-        let mut gfa2: GFA2 = GFA2::new();
         match parse_file_to_graph("./tests/big_files/test.gfa2") {
             Ok(g) => {
                 println!("Create graph from file: {:?}", start.elapsed());
                 let start = Instant::now();
-                gfa2 = to_gfa2(&g);
+                let gfa2 = to_gfa2(&g);
                 println!("Convert graph to GFAObject: {:?}", start.elapsed());
                 let start = Instant::now();
                 match to_json(GFAType::GFA2(gfa2)) {
@@ -192,12 +191,11 @@ mod tests {
         Save BINCODEObject to file: Duration { seconds: 0, nanoseconds: 179276200 }
         */
         let start = Instant::now();
-        let mut gfa2: GFA2 = GFA2::new();
         match parse_file_to_graph("./tests/big_files/test.gfa2") {
             Ok(g) => {
                 println!("Create graph from file: {:?}", start.elapsed());
                 let start = Instant::now();
-                gfa2 = to_gfa2(&g);
+                let gfa2 = to_gfa2(&g);
                 println!("Convert graph to GFAObject: {:?}", start.elapsed());
                 let start = Instant::now();
                 match to_bincode(GFAType::GFA2(gfa2)) {
