@@ -20,8 +20,6 @@ pub struct Node {
     pub sequence: BString,
     pub left_edges: Vec<Handle>,
     pub right_edges: Vec<Handle>,
-    //pub left_edges: FnvHashMap<Handle, ()>,
-    //pub right_edges: FnvHashMap<Handle, ()>,
     pub occurrences: FnvHashMap<PathId, usize>,
 }
 
@@ -31,8 +29,6 @@ impl Node {
             sequence: sequence.into(),
             left_edges: vec![],
             right_edges: vec![],
-            //left_edges: FnvHashMap::default(),
-            //right_edges: FnvHashMap::default(),
             occurrences: FnvHashMap::default(),
         }
     }

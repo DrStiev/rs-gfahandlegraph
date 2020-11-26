@@ -88,7 +88,7 @@ fn clear_big_graph() {
 #[test]
 fn ditto() {
     let mut graph = read_ditto();
-    println!("{:#?}", graph);
+    //println!("{:#?}", graph);
     //graph.print_graph();
     let node = 1 as u64;
     let start = Instant::now();
@@ -96,7 +96,7 @@ fn ditto() {
         Ok(_) => {
             println!("{:?}", start.elapsed());
             //println!("{:#?}", graph);
-            //graph.print_graph();
+            graph.print_graph();
         }
         Err(why) => println!("Error: {}", why),
     }
@@ -116,7 +116,8 @@ fn ditto() {
 
 #[test]
 fn create_medium_graph() {
-    // Create graph from file: Duration { seconds: 0, nanoseconds: 928072500 }
+    // Create graph from file: Duration { seconds: 0, nanoseconds: 928072500 } (main PC)
+    // Create graph from file: Duration { seconds: 1, nanoseconds: 814588300 } (Portable PC)
     let g = read_medium_gfa1();
     // nodes: 4058     edges: 9498     paths: 7
     let nodes = g.handles().count();
@@ -125,7 +126,8 @@ fn create_medium_graph() {
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
     //g.print_graph();
 
-    // Create graph from file: Duration { seconds: 1, nanoseconds: 219559200 }
+    // Create graph from file: Duration { seconds: 1, nanoseconds: 219559200 } (main PC)
+    // Create graph from file: Duration { seconds: 2, nanoseconds: 300047700 } (Portable PC)
     let g = read_medium_gfa2();
     // nodes: 4058     edges: 9498     paths: 7
     let nodes = g.handles().count();
@@ -136,12 +138,18 @@ fn create_medium_graph() {
 
 #[test]
 fn mod_graph_from_medium_gfa1() {
-    /*
+    /* MAIN PC
     Create graph from file: Duration { seconds: 0, nanoseconds: 928478400 }
     remove 1000 nodes from graph: Duration { seconds: 6, nanoseconds: 430148300 }
     remove 1000 small edges: Duration { seconds: 6, nanoseconds: 558348200 }
     remove 1 big edge (form of 1000 edges): Duration { seconds: 6, nanoseconds: 508098500 }
     */
+    /* PORTABLE PC
+    Create graph from file: Duration { seconds: 1, nanoseconds: 473749400 }
+    remove 1000 nodes from graph: Duration { seconds: 10, nanoseconds: 552469200 }
+    remove 1000 small edges: Duration { seconds: 10, nanoseconds: 147140900 }
+    remove 1 big edge (form of 1000 edges): Duration { seconds: 10, nanoseconds: 7050100 }
+     */
     let mut graph = read_medium_gfa1();
 
     let start = Instant::now();
