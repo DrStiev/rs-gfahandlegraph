@@ -74,7 +74,6 @@ impl<'a> AllEdgesPar for &'a HashGraph {
 
 impl<'a> HandleNeighbors for &'a HashGraph {
     type Neighbors = NeighborIter<'a, std::slice::Iter<'a, Handle>>;
-    //type Neighbors = NeighborIter<'a, std::collections::hash_map::Keys<'a, Handle, ()>>;
 
     #[inline]
     fn neighbors(self, handle: Handle, dir: Direction) -> Self::Neighbors {
@@ -87,7 +86,6 @@ impl<'a> HandleNeighbors for &'a HashGraph {
             (Direction::Right, false) => &node.right_edges,
         };
         NeighborIter::new(handles.iter(), dir == Direction::Left)
-        //NeighborIter::new(handles.keys(), dir == Direction::Left)
     }
 
     #[inline]
@@ -241,41 +239,21 @@ impl SubtractiveHandleGraph for HashGraph {
         if let Some(node) = self.graph.remove(&node_id) {
             let l = node.left_edges;
             let r = node.right_edges;
-
-            /*
-            for (i, _) in l.iter() {
-                if let Some(left) = self.graph.get_mut(&i.id()) {
-                    if i.is_reverse() {
-                        left.left_edges.remove(&i);
-                    } else {
-                        left.right_edges.remove(&i);
-                    }
-                }
-            }
-            for (i, _) in r.iter() {
-                if let Some(right) = self.graph.get_mut(&i.id()) {
-                    if i.is_reverse() {
-                        right.right_edges.remove(&i);
-                    } else {
-                        right.left_edges.remove(&i);
-                    }
-                }
-            }
-             */
-
             // delete all the occurrencies in the edge list of node.id()
             for i in l.iter() {
                 if let Some(left) = self.graph.get_mut(&i.id()) {
                     if i.is_reverse() {
                         if let Some(ll) = left
                             .left_edges
-                            .iter()
-                            .position(|x| x.id() == node_id)
+                            .par_iter()
+                            .position_first(|x| x.id() == node_id)
                         {
                             left.left_edges.remove(ll);
                         }
-                    } else if let Some(lr) =
-                        left.right_edges.iter().position(|x| x.id() == node_id)
+                    } else if let Some(lr) = left
+                        .right_edges
+                        .par_iter()
+                        .position_first(|x| x.id() == node_id)
                     {
                         left.right_edges.remove(lr);
                     }
@@ -286,13 +264,15 @@ impl SubtractiveHandleGraph for HashGraph {
                     if i.is_reverse() {
                         if let Some(rr) = right
                             .right_edges
-                            .iter()
-                            .position(|x| x.id() == node_id)
+                            .par_iter()
+                            .position_first(|x| x.id() == node_id)
                         {
                             right.right_edges.remove(rr);
                         }
-                    } else if let Some(rl) =
-                        right.left_edges.iter().position(|x| x.id() == node_id)
+                    } else if let Some(rl) = right
+                        .left_edges
+                        .par_iter()
+                        .position_first(|x| x.id() == node_id)
                     {
                         right.left_edges.remove(rl);
                     }
@@ -301,7 +281,7 @@ impl SubtractiveHandleGraph for HashGraph {
 
             for path in self.clone().paths() {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;
-                if nodes.iter().any(|x| x.id() == node_id) {
+                if nodes.par_iter().any(|x| x.id() == node_id) {
                     self.paths.remove(&path);
                 }
             }
@@ -315,35 +295,21 @@ impl SubtractiveHandleGraph for HashGraph {
     fn remove_edge(&mut self, Edge(l, r): Edge) -> Result<bool, GraphError> {
         // delete all the occurrencies of edge found in graph
         if self.has_edge(l, r) {
-            /*
             if l.is_reverse() {
                 if let Some(left) = self.graph.get_mut(&l.id()) {
-                    left.left_edges.remove(&l);
-                }
-            } else if let Some(left) = self.graph.get_mut(&l.id()) {
-                left.right_edges.remove(&l);
-            }
-
-            if r.is_reverse() {
-                if let Some(right) = self.graph.get_mut(&r.id()) {
-                    right.right_edges.remove(&r);
-                }
-            } else if let Some(right) = self.graph.get_mut(&r.id()) {
-                right.left_edges.remove(&r);
-            }
-             */
-
-            if l.is_reverse() {
-                if let Some(left) = self.graph.get_mut(&l.id()) {
-                    if let Some(ll) =
-                        left.left_edges.iter().position(|x| x.id() == r.id())
+                    if let Some(ll) = left
+                        .left_edges
+                        .par_iter()
+                        .position_first(|x| x.id() == r.id())
                     {
                         left.left_edges.remove(ll);
                     }
                 }
             } else if let Some(left) = self.graph.get_mut(&l.id()) {
-                if let Some(lr) =
-                    left.right_edges.iter().position(|x| x.id() == r.id())
+                if let Some(lr) = left
+                    .right_edges
+                    .par_iter()
+                    .position_first(|x| x.id() == r.id())
                 {
                     left.right_edges.remove(lr);
                 }
@@ -351,15 +317,19 @@ impl SubtractiveHandleGraph for HashGraph {
 
             if r.is_reverse() {
                 if let Some(right) = self.graph.get_mut(&r.id()) {
-                    if let Some(rr) =
-                        right.right_edges.iter().position(|x| x.id() == l.id())
+                    if let Some(rr) = right
+                        .right_edges
+                        .par_iter()
+                        .position_first(|x| x.id() == l.id())
                     {
                         right.right_edges.remove(rr);
                     }
                 }
             } else if let Some(right) = self.graph.get_mut(&r.id()) {
-                if let Some(rl) =
-                    right.left_edges.iter().position(|x| x.id() == l.id())
+                if let Some(rl) = right
+                    .left_edges
+                    .par_iter()
+                    .position_first(|x| x.id() == l.id())
                 {
                     right.left_edges.remove(rl);
                 }
@@ -367,11 +337,13 @@ impl SubtractiveHandleGraph for HashGraph {
 
             for path in self.clone().paths() {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;
-                if let Some(l) = nodes.iter().position(|x| x.id() == l.id()) {
-                    if let Some(r) = nodes.iter().position(|x| x.id() == r.id())
+                if let Some(l) =
+                    nodes.par_iter().position_first(|x| x.id() == l.id())
+                {
+                    if let Some(r) =
+                        nodes.par_iter().position_first(|x| x.id() == r.id())
                     {
-                        let lr = l + 1;
-                        if lr == r {
+                        if r == l + 1 {
                             self.paths.remove(&path);
                         }
                     }
@@ -447,7 +419,6 @@ impl AdditiveHandleGraph for HashGraph {
                 .get(&left.id())
                 .expect("Node doesn't exist for the given handle");
 
-            //None == left_node.right_edges.iter().find(|(&h, _)| h == right)
             None == left_node.right_edges.iter().find(|&&h| h == right)
         };
 
@@ -457,10 +428,8 @@ impl AdditiveHandleGraph for HashGraph {
                 .get_mut(&left.id())
                 .expect("Node doesn't exist for the given handle");
             if left.is_reverse() {
-                //left_node.left_edges.insert(right, ());
                 left_node.left_edges.push(right);
             } else {
-                //left_node.right_edges.insert(right, ());
                 left_node.right_edges.push(right);
             }
             if left != right.flip() {
@@ -469,10 +438,8 @@ impl AdditiveHandleGraph for HashGraph {
                     .get_mut(&right.id())
                     .expect("Node doesn't exist for the given handle");
                 if right.is_reverse() {
-                    //right_node.right_edges.insert(left.flip(), ());
                     right_node.right_edges.push(left.flip());
                 } else {
-                    //right_node.left_edges.insert(left.flip(), ());
                     right_node.left_edges.push(left.flip());
                 }
             }
@@ -555,14 +522,6 @@ impl MutableHandleGraph for HashGraph {
                 &mut node.left_edges
             };
 
-            /*
-            for (ref mut bwd, _) in neighbors.iter_mut() {
-                if *bwd == &fwd_handle.flip() {
-                    *bwd = &result.last().unwrap().flip();
-                }
-            }
-             */
-
             for bwd in neighbors.iter_mut() {
                 if *bwd == fwd_handle.flip() {
                     *bwd = result.last().unwrap().flip();
@@ -610,13 +569,11 @@ impl MutableHandleGraph for HashGraph {
             node.left_edges
                 .iter()
                 .chain(node.right_edges.iter())
-                //.map(|(&x, ())| (x, ()))
                 .copied()
                 .collect::<Vec<_>>()
         };
 
         for target in edges {
-            /*for (target, _) in edges {*/
             let other = self.get_node_mut(&target.id()).unwrap();
             let backward_edges = if target.is_reverse() {
                 other.right_edges.iter_mut()
@@ -624,14 +581,6 @@ impl MutableHandleGraph for HashGraph {
                 other.left_edges.iter_mut()
             };
 
-            /*
-            for (ref mut backward_handle, _) in backward_edges {
-                if backward_handle.id() == handle.id() {
-                    *backward_handle = &backward_handle.flip();
-                    break;
-                }
-            }
-            */
             for backward_handle in backward_edges {
                 if backward_handle.id() == handle.id() {
                     *backward_handle = backward_handle.flip();
