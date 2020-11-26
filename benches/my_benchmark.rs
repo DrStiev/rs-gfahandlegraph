@@ -49,13 +49,13 @@ fn mod_graph_from_medium_gfa2() -> bool {
 
     // add nodes, edges and paths
     for i in 1..1001 {
-        match graph.create_handle(b"TEST_SEQUENCE", 5000 + i as u64) {
+        match graph.create_handle(5_000 + i as u64, b"TEST_SEQUENCE") {
             Ok(_) => (),
             Err(why) => println!("Error: {}", why),
         };
         if i > 1 {
-            let left = Handle::new(5000 + i - 1, Orientation::Forward);
-            let right = Handle::new(5000 + i, Orientation::Forward);
+            let left = Handle::new(5_000 + i - 1, Orientation::Forward);
+            let right = Handle::new(5_000 + i, Orientation::Forward);
             let edge = Edge(left, right);
             match graph.create_edge(edge) {
                 Ok(_) => (),
@@ -67,7 +67,7 @@ fn mod_graph_from_medium_gfa2() -> bool {
     let path_id = b"default_path_id";
     let path = graph.create_path_handle(path_id, false);
     for i in 1..1001 {
-        let handle = Handle::new(5000 + i, Orientation::Forward);
+        let handle = Handle::new(5_000 + i, Orientation::Forward);
         match graph.append_step(&path, handle) {
             Ok(_) => (),
             Err(why) => println!("Error: {}", why),
@@ -95,12 +95,11 @@ fn criterion_benchmark(c: &mut Criterion) {
 fn criterion_benchmark(c: &mut Criterion) {
     /*
     CREATE GRAPH FROM MID GFA
-                        time:   [95.183 ms 95.269 ms 95.356 ms]
-                        change: [-0.7161% -0.5547% -0.3996%] (p = 0.00 < 0.05)
-                        Change within noise threshold.
-    Found 6 outliers among 100 measurements (6.00%)
-      2 (2.00%) low mild
-      3 (3.00%) high mild
+                            time:   [76.702 ms 76.890 ms 77.090 ms]
+                            change: [-0.3201% +0.1108% +0.5149%] (p = 0.62 > 0.05)
+                            No change in performance detected.
+    Found 3 outliers among 100 measurements (3.00%)
+      2 (2.00%) high mild
       1 (1.00%) high severe
     */
     c.bench_function("CREATE GRAPH FROM MID GFA", |b| {
@@ -108,13 +107,13 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
 
     /*
-    CREATE GRAPH FROM MID GFA2
-                        time:   [119.58 ms 119.71 ms 119.86 ms]
-                        change: [-0.6557% -0.4369% -0.2326%] (p = 0.00 < 0.05)
-                        Change within noise threshold.
-    Found 6 outliers among 100 measurements (6.00%)
+        CREATE GRAPH FROM MID GFA2
+                            time:   [97.021 ms 97.214 ms 97.429 ms]
+                            change: [+0.3214% +0.6042% +0.8833%] (p = 0.00 < 0.05)
+                            Change within noise threshold.
+    Found 5 outliers among 100 measurements (5.00%)
       4 (4.00%) high mild
-      2 (2.00%) high severe
+      1 (1.00%) high severe
     */
     c.bench_function("CREATE GRAPH FROM MID GFA2", |b| {
         b.iter(|| create_graph_from_medium_gfa2())
@@ -122,9 +121,12 @@ fn criterion_benchmark(c: &mut Criterion) {
 
     /*
     MODIFY GRAPH FROM MID GFA2
-                        time:   [908.09 ms 909.66 ms 911.30 ms]
-                        change: [-2.8493% -1.6381% -0.9226%] (p = 0.00 < 0.05)
-                        Change within noise threshold.
+                            time:   [886.56 ms 894.65 ms 908.31 ms]
+                            change: [-0.7563% +0.2077% +1.5585%] (p = 0.82 > 0.05)
+                            No change in performance detected.
+    Found 6 outliers among 100 measurements (6.00%)
+      1 (1.00%) high mild
+      5 (5.00%) high severe
     */
     c.bench_function("MODIFY GRAPH FROM MID GFA2", |b| {
         b.iter(|| mod_graph_from_medium_gfa2())
