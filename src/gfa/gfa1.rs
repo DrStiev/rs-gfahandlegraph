@@ -42,7 +42,9 @@ use std::fmt;
 ///     ],
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct GFA {
     pub headers: Vec<Header>,
     pub segments: Vec<Segment>,
@@ -241,7 +243,9 @@ impl fmt::Display for Header {
 ///     optional: b"",
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct Segment {
     pub name: usize,
     pub sequence: BString,
@@ -299,7 +303,9 @@ impl fmt::Display for Segment {
 ///     optional: b"",
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct Link {
     pub from_segment: usize,
     pub from_orient: Orientation,
@@ -373,7 +379,9 @@ impl fmt::Display for Link {
 ///     optional: b"",
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct Containment {
     pub container_name: usize,
     pub container_orient: Orientation,
@@ -444,7 +452,9 @@ impl fmt::Display for Containment {
 ///     optional: "".into(),
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct Path {
     pub path_name: BString,
     pub segment_names: BString,
@@ -483,7 +493,9 @@ impl Path {
 
     /// Produces an iterator over the usize segments of the given
     /// path.
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
+    pub fn iter<'a>(
+        &'a self,
+    ) -> impl Iterator<Item = (usize, Orientation)> + 'a {
         self.segment_names
             .split_str(b",")
             .filter_map(Self::parse_segment_id)

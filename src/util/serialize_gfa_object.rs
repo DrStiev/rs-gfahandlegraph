@@ -67,13 +67,22 @@ mod tests {
                 let start = Instant::now();
                 match to_json(GFAType::GFA2(gfa2)) {
                     Ok(j) => {
-                        println!("Convert GFAObject to JSONObject: {:?}", start.elapsed());
+                        println!(
+                            "Convert GFAObject to JSONObject: {:?}",
+                            start.elapsed()
+                        );
                         let start = Instant::now();
                         match save_on_file(
                             ObjectType::JSON(j),
-                            Some("./tests/output_files/ape-4-0.10b.gfa2.json".to_string()),
+                            Some(
+                                "./tests/output_files/ape-4-0.10b.gfa2.json"
+                                    .to_string(),
+                            ),
                         ) {
-                            Ok(_) => println!("Save JSONObject to file: {:?}", start.elapsed()),
+                            Ok(_) => println!(
+                                "Save JSONObject to file: {:?}",
+                                start.elapsed()
+                            ),
                             Err(why) => println!("Error: {}", why),
                         }
                     }
@@ -102,13 +111,22 @@ mod tests {
                 let start = Instant::now();
                 match to_bincode(GFAType::GFA2(gfa2)) {
                     Ok(b) => {
-                        println!("Convert GFAObject to BINCODEObject: {:?}", start.elapsed());
+                        println!(
+                            "Convert GFAObject to BINCODEObject: {:?}",
+                            start.elapsed()
+                        );
                         let start = Instant::now();
                         match save_on_file(
                             ObjectType::BINCODE(b),
-                            Some("./tests/output_files/ape-4-0.10b.gfa2.bin".to_string()),
+                            Some(
+                                "./tests/output_files/ape-4-0.10b.gfa2.bin"
+                                    .to_string(),
+                            ),
                         ) {
-                            Ok(_) => println!("Save BINCODEObject to file: {:?}", start.elapsed()),
+                            Ok(_) => println!(
+                                "Save BINCODEObject to file: {:?}",
+                                start.elapsed()
+                            ),
                             Err(why) => println!("Error: {}", why),
                         }
                     }
@@ -145,10 +163,16 @@ mod tests {
                 let start = Instant::now();
                 match to_json(GFAType::GFA2(gfa2)) {
                     Ok(j) => {
-                        println!("Convert GFAObject to JSONObject: {:?}", start.elapsed());
+                        println!(
+                            "Convert GFAObject to JSONObject: {:?}",
+                            start.elapsed()
+                        );
                         let start = Instant::now();
                         match save_on_file(ObjectType::JSON(j), None) {
-                            Ok(_) => println!("Save JSONObject to file: {:?}", start.elapsed()),
+                            Ok(_) => println!(
+                                "Save JSONObject to file: {:?}",
+                                start.elapsed()
+                            ),
                             Err(why) => println!("Error: {}", why),
                         }
                     }
@@ -178,10 +202,16 @@ mod tests {
                 let start = Instant::now();
                 match to_bincode(GFAType::GFA2(gfa2)) {
                     Ok(b) => {
-                        println!("Convert GFAObject to BINCODEObject: {:?}", start.elapsed());
+                        println!(
+                            "Convert GFAObject to BINCODEObject: {:?}",
+                            start.elapsed()
+                        );
                         let start = Instant::now();
                         match save_on_file(ObjectType::BINCODE(b), None) {
-                            Ok(_) => println!("Save BINCODEObject to file: {:?}", start.elapsed()),
+                            Ok(_) => println!(
+                                "Save BINCODEObject to file: {:?}",
+                                start.elapsed()
+                            ),
                             Err(why) => println!("Error: {}", why),
                         }
                     }

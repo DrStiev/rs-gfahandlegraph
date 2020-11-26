@@ -109,16 +109,27 @@ impl GFA2Parser {
         let mut fields = line.split_str(b"\t");
         let hdr = fields.next().ok_or(ParseError::EmptyLine)?;
 
-        let invalid_line = |e: ParseFieldError| ParseError::invalid_line(e, bytes);
+        let invalid_line =
+            |e: ParseFieldError| ParseError::invalid_line(e, bytes);
 
         let line = match hdr {
-            b"H" if self.headers => Header::parse_line(fields).map(Header::wrap),
-            b"S" if self.segments => Segment::parse_line(fields).map(Segment::wrap),
-            b"F" if self.fragments => Fragment::parse_line(fields).map(Fragment::wrap),
+            b"H" if self.headers => {
+                Header::parse_line(fields).map(Header::wrap)
+            }
+            b"S" if self.segments => {
+                Segment::parse_line(fields).map(Segment::wrap)
+            }
+            b"F" if self.fragments => {
+                Fragment::parse_line(fields).map(Fragment::wrap)
+            }
             b"E" if self.edges => Edge::parse_line(fields).map(Edge::wrap),
             b"G" if self.gaps => Gap::parse_line(fields).map(Gap::wrap),
-            b"O" if self.groups_o => GroupO::parse_line(fields).map(GroupO::wrap),
-            b"U" if self.groups_u => GroupU::parse_line(fields).map(GroupU::wrap),
+            b"O" if self.groups_o => {
+                GroupO::parse_line(fields).map(GroupO::wrap)
+            }
+            b"U" if self.groups_u => {
+                GroupU::parse_line(fields).map(GroupU::wrap)
+            }
             _ => return Err(ParseError::UnknownLineType),
         }
         .map_err(invalid_line)?;
@@ -163,7 +174,10 @@ impl GFA2Parser {
     /// */
     ///
     /// ```
-    pub fn parse_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<GFA2, ParseError> {
+    pub fn parse_file<P: AsRef<std::path::Path>>(
+        &self,
+        path: P,
+    ) -> Result<GFA2, ParseError> {
         use {
             bstr::io::BufReadExt,
             std::{fs::File, io::BufReader},
@@ -235,8 +249,10 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[+-]?[0-9]+\.?[0-9]+)?").unwrap();
+        static ref RE: Regex = Regex::new(
+            r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[+-]?[0-9]+\.?[0-9]+)?"
+        )
+        .unwrap();
     }
 
     let next = next_field(input)?;
@@ -360,7 +376,8 @@ where
 {
     lazy_static! {
         static ref RE: Regex =
-            Regex::new(r"(?-u)\*|([0-9]+[MDIP])+|(\-?[0-9]+(,\-?[0-9]+)*)").unwrap();
+            Regex::new(r"(?-u)\*|([0-9]+[MDIP])+|(\-?[0-9]+(,\-?[0-9]+)*)")
+                .unwrap();
     }
 
     let next = next_field(input)?;
@@ -526,7 +543,8 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)[!-~]+[+-]([ ][!-~]+[+-])*").unwrap();
+        static ref RE: Regex =
+            Regex::new(r"(?-u)[!-~]+[+-]([ ][!-~]+[+-])*").unwrap();
     }
 
     let next = next_field(input)?;
@@ -736,8 +754,11 @@ mod tests {
     #[test]
     fn can_parse_ogroup() {
         let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
-        let ogroup_: GroupO =
-            GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(), b"");
+        let ogroup_: GroupO = GroupO::new(
+            "P1".into(),
+            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+            b"",
+        );
 
         let fields = ogroup.split_terminator('\t');
         let result = GroupO::parse_line(fields);
@@ -754,7 +775,8 @@ mod tests {
     #[test]
     fn can_parse_ugroup() {
         let ugroup = "SG1\t16 24 SG2 51_24 16_24";
-        let ugroup_: GroupU = GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
+        let ugroup_: GroupU =
+            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
 
         let fields = ugroup.split_terminator('\t');
         let result = GroupU::parse_line(fields);

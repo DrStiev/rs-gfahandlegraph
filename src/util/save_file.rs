@@ -31,7 +31,10 @@ pub enum ObjectType {
 /// save_on_file(ObjectType::JSON(json), Some(String::from("./tests/output_files/json_to_file.json")));
 /// save_on_file(ObjectType::BINCODE(bincode), Some(String::from("./tests/output_files/bincode_to_file.bin")));
 /// ```
-pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<()> {
+pub fn save_on_file(
+    file: ObjectType,
+    path: Option<String>,
+) -> std::io::Result<()> {
     match file {
         ObjectType::JSON(x) => {
             let path = path.unwrap_or_else(|| {
@@ -45,7 +48,9 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
         }
         ObjectType::BINCODE(x) => {
             let path = path.unwrap_or_else(|| {
-                String::from("./tests/output_files/default_path/bincode_file.bin")
+                String::from(
+                    "./tests/output_files/default_path/bincode_file.bin",
+                )
             });
             let path = Path::new(&path);
             let mut file = File::create(path)?;
@@ -65,7 +70,9 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
         }
         ObjectType::GFA2(x) => {
             let path = path.unwrap_or_else(|| {
-                String::from("./tests/output_files/default_path/file_usize.gfa2")
+                String::from(
+                    "./tests/output_files/default_path/file_usize.gfa2",
+                )
             });
             let path = Path::new(&path);
             let mut file = File::create(path)?;
@@ -86,7 +93,9 @@ pub fn save_on_file(file: ObjectType, path: Option<String>) -> std::io::Result<(
         }
         ObjectType::FROMGFA2GRAPH(g) => {
             let path = path.unwrap_or_else(|| {
-                String::from("./tests/output_files/default_path/file_graph.gfa2")
+                String::from(
+                    "./tests/output_files/default_path/file_graph.gfa2",
+                )
             });
             let path = Path::new(&path);
             let mut file = File::create(path)?;

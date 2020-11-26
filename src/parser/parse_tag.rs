@@ -57,7 +57,8 @@ impl OptField {
     pub fn parse_tag(input: &[u8]) -> Option<Self> {
         lazy_static! {
             static ref RE: Regex =
-                Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*").unwrap();
+                Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*")
+                    .unwrap();
         }
 
         use OptFieldVal::*;

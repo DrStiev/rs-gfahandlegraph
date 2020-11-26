@@ -74,16 +74,19 @@ impl HashGraph {
     ///     Err(why) => println!("{}", why),
     /// }
     /// ```
-    pub fn create_graph(&mut self, file: FileType) -> Result<HashGraph, GraphError> {
+    pub fn create_graph(
+        &mut self,
+        file: FileType,
+    ) -> Result<HashGraph, GraphError> {
         match file {
             FileType::GFA(x) => {
-                x.segments
-                    .iter()
-                    .for_each(|s| match self.create_handle(s.name, &s.sequence) {
+                x.segments.into_iter().for_each(|s| {
+                    match self.create_handle(s.name, &s.sequence) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
-                    });
-                x.links.iter().for_each(|l| {
+                    }
+                });
+                x.links.into_iter().for_each(|l| {
                     let left = Handle::new(l.from_segment, l.from_orient);
                     let right = Handle::new(l.to_segment, l.to_orient);
                     match self.create_edge(GraphEdge(left, right)) {
@@ -91,10 +94,13 @@ impl HashGraph {
                         Err(why) => println!("Error {}", why),
                     }
                 });
-                x.paths.iter().for_each(|p| {
+                x.paths.into_iter().for_each(|p| {
                     let path_id = self.create_path_handle(&p.path_name, false);
                     for (id, orient) in p.iter() {
-                        match self.append_step(&path_id, Handle::new(id as u64, orient)) {
+                        match self.append_step(
+                            &path_id,
+                            Handle::new(id as u64, orient),
+                        ) {
                             Ok(_) => (),
                             Err(why) => println!("Error: {}", why),
                         };
@@ -103,30 +109,28 @@ impl HashGraph {
                 Ok(self.to_owned())
             }
             FileType::GFA2(x) => {
-                x.segments
-                    .iter()
-                    .for_each(|s| match self.create_handle(s.id, &s.sequence) {
+                x.segments.into_iter().for_each(|s| {
+                    match self.create_handle(s.id, &s.sequence) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
-                    });
-                x.edges.iter().for_each(|e| {
+                    }
+                });
+                x.edges.into_iter().for_each(|e| {
+                    let orient = |rev: &str| match rev {
+                        "43" => Orientation::Forward,
+                        "45" => Orientation::Backward,
+                        _ => panic!("Error retrieving the orientation"),
+                    };
+
                     let sid1 = e.sid1.to_string();
                     let len = sid1.len() - 2;
                     let l = sid1[..len].parse::<u64>().unwrap();
-                    let l_orient = match &sid1[len..] {
-                        "43" => Orientation::Forward,
-                        "45" => Orientation::Backward,
-                        _ => panic!("Error! Edge did not include orientation"),
-                    };
+                    let l_orient = orient(&sid1[len..]);
 
                     let sid2 = e.sid2.to_string();
                     let len = sid2.len() - 2;
                     let r = sid2[..len].parse::<u64>().unwrap();
-                    let r_orient = match &sid2[len..] {
-                        "43" => Orientation::Forward,
-                        "45" => Orientation::Backward,
-                        _ => panic!("Error! Edge did not include orientation"),
-                    };
+                    let r_orient = orient(&sid2[len..]);
 
                     let left = Handle::new(l, l_orient);
                     let right = Handle::new(r, r_orient);
@@ -135,10 +139,13 @@ impl HashGraph {
                         Err(why) => println!("Error {}", why),
                     }
                 });
-                x.groups_o.iter().for_each(|o| {
+                x.groups_o.into_iter().for_each(|o| {
                     let path_id = self.create_path_handle(&o.id, false);
                     for (id, orient) in o.iter() {
-                        match self.append_step(&path_id, Handle::new(id as u64, orient)) {
+                        match self.append_step(
+                            &path_id,
+                            Handle::new(id as u64, orient),
+                        ) {
                             Ok(_) => (),
                             Err(why) => println!("Error: {}", why),
                         };
@@ -195,7 +202,8 @@ impl HashGraph {
         // get all the nodeid and sequence associated with them
         for handle in self.handles_par().collect::<Vec<_>>() {
             let node_id: String = handle.id().to_string();
-            let sequence: BString = self.sequence_iter(handle.forward()).collect();
+            let sequence: BString =
+                self.sequence_iter(handle.forward()).collect();
             println!("\t\t{}: {}", node_id, sequence);
         }
     }
@@ -206,34 +214,19 @@ impl HashGraph {
         for edge in self.edges_par().collect::<Vec<_>>() {
             let GraphEdge(left, right) = edge;
 
-            let from_node: String = if !left.id().to_string().is_empty() {
-                left.id().to_string()
-            } else {
-                "NUL".to_string()
-            };
-            let to_node: String = if !right.id().to_string().is_empty() {
-                right.id().to_string()
-            } else {
-                "NUL".to_string()
+            let orient = |rev: bool| {
+                if rev {
+                    "-".to_string()
+                } else {
+                    "+".to_string()
+                }
             };
 
-            let mut left_orient: String = "".to_string();
-            if from_node != "NUL" {
-                if left.is_reverse() {
-                    left_orient = "-".to_string();
-                } else {
-                    left_orient = "+".to_string();
-                }
-            }
+            let from_node: String = left.id().to_string();
+            let to_node: String = right.id().to_string();
 
-            let mut right_orient: String = "".to_string();
-            if to_node != "NUL" {
-                if right.is_reverse() {
-                    right_orient = "-".to_string();
-                } else {
-                    right_orient = "+".to_string();
-                }
-            }
+            let left_orient: String = orient(left.is_reverse());
+            let right_orient: String = orient(right.is_reverse());
 
             println!(
                 "\t\t{}{} -- {}{}",
@@ -265,7 +258,8 @@ impl HashGraph {
                 }
                 // print correct reverse and complement sequence to display the correct path
                 if handle.is_reverse() {
-                    let rev_sequence: BString = dna::rev_comp(node.sequence.as_slice()).into();
+                    let rev_sequence: BString =
+                        dna::rev_comp(node.sequence.as_slice()).into();
                     print!("{}", rev_sequence);
                 } else {
                     print!("{}", node.sequence);
@@ -294,9 +288,9 @@ impl HashGraph {
     }
 
     pub fn get_node_unchecked(&self, node_id: &NodeId) -> &Node {
-        self.graph
-            .get(node_id)
-            .unwrap_or_else(|| panic!("Tried getting a node that doesn't exist, ID: {:?}", node_id))
+        self.graph.get(node_id).unwrap_or_else(|| {
+            panic!("Tried getting a node that doesn't exist, ID: {:?}", node_id)
+        })
     }
 
     pub fn get_node_mut(&mut self, node_id: &NodeId) -> Option<&mut Node> {

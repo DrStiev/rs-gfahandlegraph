@@ -66,7 +66,9 @@ impl fmt::Display for Header {
 ///     tag: b"",
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct Segment {
     pub id: usize,
     pub len: BString,
@@ -128,7 +130,9 @@ impl fmt::Display for Segment {
 ///     tag: b"",
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct Fragment {
     pub id: usize,
     pub ext_ref: usize, // orientation as final char (+-)
@@ -225,7 +229,9 @@ impl fmt::Display for Fragment {
 ///     tag: b"",
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct Edge {
     pub id: usize,   // optional id, can be either * or id tag
     pub sid1: usize, // orientation as final char (+-)
@@ -233,7 +239,7 @@ pub struct Edge {
     pub beg1: BString,
     pub end1: BString, // dollar character as optional final char
     pub beg2: BString,
-    pub end2: BString,      // dollar character as optional final char
+    pub end2: BString, // dollar character as optional final char
     pub alignment: BString, // alignment field can be *, trace or CIGAR
     pub tag: BString,
 }
@@ -327,7 +333,9 @@ impl fmt::Display for Edge {
 ///     tag: b"",
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct Gap {
     pub id: usize,   // optional id, can be either * or id tag
     pub sid1: usize, // orientation as final char (+-)
@@ -338,7 +346,14 @@ pub struct Gap {
 }
 
 impl Gap {
-    pub fn new(id: usize, sid1: usize, sid2: usize, dist: &[u8], var: &[u8], tag: &[u8]) -> Self {
+    pub fn new(
+        id: usize,
+        sid1: usize,
+        sid2: usize,
+        dist: &[u8],
+        var: &[u8],
+        tag: &[u8],
+    ) -> Self {
         Gap {
             id,
             sid1,
@@ -396,11 +411,13 @@ impl fmt::Display for Gap {
 ///     tag: "".into(),
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct GroupO {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
-    pub id: BString,        // optional id, can be either * or id tag
+    pub id: BString, // optional id, can be either * or id tag
     pub var_field: BString, // "array" of ref (from 1 to n)
     pub tag: BString,
 }
@@ -429,7 +446,9 @@ impl GroupO {
     }
 
     /// Produces an iterator over the usize segments of the given group
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
+    pub fn iter<'a>(
+        &'a self,
+    ) -> impl Iterator<Item = (usize, Orientation)> + 'a {
         self.var_field
             .split_str(b" ")
             .filter_map(Self::parse_segment_id)
@@ -462,11 +481,13 @@ impl fmt::Display for GroupO {
 ///     tag: "".into(),
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct GroupU {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
-    pub id: BString,        // optional id, can be either * or id tag
+    pub id: BString, // optional id, can be either * or id tag
     pub var_field: BString, // "array" of id (from 1 to n)
     pub tag: BString,
 }
@@ -543,7 +564,9 @@ impl fmt::Display for GroupU {
 ///     ]
 /// };
 /// ```
-#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
 pub struct GFA2 {
     // OptFields is used to encode the <tag>* item
     // struct to hold the results of parsing a file; not actually a graph
@@ -730,8 +753,11 @@ mod test {
 
     #[test]
     fn o_group_iter() {
-        let ogroup_: GroupO =
-            GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(), b"");
+        let ogroup_: GroupO = GroupO::new(
+            "P1".into(),
+            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+            b"",
+        );
         for (name, orientation) in ogroup_.iter() {
             println!("{}{}", name, orientation);
         }
@@ -739,7 +765,8 @@ mod test {
 
     #[test]
     fn u_group_iter() {
-        let ugroup_: GroupU = GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
+        let ugroup_: GroupU =
+            GroupU::new("SG1".into(), "16 24 SG2 51_24 16_24".into(), b"");
         for name in ugroup_.iter() {
             println!("{}", name);
         }

@@ -121,13 +121,18 @@ impl GFAParser {
         let mut fields = line.split_str(b"\t");
         let hdr = fields.next().ok_or(ParseError::EmptyLine)?;
 
-        let invalid_line = |e: ParseFieldError| ParseError::invalid_line(e, bytes);
+        let invalid_line =
+            |e: ParseFieldError| ParseError::invalid_line(e, bytes);
 
         let line = match hdr {
             b"H" => Header::parse_line(fields).map(Header::wrap),
-            b"S" if self.segments => Segment::parse_line(fields).map(Segment::wrap),
+            b"S" if self.segments => {
+                Segment::parse_line(fields).map(Segment::wrap)
+            }
             b"L" if self.links => Link::parse_line(fields).map(Link::wrap),
-            b"C" if self.containments => Containment::parse_line(fields).map(Containment::wrap),
+            b"C" if self.containments => {
+                Containment::parse_line(fields).map(Containment::wrap)
+            }
             b"P" if self.paths => Path::parse_line(fields).map(Path::wrap),
             _ => return Err(ParseError::UnknownLineType),
         }
@@ -177,7 +182,10 @@ impl GFAParser {
     /// */
     ///
     /// ```
-    pub fn parse_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<GFA, ParseError> {
+    pub fn parse_file<P: AsRef<std::path::Path>>(
+        &self,
+        path: P,
+    ) -> Result<GFA, ParseError> {
         use {
             bstr::io::BufReadExt,
             std::{fs::File, io::BufReader},
@@ -259,8 +267,10 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[0-9]+\.[0-9]+)?").unwrap();
+        static ref RE: Regex = Regex::new(
+            r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[0-9]+\.[0-9]+)?"
+        )
+        .unwrap();
     }
 
     let next = next_field(input)?;
@@ -299,7 +309,8 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)\*|([0-9]+[MIDNSHPX=])+").unwrap();
+        static ref RE: Regex =
+            Regex::new(r"(?-u)\*|([0-9]+[MIDNSHPX=])+").unwrap();
     }
 
     let next = next_field(input)?;
@@ -428,7 +439,8 @@ where
 {
     lazy_static! {
         static ref RE: Regex =
-            Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*").unwrap();
+            Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*")
+                .unwrap();
     }
 
     let next = next_field(input)?;
@@ -583,7 +595,8 @@ mod tests {
     #[test]
     fn can_parse_path() {
         let path = "14\t11+,12-,13+\t4M,5M";
-        let path_: Path = Path::new("14".into(), "11+,12-,13+".into(), "4M,5M".into(), b"");
+        let path_: Path =
+            Path::new("14".into(), "11+,12-,13+".into(), "4M,5M".into(), b"");
 
         let fields = path.split_terminator('\t');
         let result = Path::parse_line(fields);

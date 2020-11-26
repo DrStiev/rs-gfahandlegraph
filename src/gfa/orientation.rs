@@ -9,7 +9,18 @@ use serde::{Deserialize, Serialize};
 ///     Backward, // represents the '-' sign
 /// }
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Serialize,
+    Deserialize,
+    Hash,
+)]
 pub enum Orientation {
     Forward,
     Backward,
@@ -30,7 +41,10 @@ impl Orientation {
         opt.ok_or(ParseFieldError::OrientationError)
     }
 
-    pub fn write_plus_minus(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    pub fn write_plus_minus(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         let sym = match self {
             Self::Forward => '+',
             Self::Backward => '-',
@@ -55,7 +69,10 @@ impl Orientation {
         }
     }
 
-    pub fn write_gt_ln(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    pub fn write_gt_ln(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         let sym = match self {
             Self::Forward => '>',
             Self::Backward => '<',

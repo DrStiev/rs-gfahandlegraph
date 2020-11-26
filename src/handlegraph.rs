@@ -73,7 +73,11 @@ pub trait HandleNeighbors: Sized {
 pub trait HandleNeighborsPar {
     type NeighborsPar: ParallelIterator<Item = Handle>;
 
-    fn neighbors_par(self, handle: Handle, dir: Direction) -> Self::NeighborsPar;
+    fn neighbors_par(
+        self,
+        handle: Handle,
+        dir: Direction,
+    ) -> Self::NeighborsPar;
 }
 
 /// Access to the sequence of any node, and related methods such as retrieving subsequences, individual bases, and node lengths.
@@ -120,7 +124,9 @@ pub trait HandleSequencesPar {
 /// The `impl` on `&T`, which has the additional bound that `T:
 /// HandleGraph`, makes it possible to use this as the only bound in
 /// functions that are generic over `HandleGraph` implementations.
-pub trait HandleGraphRef: AllEdges + AllHandles + HandleNeighbors + HandleSequences + Copy {
+pub trait HandleGraphRef:
+    AllEdges + AllHandles + HandleNeighbors + HandleSequences + Copy
+{
     fn total_length(self) -> usize {
         self.handles().map(|h| self.node_len(h)).sum()
     }

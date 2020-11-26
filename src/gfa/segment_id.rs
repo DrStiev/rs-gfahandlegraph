@@ -44,12 +44,16 @@ pub trait SegmentId: std::fmt::Display + Sized + Default {
     {
         let next = input.next().ok_or(ParseFieldError::MissingFields)?;
         match id {
-            IdType::ID() => Self::parse_id(IdType::ID(), next.as_ref()).ok_or(Self::ERROR),
+            IdType::ID() => {
+                Self::parse_id(IdType::ID(), next.as_ref()).ok_or(Self::ERROR)
+            }
             IdType::OPTIONALID() => {
-                Self::parse_id(IdType::OPTIONALID(), next.as_ref()).ok_or(Self::ERROR)
+                Self::parse_id(IdType::OPTIONALID(), next.as_ref())
+                    .ok_or(Self::ERROR)
             }
             IdType::REFERENCEID() => {
-                Self::parse_id(IdType::REFERENCEID(), next.as_ref()).ok_or(Self::ERROR)
+                Self::parse_id(IdType::REFERENCEID(), next.as_ref())
+                    .ok_or(Self::ERROR)
             }
         }
     }
@@ -90,7 +94,9 @@ impl SegmentId for BString {
 
     fn parse_id(id: IdType, input: &[u8]) -> Option<Self> {
         match id {
-            IdType::ID() => RE_ID.find(input).map(|s| BString::from(s.as_bytes())),
+            IdType::ID() => {
+                RE_ID.find(input).map(|s| BString::from(s.as_bytes()))
+            }
             IdType::OPTIONALID() => RE_OPTIONAL_ID
                 .find(input)
                 .map(|s| BString::from(s.as_bytes())),
@@ -101,8 +107,7 @@ impl SegmentId for BString {
     }
 }
 
-/// This function will convert any
-/// [printable]
+/// This function will convert any [printable]
 /// input into the corresponding [ASCII CODE].\
 /// Remember! if the input it's already a `Number` it will be returned as it is.
 ///
@@ -145,15 +150,18 @@ pub fn convert_to_usize(input: &[u8]) -> Option<usize> {
 /// array to perform the conversion from symbols to usize and viceversa
 const CHARS: [&str; 128] = [
     // unprintable characters, never used but they need to be here
-    "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF", "VT", "FF", "CR",
-    "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC",
-    "FS", "GS", "RS", "US", // printable characters, the ones that will be used
-    " ", "!", "\"", "#", "$", "%", "&", "\'", "(", ")", "*", "+", ",", "-", ".", "/", "0", "1",
-    "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D",
-    "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W",
-    "X", "Y", "Z", "[", "\\", "]", "^", "_", "`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
-    "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}",
-    "~", // even if printable, this character it's not used
+    "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF",
+    "VT", "FF", "CR", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK",
+    "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US",
+    // printable characters, the ones that will be used
+    " ", "!", "\"", "#", "$", "%", "&", "\'", "(", ")", "*", "+", ",", "-", ".",
+    "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=",
+    ">", "?", "@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
+    "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[",
+    "\\", "]", "^", "_", "`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
+    "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y",
+    "z", "{", "|", "}", "~",
+    // even if printable, this character it's not used
     "DEL",
 ];
 

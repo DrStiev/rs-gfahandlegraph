@@ -1,13 +1,16 @@
-use crate::{handle::Edge, handlegraph::*, hashgraph::HashGraph, pathgraph::PathHandleGraph};
+use crate::{
+    handle::Edge, handlegraph::*, hashgraph::HashGraph,
+    pathgraph::PathHandleGraph,
+};
 
 use crate::gfa::{
     gfa1::{Header as Header1, Link, Path, Segment as Segment1, GFA},
     gfa2::{Edge as GFA2Edge, GroupO, Header, Segment, GFA2},
     orientation::Orientation,
-    segment_id::*,
 };
+
 use bstr::BString;
-use rayon::iter::{ParallelIterator, IntoParallelRefMutIterator};
+use rayon::iter::ParallelIterator;
 
 /// Function that takes a
 /// [`HASHGRAPH`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/graph/struct.HashGraph.html)
@@ -51,33 +54,18 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
     file.headers.push(header);
 
     for h in graph.handles_par().collect::<Vec<_>>() {
-        let seq_id = usize::from(h.id());
+        let id = usize::from(h.id());
         let sequence: BString = graph.sequence_iter(h.forward()).collect();
         let len: BString = BString::from(sequence.len().to_string());
 
         let segment = Segment {
-            id: seq_id,
+            id,
             len,
             sequence,
             tag: BString::from(""),
         };
         file.segments.push(segment);
     }
-    /*
-    for handle in graph.handles() {
-        let seq_id = usize::from(handle.id());
-        let sequence: BString = graph.sequence_iter(handle.forward()).collect();
-        let len: BString = BString::from(sequence.len().to_string());
-
-        let segment = Segment {
-            id: seq_id,
-            len,
-            sequence,
-            tag: BString::from(""),
-        };
-        file.segments.push(segment);
-    }
-     */
 
     let orient = |rev: bool| {
         if rev {
@@ -104,7 +92,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
 
         let edge = GFA2Edge {
             // placeholder id
-            id: convert_to_usize(b"*").unwrap(),
+            id: 42, // 42 is the ASCII CODE for the character '*'
             sid1,
             sid2,
             beg1: "0".into(),  // placeholder value
@@ -116,37 +104,6 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
         };
         file.edges.push(edge);
     }
-    /*
-    for edge in graph.edges() {
-        let Edge(left, right) = edge;
-
-        let sid1_id: String = left.id().to_string();
-        let sid1_orient = orient(left.is_reverse());
-        let sid1 = format!("{}{}", sid1_id, sid1_orient)
-            .parse::<usize>()
-            .unwrap();
-
-        let sid2_id: String = right.id().to_string();
-        let sid2_orient = orient(right.is_reverse());
-        let sid2 = format!("{}{}", sid2_id, sid2_orient)
-            .parse::<usize>()
-            .unwrap();
-
-        let edge = GFA2Edge {
-            // placeholder id
-            id: convert_to_usize(b"*").unwrap(),
-            sid1,
-            sid2,
-            beg1: "0".into(),  // placeholder value
-            end1: "0$".into(), // placeholder value
-            beg2: "0".into(),  // placeholder value
-            end2: "0$".into(), // placeholder value
-            alignment: "0M".into(),
-            tag: BString::from(""),
-        };
-        file.edges.push(edge);
-    }
-     */
 
     let o_orient = |rev: bool| {
         if rev {
@@ -157,7 +114,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
     };
 
     for path_id in graph.paths() {
-        let path_name: BString = graph.path_handle_to_name(path_id).into();
+        let id: BString = graph.path_handle_to_name(path_id).into();
         let mut segment_names: Vec<String> = Vec::new();
 
         for step in graph.steps(path_id) {
@@ -178,7 +135,7 @@ pub fn to_gfa2(graph: &HashGraph) -> GFA2 {
         segment_names.pop();
 
         let ogroup: GroupO = GroupO {
-            id: path_name,
+            id,
             var_field: BString::from(segment_names),
             tag: BString::from(""),
         };
@@ -238,18 +195,6 @@ pub fn to_gfa(graph: &HashGraph) -> GFA {
         };
         gfa.segments.push(segment);
     }
-    /*
-    for handle in graph.handles() {
-        let name = usize::from(handle.id());
-        let sequence: BString = graph.sequence_iter(handle.forward()).collect();
-
-        let segment = Segment1 {
-            name,
-            sequence,
-            optional: BString::from(""),
-        };
-        gfa.segments.push(segment);
-    }*/
 
     let orient = |rev: bool| {
         if rev {
@@ -277,26 +222,6 @@ pub fn to_gfa(graph: &HashGraph) -> GFA {
         };
         gfa.links.push(link);
     }
-    /*
-    for edge in graph.edges() {
-        let Edge(left, right) = edge;
-        let from_segment: usize = usize::from(left.id());
-        let from_orient = orient(left.is_reverse());
-        let to_segment: usize = usize::from(right.id());
-        let to_orient = orient(right.is_reverse());
-        let overlap = BString::from("0M");
-
-        let link = Link {
-            from_segment,
-            from_orient,
-            to_segment,
-            to_orient,
-            overlap,
-            optional: BString::from(""),
-        };
-        gfa.links.push(link);
-    }
-    */
 
     for path_id in graph.paths() {
         let path_name: BString = graph.path_handle_to_name(path_id).into();
@@ -365,8 +290,8 @@ mod test {
 
     #[test]
     fn can_convert_medium_graph_to_gfa2() {
-        // Convert graph to GFA2: Duration { seconds: 0, nanoseconds: 209741800 }
-        // Print graph: Duration { seconds: 0, nanoseconds: 108029100 }
+        // Convert graph to GFA2: Duration { seconds: 0, nanoseconds: 194460200 }
+        // Print graph: Duration { seconds: 0, nanoseconds: 87618500 }
         match parse_file_to_graph("./tests/big_files/test.gfa2") {
             Ok(g) => {
                 let start = Instant::now();

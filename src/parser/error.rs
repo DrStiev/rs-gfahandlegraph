@@ -94,11 +94,21 @@ impl fmt::Display for ParseFieldError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         use ParseFieldError as PFE;
         match self {
-            PFE::UintIdError => write!(f, "Failed to parse a segment ID as an unsigned integer"),
-            PFE::Utf8Error => write!(f, "Failed to parse a bytestring as a UTF-8 string"),
-            PFE::ParseFromStringError => write!(f, "Failed to parse a field from a string"),
-            PFE::OrientationError => write!(f, "Failed to parse an orientation character"),
-            PFE::InvalidField(field) => write!(f, "Failed to parse field `{}`", field),
+            PFE::UintIdError => {
+                write!(f, "Failed to parse a segment ID as an unsigned integer")
+            }
+            PFE::Utf8Error => {
+                write!(f, "Failed to parse a bytestring as a UTF-8 string")
+            }
+            PFE::ParseFromStringError => {
+                write!(f, "Failed to parse a field from a string")
+            }
+            PFE::OrientationError => {
+                write!(f, "Failed to parse an orientation character")
+            }
+            PFE::InvalidField(field) => {
+                write!(f, "Failed to parse field `{}`", field)
+            }
             PFE::MissingFields => write!(f, "Line is missing required fields"),
             PFE::Unknown => write!(f, "Unknown error when parsing a field"),
         }
@@ -149,7 +159,9 @@ impl fmt::Display for ParseError {
             PE::InvalidLine(field_err, line) => {
                 write!(f, "Failed to parse line {}, error: {}", line, field_err)
             }
-            PE::InvalidField(field_err) => write!(f, "Failed to parse field: {}", field_err),
+            PE::InvalidField(field_err) => {
+                write!(f, "Failed to parse field: {}", field_err)
+            }
             PE::IOError(err) => write!(f, "IO error: {}", err),
             PE::ExtensionError() => write!(f, "Extension not correct!"),
             PE::ConversionGFAToGraph(why) => write!(f, "{}", why),

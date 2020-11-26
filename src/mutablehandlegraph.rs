@@ -16,7 +16,10 @@ pub trait SubtractiveHandleGraph {
     /// // Nodes: 11, 13
     /// // Edges: 11 -> 13
     /// ```
-    fn remove_handle<T: Into<NodeId>>(&mut self, node: T) -> Result<bool, GraphError>;
+    fn remove_handle<T: Into<NodeId>>(
+        &mut self,
+        node: T,
+    ) -> Result<bool, GraphError>;
 
     /// Function that removes an
     /// [`Edge`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/handle/struct.Edge.html)
@@ -136,9 +139,17 @@ pub trait ModdableHandleGraph {
 /// Trait encapsulating the mutable aspects of a handlegraph
 /// WIP
 pub trait MutableHandleGraph: HandleGraph {
-    fn divide_handle(&mut self, handle: Handle, offsets: Vec<usize>) -> Vec<Handle>;
+    fn divide_handle(
+        &mut self,
+        handle: Handle,
+        offsets: Vec<usize>,
+    ) -> Vec<Handle>;
 
-    fn split_handle(&mut self, handle: Handle, offset: usize) -> (Handle, Handle) {
+    fn split_handle(
+        &mut self,
+        handle: Handle,
+        offset: usize,
+    ) -> (Handle, Handle) {
         let handles = self.divide_handle(handle, vec![offset]);
         (handles[0], handles[1])
     }

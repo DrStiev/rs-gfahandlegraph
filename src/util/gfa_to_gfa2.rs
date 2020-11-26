@@ -36,14 +36,20 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
+                    .map(|x| {
+                        BString::from(
+                            str::from_utf8(x).unwrap().to_owned() + "\t",
+                        )
+                    })
                     .collect::<BString>();
 
                 let header = Header { version, tag };
                 gfa2.headers.push(header);
             }
             "S" => {
-                let id = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
+                let id =
+                    convert_to_usize(line_split.next().unwrap().as_bytes())
+                        .unwrap();
                 let sequence = BString::from(line_split.next().unwrap());
                 let len = BString::from(sequence.len().to_string());
 
@@ -55,7 +61,11 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
+                    .map(|x| {
+                        BString::from(
+                            str::from_utf8(x).unwrap().to_owned() + "\t",
+                        )
+                    })
                     .collect::<BString>();
 
                 let segment = Segment {
@@ -70,12 +80,18 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                 // placeholder value
                 let id = convert_to_usize(b"*").unwrap();
 
-                let from_node = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
+                let from_node =
+                    convert_to_usize(line_split.next().unwrap().as_bytes())
+                        .unwrap();
                 let from_node_orient =
-                    convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
-                let to_node = convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
+                    convert_to_usize(line_split.next().unwrap().as_bytes())
+                        .unwrap();
+                let to_node =
+                    convert_to_usize(line_split.next().unwrap().as_bytes())
+                        .unwrap();
                 let to_node_orient =
-                    convert_to_usize(line_split.next().unwrap().as_bytes()).unwrap();
+                    convert_to_usize(line_split.next().unwrap().as_bytes())
+                        .unwrap();
                 let alignment = BString::from(line_split.next().unwrap());
 
                 // placeholder values
@@ -86,7 +102,11 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
 
                 if alignment != "*" {
                     let len = alignment.len() - 1;
-                    let dist = alignment[..len].to_str().unwrap().parse::<i64>().unwrap();
+                    let dist = alignment[..len]
+                        .to_str()
+                        .unwrap()
+                        .parse::<i64>()
+                        .unwrap();
 
                     if from_node_orient == 43 && to_node_orient == 43 {
                         let x = (100 - dist).abs();
@@ -118,7 +138,11 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
+                    .map(|x| {
+                        BString::from(
+                            str::from_utf8(x).unwrap().to_owned() + "\t",
+                        )
+                    })
                     .collect::<BString>();
 
                 let edge = Edge {
@@ -151,7 +175,11 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                 }
                 let tag = opt_fields
                     .into_iter()
-                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
+                    .map(|x| {
+                        BString::from(
+                            str::from_utf8(x).unwrap().to_owned() + "\t",
+                        )
+                    })
                     .collect::<BString>();
 
                 let ogroup = GroupO {
@@ -197,7 +225,10 @@ mod test {
             let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
             println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
             let start = Instant::now();
-            match save_on_file(ObjectType::GFA2(gfa2), Some(format!("{}{}", path, "2"))) {
+            match save_on_file(
+                ObjectType::GFA2(gfa2),
+                Some(format!("{}{}", path, "2")),
+            ) {
                 Ok(_) => println!("Save file {:?}", start.elapsed()),
                 Err(why) => println!("Error: {}", why),
             }
@@ -211,7 +242,10 @@ mod test {
         let path: String = "./tests/big_files/test.gfa".to_string();
         let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
         println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
-        match save_on_file(ObjectType::GFA2(gfa2), Some(format!("{}{}", path, "2"))) {
+        match save_on_file(
+            ObjectType::GFA2(gfa2),
+            Some(format!("{}{}", path, "2")),
+        ) {
             Ok(_) => println!("File converted and saved correctly!"),
             Err(why) => println!("Error: {}", why),
         }
@@ -229,7 +263,10 @@ mod test {
         for i in 0..4 {
             let path = FILES[i].to_string();
             let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
-            match save_on_file(ObjectType::GFA2(gfa2), Some(format!("{}{}", path, "2"))) {
+            match save_on_file(
+                ObjectType::GFA2(gfa2),
+                Some(format!("{}{}", path, "2")),
+            ) {
                 Ok(_) => println!("File converted and saved correctly!"),
                 Err(why) => println!("Error: {}", why),
             }

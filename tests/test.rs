@@ -116,15 +116,16 @@ fn ditto() {
 
 #[test]
 fn create_medium_graph() {
-    //Create graph from file: Duration { seconds: 0, nanoseconds: 930659400 }
+    // Create graph from file: Duration { seconds: 0, nanoseconds: 928072500 }
     let g = read_medium_gfa1();
     // nodes: 4058     edges: 9498     paths: 7
     let nodes = g.handles().count();
     let edges = g.edges().count();
     let paths = g.paths().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
+    //g.print_graph();
 
-    //Create graph from file: Duration { seconds: 1, nanoseconds: 231729800 }
+    // Create graph from file: Duration { seconds: 1, nanoseconds: 219559200 }
     let g = read_medium_gfa2();
     // nodes: 4058     edges: 9498     paths: 7
     let nodes = g.handles().count();
@@ -232,11 +233,11 @@ fn create_big_graph() {
 #[ignore]
 fn mod_graph_from_big_gfa1() {
     /*
-    Create graph from file: Duration { seconds: 505, nanoseconds: 571391900 }
-    remove 100 nodes from graph: Duration { seconds: 359, nanoseconds: 621004900 }
-    add 100 nodes and edges: Duration { seconds: 0, nanoseconds: 503600 }
-    add 100 paths: Duration { seconds: 0, nanoseconds: 227600 }
-    remove 100 edges: Duration { seconds: 357, nanoseconds: 169029400 }
+    Create graph from file: Duration { seconds: 531, nanoseconds: 52844900 }
+    remove 100 nodes from graph: Duration { seconds: 367, nanoseconds: 514004300 }
+    add 100 nodes and edges: Duration { seconds: 0, nanoseconds: 379000 }
+    add 100 paths: Duration { seconds: 0, nanoseconds: 20216100 }
+    remove 100 edges: Duration { seconds: 369, nanoseconds: 358321100 }
     */
     let mut graph = read_big_gfa1();
 
@@ -354,7 +355,8 @@ fn add_path() {
                             _ => panic!("AAAAAAAA"),
                         };
 
-                        let handle = Handle::new(seq_id.parse::<u64>().unwrap(), orient);
+                        let handle =
+                            Handle::new(seq_id.parse::<u64>().unwrap(), orient);
                         match graph.append_step(&path, handle) {
                             Ok(_) => (),
                             Err(why) => println!("Error: {}", why),

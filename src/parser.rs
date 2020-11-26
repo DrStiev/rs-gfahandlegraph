@@ -43,7 +43,9 @@ use crate::hashgraph::HashGraph;
 /// }
 /// */
 /// ```
-pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(path: P) -> Result<HashGraph, ParseError> {
+pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(
+    path: P,
+) -> Result<HashGraph, ParseError> {
     use crate::hashgraph::graph::FileType;
     use std::ffi::OsStr;
 
@@ -55,7 +57,9 @@ pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(path: P) -> Result<HashGra
 
             match graph.create_graph(FileType::GFA2(gfa2)) {
                 Ok(g) => Ok(g),
-                Err(why) => Err(ParseError::ConversionGFAToGraph(why.to_string())),
+                Err(why) => {
+                    Err(ParseError::ConversionGFAToGraph(why.to_string()))
+                }
             }
         }
         "gfa" => {
@@ -65,7 +69,9 @@ pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(path: P) -> Result<HashGra
 
             match graph.create_graph(FileType::GFA(gfa)) {
                 Ok(g) => Ok(g),
-                Err(why) => Err(ParseError::ConversionGFAToGraph(why.to_string())),
+                Err(why) => {
+                    Err(ParseError::ConversionGFAToGraph(why.to_string()))
+                }
             }
         }
         _ => Err(ParseError::ExtensionError()),
