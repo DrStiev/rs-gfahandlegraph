@@ -137,7 +137,7 @@ fn create_medium_graph() {
 }
 
 #[test]
-fn mod_graph_from_medium_gfa1() {
+fn mod_graph_from_medium_gfa() {
     /* MAIN PC
     Create graph from file: Duration { seconds: 0, nanoseconds: 829720400 }
     remove 1000 nodes from graph: Duration { seconds: 5, nanoseconds: 735074900 }
@@ -238,7 +238,7 @@ fn create_big_graph() {
 }
 
 #[test]
-//#[ignore]
+#[ignore]
 fn mod_graph_from_big_gfa1() {
     /*
     Create graph from file: Duration { seconds: 499, nanoseconds: 440272800 }

@@ -16,7 +16,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
     let file = File::open(path).unwrap();
     let reader = BufReader::new(file);
 
-    for line in reader.lines() {
+    reader.lines().for_each(|line| {
         let line = line.unwrap();
         let mut line_split = line.split_whitespace();
         let prefix = line_split.next().unwrap();
@@ -192,7 +192,8 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
             // ignore all the other lines (typically C- and comment-lines)
             _ => (),
         }
-    }
+    });
+
     gfa2
 }
 
@@ -236,10 +237,26 @@ mod test {
     }
 
     #[test]
-    fn can_parse_and_write_file_with_tags() {
-        // Convert file from GFA to GFA2: Duration { seconds: 0, nanoseconds: 456816000 }
+    fn can_parse_and_write_medium_file() {
+        // Convert file from GFA to GFA2: Duration { seconds: 0, nanoseconds: 386670300 }
         let start = Instant::now();
         let path: String = "./tests/big_files/test.gfa".to_string();
+        let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
+        println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
+        match save_on_file(
+            ObjectType::GFA2(gfa2),
+            Some(format!("{}{}", path, "2")),
+        ) {
+            Ok(_) => println!("File converted and saved correctly!"),
+            Err(why) => println!("Error: {}", why),
+        }
+    }
+
+    #[test]
+    fn can_parse_and_write_medium_file_with_tag() {
+        // Convert file from GFA to GFA2: Duration { seconds: 0, nanoseconds: 449616800 }
+        let start = Instant::now();
+        let path: String = "./tests/big_files/A-3105.sort.gfa".to_string();
         let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
         println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
         match save_on_file(

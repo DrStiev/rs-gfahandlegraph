@@ -210,8 +210,6 @@ impl HashGraph {
     fn print_edges(&self) {
         // get all the link (edge) between nodes
         self.edges_par().for_each(|edge| {
-            let GraphEdge(left, right) = edge;
-
             let orient = |rev: bool| {
                 if rev {
                     "-".to_string()
@@ -219,10 +217,9 @@ impl HashGraph {
                     "+".to_string()
                 }
             };
-
+            let GraphEdge(left, right) = edge;
             let from_node: String = left.id().to_string();
             let to_node: String = right.id().to_string();
-
             let left_orient: String = orient(left.is_reverse());
             let right_orient: String = orient(right.is_reverse());
 

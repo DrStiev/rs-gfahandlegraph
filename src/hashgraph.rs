@@ -237,23 +237,24 @@ impl SubtractiveHandleGraph for HashGraph {
     ) -> Result<bool, GraphError> {
         let node_id: NodeId = node.into();
         if let Some(node) = self.graph.remove(&node_id) {
+            // delete all the occurrencies in the edge list of node.id()
             let l = node.left_edges;
             let r = node.right_edges;
-            // delete all the occurrencies in the edge list of node.id()
+
             for i in l.iter() {
                 if let Some(left) = self.graph.get_mut(&i.id()) {
                     if i.is_reverse() {
                         if let Some(ll) = left
                             .left_edges
                             .par_iter()
-                            .position_first(|x| x.id() == node_id)
+                            .position_any(|x| x.id() == node_id)
                         {
                             left.left_edges.remove(ll);
                         }
                     } else if let Some(lr) = left
                         .right_edges
                         .par_iter()
-                        .position_first(|x| x.id() == node_id)
+                        .position_any(|x| x.id() == node_id)
                     {
                         left.right_edges.remove(lr);
                     }
@@ -265,14 +266,14 @@ impl SubtractiveHandleGraph for HashGraph {
                         if let Some(rr) = right
                             .right_edges
                             .par_iter()
-                            .position_first(|x| x.id() == node_id)
+                            .position_any(|x| x.id() == node_id)
                         {
                             right.right_edges.remove(rr);
                         }
                     } else if let Some(rl) = right
                         .left_edges
                         .par_iter()
-                        .position_first(|x| x.id() == node_id)
+                        .position_any(|x| x.id() == node_id)
                     {
                         right.left_edges.remove(rl);
                     }
@@ -300,7 +301,7 @@ impl SubtractiveHandleGraph for HashGraph {
                     if let Some(ll) = left
                         .left_edges
                         .par_iter()
-                        .position_first(|x| x.id() == r.id())
+                        .position_any(|x| x.id() == r.id())
                     {
                         left.left_edges.remove(ll);
                     }
@@ -309,7 +310,7 @@ impl SubtractiveHandleGraph for HashGraph {
                 if let Some(lr) = left
                     .right_edges
                     .par_iter()
-                    .position_first(|x| x.id() == r.id())
+                    .position_any(|x| x.id() == r.id())
                 {
                     left.right_edges.remove(lr);
                 }
@@ -320,7 +321,7 @@ impl SubtractiveHandleGraph for HashGraph {
                     if let Some(rr) = right
                         .right_edges
                         .par_iter()
-                        .position_first(|x| x.id() == l.id())
+                        .position_any(|x| x.id() == l.id())
                     {
                         right.right_edges.remove(rr);
                     }
@@ -329,7 +330,7 @@ impl SubtractiveHandleGraph for HashGraph {
                 if let Some(rl) = right
                     .left_edges
                     .par_iter()
-                    .position_first(|x| x.id() == l.id())
+                    .position_any(|x| x.id() == l.id())
                 {
                     right.left_edges.remove(rl);
                 }
@@ -338,10 +339,10 @@ impl SubtractiveHandleGraph for HashGraph {
             for path in self.clone().paths() {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;
                 if let Some(l) =
-                    nodes.par_iter().position_first(|x| x.id() == l.id())
+                    nodes.par_iter().position_any(|x| x.id() == l.id())
                 {
                     if let Some(r) =
-                        nodes.par_iter().position_first(|x| x.id() == r.id())
+                        nodes.par_iter().position_any(|x| x.id() == r.id())
                     {
                         if r == l + 1 {
                             self.paths.remove(&path);
