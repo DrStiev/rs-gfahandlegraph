@@ -7,6 +7,7 @@ use lazy_static::lazy_static;
 use regex::bytes::Regex;
 
 /// Builder struct for GFAParsers
+#[derive(Debug, Default, Clone, Copy)]
 pub struct ParserBuilder {
     pub headers: bool,
     pub segments: bool,
@@ -115,6 +116,19 @@ impl GFAParser {
         Default::default()
     }
 
+    #[inline]
+    pub fn ignore_line(&self, line_type: u8) -> bool {
+        match line_type {
+            b'H' => false,
+            b'S' => !self.segments,
+            b'L' => !self.links,
+            b'P' => !self.paths,
+            b'C' => !self.containments,
+            _ => true,
+        }
+    }
+
+    #[inline]
     pub fn parse_gfa_line(&self, bytes: &[u8]) -> ParserResult<Line> {
         let line: &BStr = bytes.trim().as_ref();
 
@@ -126,14 +140,10 @@ impl GFAParser {
 
         let line = match hdr {
             b"H" => Header::parse_line(fields).map(Header::wrap),
-            b"S" if self.segments => {
-                Segment::parse_line(fields).map(Segment::wrap)
-            }
-            b"L" if self.links => Link::parse_line(fields).map(Link::wrap),
-            b"C" if self.containments => {
-                Containment::parse_line(fields).map(Containment::wrap)
-            }
-            b"P" if self.paths => Path::parse_line(fields).map(Path::wrap),
+            b"S" => Segment::parse_line(fields).map(Segment::wrap),
+            b"L" => Link::parse_line(fields).map(Link::wrap),
+            b"C" => Containment::parse_line(fields).map(Containment::wrap),
+            b"P" => Path::parse_line(fields).map(Path::wrap),
             _ => return Err(ParseError::UnknownLineType),
         }
         .map_err(invalid_line)?;
@@ -148,11 +158,20 @@ impl GFAParser {
         let mut gfa = GFA::new();
 
         for line in lines {
-            match self.parse_gfa_line(line.as_ref()) {
-                Ok(parsed) => gfa.insert_line(parsed),
-                Err(err) if err.can_safely_continue(&self.tolerance) => (),
-                Err(err) => return Err(err),
-            };
+            let line = line.as_ref();
+            if let Some(c) = line.first() {
+                if !self.ignore_line(*c) {
+                    match self.parse_gfa_line(line.as_ref()) {
+                        Ok(parsed) => gfa.insert_line(parsed),
+                        Err(err)
+                            if err.can_safely_continue(&self.tolerance) =>
+                        {
+                            ()
+                        }
+                        Err(err) => return Err(err),
+                    };
+                }
+            }
         }
 
         Ok(gfa)
@@ -234,6 +253,7 @@ where
 {
     type Item = ParserResult<Line>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let next_line = self.iter.next()?;
         let result = self.parser.parse_gfa_line(next_line.as_ref());
@@ -241,6 +261,7 @@ where
     }
 }
 
+#[inline]
 fn next_field<I, P>(mut input: I) -> ParserFieldResult<P>
 where
     I: Iterator<Item = P>,
@@ -249,6 +270,7 @@ where
     input.next().ok_or(ParseFieldError::MissingFields)
 }
 
+#[inline]
 fn parse_orientation<I>(mut input: I) -> ParserFieldResult<Orientation>
 where
     I: Iterator,
@@ -319,6 +341,9 @@ where
         .ok_or(ParseFieldError::InvalidField("Overlap"))
 }
 
+/// function that parses the sequence tag of the segment element
+/// ```<sequence> <- * | [A-Za-z=.]+```
+#[inline]
 fn parse_sequence<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,

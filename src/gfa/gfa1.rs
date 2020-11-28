@@ -141,6 +141,7 @@ impl GFA {
     /// GFA. Simply pushes it into the corresponding Vec in the GFA,
     /// or replaces the header, so there's no deduplication or sorting
     /// taking place.
+    #[inline]
     pub fn insert_line(&mut self, line: Line) {
         use Line::*;
         match line {
@@ -180,6 +181,7 @@ impl GFA {
 }
 
 impl GFA {
+    #[inline]
     pub fn new() -> Self {
         Default::default()
     }
@@ -253,6 +255,7 @@ pub struct Segment {
 }
 
 impl Segment {
+    #[inline]
     pub fn new(name: usize, sequence: &[u8], optional: &[u8]) -> Self {
         Segment {
             name,
@@ -316,6 +319,7 @@ pub struct Link {
 }
 
 impl Link {
+    #[inline]
     pub fn new(
         from_segment: usize,
         from_orient: Orientation,
@@ -393,6 +397,7 @@ pub struct Containment {
 }
 
 impl Containment {
+    #[inline]
     pub fn new(
         container_name: usize,
         container_orient: Orientation,
@@ -463,6 +468,7 @@ pub struct Path {
 }
 
 impl Path {
+    #[inline]
     pub fn new(
         path_name: BString,
         segment_names: BString,
@@ -478,6 +484,7 @@ impl Path {
     }
 
     /// Parses (and copies!) a segment ID in the path segment list
+    #[inline]
     fn parse_segment_id(input: &[u8]) -> Option<(usize, Orientation)> {
         use Orientation::*;
         let last = input.len() - 1;
@@ -493,6 +500,7 @@ impl Path {
 
     /// Produces an iterator over the usize segments of the given
     /// path.
+    #[inline]
     pub fn iter<'a>(
         &'a self,
     ) -> impl Iterator<Item = (usize, Orientation)> + 'a {

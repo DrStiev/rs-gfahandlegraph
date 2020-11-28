@@ -171,18 +171,21 @@ impl fmt::Display for ParseError {
 }
 
 impl From<std::io::Error> for ParseError {
+    #[inline]
     fn from(err: std::io::Error) -> Self {
         Self::IOError(err)
     }
 }
 
 impl From<ParseFieldError> for ParseError {
+    #[inline]
     fn from(err: ParseFieldError) -> Self {
         Self::InvalidField(err)
     }
 }
 
 impl From<GraphError> for ParseError {
+    #[inline]
     fn from(err: GraphError) -> Self {
         Self::ConversionGFAToGraph(err.to_string())
     }
@@ -197,7 +200,8 @@ impl ParseError {
         Self::InvalidLine(error, dest)
     }
 
-    pub(crate) fn can_safely_continue(&self, tol: &ParserTolerance) -> bool {
+    #[inline]
+    fn can_safely_continue(&self, tol: &ParserTolerance) -> bool {
         use ParserTolerance as Tol;
         match tol {
             Tol::IgnoreAll => true,

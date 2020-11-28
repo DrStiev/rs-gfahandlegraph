@@ -8,6 +8,7 @@ use lazy_static::lazy_static;
 use regex::bytes::Regex;
 
 /// Builder struct for GFAParsers
+#[derive(Debug, Default, Clone, Copy)]
 pub struct ParserBuilder {
     pub headers: bool,
     pub segments: bool,
@@ -103,6 +104,21 @@ impl GFA2Parser {
         Default::default()
     }
 
+    #[inline]
+    pub fn ignore_line(&self, line_type: u8) -> bool {
+        match line_type {
+            b'H' => false,
+            b'S' => !self.segments,
+            b'E' => !self.edges,
+            b'O' => !self.groups_o,
+            b'G' => !self.gaps,
+            b'F' => !self.fragments,
+            b'u' => !self.groups_u,
+            _ => true,
+        }
+    }
+
+    #[inline]
     fn parse_gfa_line(&self, bytes: &[u8]) -> ParserResult<Line> {
         let line: &BStr = bytes.trim().as_ref();
 
@@ -113,23 +129,14 @@ impl GFA2Parser {
             |e: ParseFieldError| ParseError::invalid_line(e, bytes);
 
         let line = match hdr {
-            b"H" if self.headers => {
-                Header::parse_line(fields).map(Header::wrap)
-            }
-            b"S" if self.segments => {
-                Segment::parse_line(fields).map(Segment::wrap)
-            }
-            b"F" if self.fragments => {
-                Fragment::parse_line(fields).map(Fragment::wrap)
-            }
-            b"E" if self.edges => Edge::parse_line(fields).map(Edge::wrap),
-            b"G" if self.gaps => Gap::parse_line(fields).map(Gap::wrap),
-            b"O" if self.groups_o => {
-                GroupO::parse_line(fields).map(GroupO::wrap)
-            }
-            b"U" if self.groups_u => {
-                GroupU::parse_line(fields).map(GroupU::wrap)
-            }
+            b"H" => Header::parse_line(fields).map(Header::wrap),
+
+            b"S" => Segment::parse_line(fields).map(Segment::wrap),
+            b"F" => Fragment::parse_line(fields).map(Fragment::wrap),
+            b"E" => Edge::parse_line(fields).map(Edge::wrap),
+            b"G" => Gap::parse_line(fields).map(Gap::wrap),
+            b"O" => GroupO::parse_line(fields).map(GroupO::wrap),
+            b"U" => GroupU::parse_line(fields).map(GroupU::wrap),
             _ => return Err(ParseError::UnknownLineType),
         }
         .map_err(invalid_line)?;
@@ -144,11 +151,20 @@ impl GFA2Parser {
         let mut gfa2 = GFA2::new();
 
         for line in lines {
-            match self.parse_gfa_line(line.as_ref()) {
-                Ok(parsed) => gfa2.insert_line(parsed),
-                Err(err) if err.can_safely_continue(&self.tolerance) => (),
-                Err(err) => return Err(err),
-            };
+            let line = line.as_ref();
+            if let Some(c) = line.first() {
+                if !self.ignore_line(*c) {
+                    match self.parse_gfa_line(line.as_ref()) {
+                        Ok(parsed) => gfa2.insert_line(parsed),
+                        Err(err)
+                            if err.can_safely_continue(&self.tolerance) =>
+                        {
+                            ()
+                        }
+                        Err(err) => return Err(err),
+                    };
+                }
+            }
         }
 
         Ok(gfa2)
@@ -226,6 +242,7 @@ where
 {
     type Item = ParserResult<Line>;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let next_line = self.iter.next()?;
         let result = self.parser.parse_gfa_line(next_line.as_ref());
@@ -233,6 +250,7 @@ where
     }
 }
 
+#[inline]
 fn next_field<I, P>(mut input: I) -> ParserFieldResult<P>
 where
     I: Iterator<Item = P>,
@@ -287,6 +305,7 @@ impl Header {
 
 /// function that parses the sequence tag of the segment element
 /// ```<sequence> <- * | [!-~]+```
+#[inline]
 fn parse_sequence<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,

@@ -37,6 +37,7 @@ pub trait SegmentId: std::fmt::Display + Sized + Default {
     // define the functions
     fn parse_id(id: IdType, input: &[u8]) -> Option<Self>;
 
+    #[inline]
     fn parse_next<I>(mut input: I, id: IdType) -> Result<Self, ParseFieldError>
     where
         I: Iterator,
@@ -50,6 +51,7 @@ pub trait SegmentId: std::fmt::Display + Sized + Default {
 impl SegmentId for usize {
     const ERROR: ParseFieldError = ParseFieldError::UintIdError;
 
+    #[inline]
     fn parse_id(id: IdType, input: &[u8]) -> Option<Self> {
         match id {
             IdType::ID() => {
@@ -80,6 +82,7 @@ impl SegmentId for usize {
 impl SegmentId for BString {
     const ERROR: ParseFieldError = ParseFieldError::Utf8Error;
 
+    #[inline]
     fn parse_id(id: IdType, input: &[u8]) -> Option<Self> {
         match id {
             IdType::ID() => {
@@ -112,6 +115,7 @@ impl SegmentId for BString {
 /// let number_: usize = 7;
 /// assert_eq!(number_, get_code_from_char(&number));
 /// ```
+#[inline]
 pub fn convert_to_usize(input: &[u8]) -> Option<usize> {
     let len = input.len();
     let my_vec: Vec<char> = input.to_str().unwrap().chars().collect();
@@ -156,6 +160,7 @@ const CHARS: [&str; 128] = [
 /// let a_: usize = 97;
 /// assert_eq!(a_, get_code_from_char(a));
 /// ```
+#[inline]
 fn get_code_from_char(c: &char) -> usize {
     if c.is_numeric() {
         c.to_digit(10).unwrap() as usize

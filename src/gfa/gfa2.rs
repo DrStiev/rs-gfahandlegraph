@@ -77,6 +77,7 @@ pub struct Segment {
 }
 
 impl Segment {
+    #[inline]
     pub fn new(id: usize, len: &[u8], sequence: &[u8], tag: &[u8]) -> Self {
         Segment {
             id,
@@ -145,6 +146,7 @@ pub struct Fragment {
 }
 
 impl Fragment {
+    #[inline]
     pub fn new(
         id: usize,
         ext_ref: usize,
@@ -245,6 +247,7 @@ pub struct Edge {
 }
 
 impl Edge {
+    #[inline]
     pub fn new(
         id: usize,
         sid1: usize,
@@ -346,6 +349,7 @@ pub struct Gap {
 }
 
 impl Gap {
+    #[inline]
     pub fn new(
         id: usize,
         sid1: usize,
@@ -423,6 +427,7 @@ pub struct GroupO {
 }
 
 impl GroupO {
+    #[inline]
     pub fn new(id: BString, var_field: BString, tag: &[u8]) -> Self {
         GroupO {
             id,
@@ -432,6 +437,7 @@ impl GroupO {
     }
 
     /// parses (and copies) a segment ID in the group segment list
+    #[inline]
     fn parse_segment_id(input: &[u8]) -> Option<(usize, Orientation)> {
         use Orientation::*;
         let last = input.len() - 1;
@@ -446,6 +452,7 @@ impl GroupO {
     }
 
     /// Produces an iterator over the usize segments of the given group
+    #[inline]
     pub fn iter<'a>(
         &'a self,
     ) -> impl Iterator<Item = (usize, Orientation)> + 'a {
@@ -493,6 +500,7 @@ pub struct GroupU {
 }
 
 impl GroupU {
+    #[inline]
     pub fn new(id: BString, var_field: BString, tag: &[u8]) -> Self {
         GroupU {
             id,
@@ -502,12 +510,14 @@ impl GroupU {
     }
 
     /// parses (and copies) a segment ID in the group segment list
+    #[inline]
     fn parse_segment_id(input: &[u8]) -> Option<usize> {
         let id = usize::parse_id(IdType::OPTIONALID(), input)?;
         Some(id)
     }
 
     /// Produces an iterator over the usize segments of the given group
+    #[inline]
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = usize> + 'a {
         self.var_field
             .split_str(b" ")
@@ -655,6 +665,7 @@ impl GFA2 {
     /// GFA. Simply pushes it into the corresponding Vec in the GFA,
     /// or replaces the header, so there's no deduplication or sorting
     /// taking place.
+    #[inline]
     pub fn insert_line(&mut self, line: Line) {
         use Line::*;
         match line {
@@ -712,6 +723,7 @@ impl GFA2 {
 }
 
 impl GFA2 {
+    #[inline]
     pub fn new() -> Self {
         Default::default()
     }
