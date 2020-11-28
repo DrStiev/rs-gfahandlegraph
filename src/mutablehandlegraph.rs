@@ -38,22 +38,6 @@ pub trait SubtractiveHandleGraph {
     /// ```
     fn remove_edge(&mut self, edge: Edge) -> Result<bool, GraphError>;
 
-    /// Function that removes a
-    /// [`Path`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/path/struct.Path.html)
-    /// from a given PathName
-    /// # Example
-    /// ```ignore
-    /// // Nodes: 11, 12, 13
-    /// // Edges: 11 -> 12, 11 -> 13, 12 -> 13
-    /// // Path: 0 (14): 11 -> 12 -> 13, 1 (15): 11 -> 13
-    /// graph.remove_path(&BString::from(15.to_string()));
-    ///
-    /// // Nodes: 11, 12, 13
-    /// // Edges: 11 -> 12, 11 -> 13, 12 -> 13
-    /// // Path: 0 (14): 11 -> 12 -> 13
-    /// ```
-    fn remove_path(&mut self, name: &[u8]) -> Result<bool, GraphError>;
-
     /// Function that clears a Graph
     /// and set max_id to 0 and min_id to u64::MAX
     /// like the Default implementation for
@@ -112,27 +96,6 @@ pub trait ModdableHandleGraph {
         old_edge: Edge,
         left_node: Option<Handle>,
         right_node: Option<Handle>,
-    ) -> Result<bool, GraphError>;
-
-    /// given a
-    /// [`PathName`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/path/struct.Path.html),
-    /// this function will replace the sequence of ids that compose the path
-    /// # Example
-    /// ```ignore
-    /// let h1 = graph.create_handle(b"1", 1);
-    /// let h3 = graph.create_handle(b"3", 3);
-    ///
-    /// if graph.modify_handle(b"14", vec![h1, h3]){
-    ///     println!("Graph AFTER modify path");
-    ///     graph.print_graph();
-    /// } else {
-    ///     println!("Failed to modify path");
-    /// }
-    /// ```
-    fn modify_path(
-        &mut self,
-        path_name: &[u8],
-        sequence_of_id: Vec<Handle>,
     ) -> Result<bool, GraphError>;
 }
 

@@ -208,26 +208,6 @@ impl ModdableHandleGraph for HashGraph {
             Ok(true)
         }
     }
-
-    fn modify_path(
-        &mut self,
-        path_name: &[u8],
-        sequence_of_id: Vec<Handle>,
-    ) -> Result<bool, GraphError> {
-        // update occurrencies in path
-        self.remove_path(path_name)?;
-        let len: usize = sequence_of_id.len();
-        let mut x: usize = 0;
-        let path = self.create_path_handle(path_name, false);
-        while x < len {
-            match self.append_step(&path, sequence_of_id[x]) {
-                Ok(_) => (),
-                Err(why) => return Err(why),
-            };
-            x += 1;
-        }
-        Ok(true)
-    }
 }
 
 impl SubtractiveHandleGraph for HashGraph {
@@ -356,18 +336,6 @@ impl SubtractiveHandleGraph for HashGraph {
                 l.id().to_string(),
                 r.id().to_string(),
             ))
-        }
-    }
-
-    fn remove_path(&mut self, name: &[u8]) -> Result<bool, GraphError> {
-        use bstr::ByteSlice;
-
-        if self.has_path(name) {
-            let path_handle = self.name_to_path_handle(name).unwrap();
-            self.paths.remove(&path_handle);
-            Ok(true)
-        } else {
-            Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
         }
     }
 
@@ -686,6 +654,16 @@ impl PathHandleGraph for HashGraph {
         Some(path.step_at_position(&self.graph, pos))
     }
 
+    fn destroy_path(&mut self, path: &Self::PathHandle) {
+        if let Some(p) = self.paths.get(&path) {
+            for handle in p.nodes.iter() {
+                let node: &mut Node = self.graph.get_mut(&handle.id()).unwrap();
+                node.occurrences.remove(path);
+            }
+            self.paths.remove(&path);
+        }
+    }
+
     fn next_step(&self, step: &Self::StepHandle) -> Self::StepHandle {
         match step {
             PathStep::Front(pid) => self.path_begin(pid),
@@ -711,61 +689,6 @@ impl PathHandleGraph for HashGraph {
                     self.path_end(pid)
                 }
             }
-        }
-    }
-
-    fn destroy_path(&mut self, path: &Self::PathHandle) {
-        if let Some(p) = self.paths.get(&path) {
-            for handle in p.nodes.iter() {
-                let node: &mut Node = self.graph.get_mut(&handle.id()).unwrap();
-                node.occurrences.remove(path);
-            }
-            self.paths.remove(&path);
-        }
-    }
-
-    fn remove_node_from_path<T: Into<NodeId>>(
-        &mut self,
-        name: &[u8],
-        node: T,
-    ) -> Result<bool, GraphError> {
-        use bstr::ByteSlice;
-
-        if self.has_path(name) {
-            let path_handle = self.name_to_path_handle(name).unwrap();
-            let node = node.into();
-            if let Some(p) = self.paths.get_mut(&path_handle) {
-                p.nodes.retain(|x| x.id() != node);
-            }
-            Ok(true)
-        } else {
-            Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
-        }
-    }
-
-    fn modify_node_from_path<T: Into<NodeId>>(
-        &mut self,
-        name: &[u8],
-        old_node: T,
-        new_node: Handle,
-    ) -> Result<bool, GraphError> {
-        use bstr::ByteSlice;
-
-        if self.has_path(name) {
-            let path_handle = self.name_to_path_handle(name).unwrap();
-            let old_node = old_node.into();
-            if let Some(p) = self.paths.get_mut(&path_handle) {
-                let path = p.nodes.clone();
-                for (id, &handle) in path.iter().enumerate() {
-                    if handle.id() == old_node {
-                        p.nodes.remove(id);
-                        p.nodes.insert(id, new_node);
-                    }
-                }
-            }
-            Ok(true)
-        } else {
-            Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
         }
     }
 
@@ -901,5 +824,78 @@ impl PathHandleGraph for HashGraph {
                 .enumerate()
                 .map(move |(i, _)| PathStep::Step(*path_handle, i)),
         )
+    }
+
+    fn remove_step<T: Into<NodeId>>(
+        &mut self,
+        name: &[u8],
+        node: T,
+    ) -> Result<bool, GraphError> {
+        use bstr::ByteSlice;
+
+        if self.has_path(name) {
+            let path_handle = self.name_to_path_handle(name).unwrap();
+            let node = node.into();
+            if let Some(p) = self.paths.get_mut(&path_handle) {
+                p.nodes.retain(|x| x.id() != node);
+            }
+            Ok(true)
+        } else {
+            Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
+        }
+    }
+
+    fn modify_step<T: Into<NodeId>>(
+        &mut self,
+        name: &[u8],
+        old_node: T,
+        new_node: Handle,
+    ) -> Result<bool, GraphError> {
+        use bstr::ByteSlice;
+
+        if self.has_path(name) {
+            let path_handle = self.name_to_path_handle(name).unwrap();
+            let old_node = old_node.into();
+            if let Some(p) = self.paths.get_mut(&path_handle) {
+                let path = p.nodes.clone();
+                for (id, &handle) in path.iter().enumerate() {
+                    if handle.id() == old_node {
+                        p.nodes.remove(id);
+                        p.nodes.insert(id, new_node);
+                    }
+                }
+            }
+            Ok(true)
+        } else {
+            Err(GraphError::PathNotExist(name.to_str().unwrap().to_string()))
+        }
+    }
+
+    fn rewrite_path(
+        &mut self,
+        path_name: &[u8],
+        sequence_of_id: Vec<Handle>,
+    ) -> Result<bool, GraphError> {
+        use bstr::ByteSlice;
+
+        // update occurrencies in path
+        if let Some(path_handle) = self.name_to_path_handle(path_name) {
+            self.destroy_path(&path_handle);
+            let len: usize = sequence_of_id.len();
+            let mut x: usize = 0;
+            let path = self.create_path_handle(path_name, false);
+            while x < len {
+                match self.append_step(&path, sequence_of_id[x]) {
+                    Ok(_) => (),
+                    Err(why) => return Err(why),
+                };
+                x += 1;
+            }
+            Ok(true)
+        } else {
+            Err(GraphError::PathNotExist(
+                path_name.to_str().unwrap().to_string(),
+            ))
+        }
     }
 }

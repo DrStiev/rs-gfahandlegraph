@@ -133,12 +133,12 @@ pub trait PathHandleGraph {
     /// let path = b"14";
     /// let node = 11 as u64;
     ///
-    /// match graph.remove_node_from_path(path, node) {
+    /// match graph.remove_step(path, node) {
     ///     Ok(_) => graph.print_graph(),
     ///     Err(why) => println!("Error: {}", why),
     /// }
     /// ```
-    fn remove_node_from_path<T: Into<NodeId>>(
+    fn remove_step<T: Into<NodeId>>(
         &mut self,
         name: &[u8],
         node: T,
@@ -154,15 +154,36 @@ pub trait PathHandleGraph {
     /// let node = 11 as u64;
     /// let nodea = Handle::new(13 as u64, Orientation::Forward);
     ///
-    /// match graph.modify_node_from_path(path, node, nodea) {
+    /// match graph.modify_step(path, node, nodea) {
     ///     Ok(_) => graph.print_graph(),
     ///     Err(why) => println!("Error: {}", why),
     /// }
     /// ```
-    fn modify_node_from_path<T: Into<NodeId>>(
+    fn modify_step<T: Into<NodeId>>(
         &mut self,
         name: &[u8],
         old_node: T,
         new_node: Handle,
+    ) -> Result<bool, GraphError>;
+
+    /// given a
+    /// [`PathName`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/path/struct.Path.html),
+    /// this function will replace the sequence of ids that compose the path
+    /// # Example
+    /// ```ignore
+    /// let h1 = graph.create_handle(b"1", 1);
+    /// let h3 = graph.create_handle(b"3", 3);
+    ///
+    /// if graph.rewrite_path(b"14", vec![h1, h3]){
+    ///     println!("Graph AFTER modify path");
+    ///     graph.print_graph();
+    /// } else {
+    ///     println!("Failed to modify path");
+    /// }
+    /// ```
+    fn rewrite_path(
+        &mut self,
+        path_name: &[u8],
+        sequence_of_id: Vec<Handle>,
     ) -> Result<bool, GraphError>;
 }

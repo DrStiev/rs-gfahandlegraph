@@ -116,7 +116,7 @@ fn ditto() {
 
 #[test]
 fn create_medium_graph() {
-    // Create graph from file: Duration { seconds: 0, nanoseconds: 928072500 } (main PC)
+    // Create graph from file: Duration { seconds: 0, nanoseconds: 759538700 } (main PC)
     // Create graph from file: Duration { seconds: 1, nanoseconds: 814588300 } (Portable PC)
     let g = read_medium_gfa1();
     // nodes: 4058     edges: 9498     paths: 7
@@ -126,7 +126,7 @@ fn create_medium_graph() {
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
     //g.print_graph();
 
-    // Create graph from file: Duration { seconds: 1, nanoseconds: 219559200 } (main PC)
+    // Create graph from file: Duration { seconds: 1, nanoseconds: 291251200 } (main PC)
     // Create graph from file: Duration { seconds: 2, nanoseconds: 300047700 } (Portable PC)
     let g = read_medium_gfa2();
     // nodes: 4058     edges: 9498     paths: 7
@@ -134,6 +134,7 @@ fn create_medium_graph() {
     let edges = g.edges().count();
     let paths = g.paths().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
+    g.print_graph();
 }
 
 #[test]
@@ -436,10 +437,11 @@ fn remove_path() {
     let mut graph = read_small_gfa2();
 
     let path = b"14";
-    match graph.remove_path(path) {
-        Ok(_) => graph.print_graph(),
-        Err(why) => println!("Error {}", why),
-    }
+    let path_id = graph
+        .name_to_path_handle(path)
+        .expect("Error, path did not exists");
+    graph.destroy_path(&path_id);
+    graph.print_graph();
 }
 
 #[test]
@@ -449,7 +451,7 @@ fn remove_node_from_path() {
     let path = b"14";
     let node: u64 = 11_u64;
 
-    match graph.remove_node_from_path(path, node) {
+    match graph.remove_step(path, node) {
         Ok(_) => graph.print_graph(),
         Err(why) => println!("Error: {}", why),
     }
@@ -463,7 +465,7 @@ fn modify_node_from_path() {
     let node: u64 = 11_u64;
     let nodea = Handle::new(13_u64, Orientation::Forward);
 
-    match graph.modify_node_from_path(path, node, nodea) {
+    match graph.modify_step(path, node, nodea) {
         Ok(_) => graph.print_graph(),
         Err(why) => println!("Error: {}", why),
     }
@@ -506,7 +508,7 @@ fn modify_path() {
         Handle::new(11_u64, Orientation::Forward),
         Handle::new(11_u64, Orientation::Forward),
     ];
-    match graph.modify_path(path, path_sequence) {
+    match graph.rewrite_path(path, path_sequence) {
         Ok(_) => graph.print_graph(),
         Err(why) => println!("Error {}", why),
     }
