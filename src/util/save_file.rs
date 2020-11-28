@@ -11,6 +11,7 @@ pub enum ObjectType {
     GFA2(GFA2),
     JSON(String),
     BINCODE(Vec<u8>),
+    YAML(String),
     FROMGFA1GRAPH(HashGraph),
     FROMGFA2GRAPH(HashGraph),
 }
@@ -19,7 +20,8 @@ pub enum ObjectType {
 /// [`GFA`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa1/struct.GFA.html),
 /// [`GFA2`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa2/struct.GFA2.html),
 /// [`JSON`](https://docs.serde.rs/serde_json/),
-/// [`BINCODE`](https://docs.rs/bincode/1.3.1/bincode/)
+/// [`BINCODE`](https://docs.rs/bincode/1.3.1/bincode/),
+/// [`YAML`](https://docs.serde.rs/serde_yaml/)
 /// or [`HASHGRAPH`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/graph/struct.HashGraph.html)
 /// Object on a file on a specific or default location
 /// # Example
@@ -29,6 +31,7 @@ pub enum ObjectType {
 /// save_on_file(ObjectType::GFA(gfa), Some(String::from("./tests/output_files/gfa_to_file.gfa")));
 /// save_on_file(ObjectType::GFA2(gfa2), Some(String::from("./tests/output_files/gfa2_to_file.gfa")));
 /// save_on_file(ObjectType::JSON(json), Some(String::from("./tests/output_files/json_to_file.json")));
+/// save_on_file(ObjectType::YAML(yaml), Some(String::from("./tests/output_files/yaml_to_file.yaml")));
 /// save_on_file(ObjectType::BINCODE(bincode), Some(String::from("./tests/output_files/bincode_to_file.bin")));
 /// ```
 pub fn save_on_file(
@@ -39,6 +42,16 @@ pub fn save_on_file(
         ObjectType::JSON(x) => {
             let path = path.unwrap_or_else(|| {
                 String::from("./tests/output_files/default_path/json_file.json")
+            });
+            let path = Path::new(&path);
+            let mut file = File::create(path)?;
+            file.write_all(x.as_bytes())?;
+            file.sync_all()?;
+            Ok(())
+        }
+        ObjectType::YAML(x) => {
+            let path = path.unwrap_or_else(|| {
+                String::from("./tests/output_files/default_path/yaml_file.yaml")
             });
             let path = Path::new(&path);
             let mut file = File::create(path)?;
