@@ -94,40 +94,43 @@ fn criterion_benchmark(c: &mut Criterion) {
 
 fn criterion_benchmark(c: &mut Criterion) {
     /*
-    CREATE GRAPH FROM MID GFA
-                            time:   [76.702 ms 76.890 ms 77.090 ms]
-                            change: [-0.3201% +0.1108% +0.5149%] (p = 0.62 > 0.05)
-                            No change in performance detected.
-    Found 3 outliers among 100 measurements (3.00%)
-      2 (2.00%) high mild
-      1 (1.00%) high severe
-    */
+        CREATE GRAPH FROM MID GFA
+                            time:   [62.412 ms 62.555 ms 62.698 ms]
+                            change: [-18.929% -18.644% -18.364%] (p = 0.00 < 0.05)
+                            Performance has improved.
+    Found 5 outliers among 100 measurements (5.00%)
+      4 (4.00%) low mild
+      1 (1.00%) high mild
+
+        */
     c.bench_function("CREATE GRAPH FROM MID GFA", |b| {
         b.iter(|| create_graph_from_medium_gfa1())
     });
 
     /*
-        CREATE GRAPH FROM MID GFA2
-                            time:   [97.021 ms 97.214 ms 97.429 ms]
-                            change: [+0.3214% +0.6042% +0.8833%] (p = 0.00 < 0.05)
-                            Change within noise threshold.
-    Found 5 outliers among 100 measurements (5.00%)
-      4 (4.00%) high mild
+            CREATE GRAPH FROM MID GFA2
+                            time:   [119.17 ms 119.33 ms 119.55 ms]
+                            change: [+22.426% +22.751% +23.097%] (p = 0.00 < 0.05)
+                            Performance has regressed.
+    Found 7 outliers among 100 measurements (7.00%)
+      6 (6.00%) high mild
       1 (1.00%) high severe
-    */
+
+        */
     c.bench_function("CREATE GRAPH FROM MID GFA2", |b| {
         b.iter(|| create_graph_from_medium_gfa2())
     });
 
     /*
-    MODIFY GRAPH FROM MID GFA2
-                            time:   [886.56 ms 894.65 ms 908.31 ms]
-                            change: [-0.7563% +0.2077% +1.5585%] (p = 0.82 > 0.05)
+        MODIFY GRAPH FROM MID GFA2
+                            time:   [900.07 ms 903.22 ms 907.38 ms]
+                            change: [-0.6081% +0.9582% +2.1199%] (p = 0.18 > 0.05)
                             No change in performance detected.
-    Found 6 outliers among 100 measurements (6.00%)
+    Found 9 outliers among 100 measurements (9.00%)
       1 (1.00%) high mild
-      5 (5.00%) high severe
-    */
+      8 (8.00%) high severe
+
+        */
     c.bench_function("MODIFY GRAPH FROM MID GFA2", |b| {
         b.iter(|| mod_graph_from_medium_gfa2())
     });

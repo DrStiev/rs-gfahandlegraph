@@ -201,7 +201,7 @@ impl ParseError {
     }
 
     #[inline]
-    fn can_safely_continue(&self, tol: &ParserTolerance) -> bool {
+    pub fn can_safely_continue(&self, tol: &ParserTolerance) -> bool {
         use ParserTolerance as Tol;
         match tol {
             Tol::IgnoreAll => true,

@@ -116,7 +116,7 @@ fn ditto() {
 
 #[test]
 fn create_medium_graph() {
-    // Create graph from file: Duration { seconds: 0, nanoseconds: 759538700 } (main PC)
+    // Create graph from file: Duration { seconds: 0, nanoseconds: 694127500 } (main PC)
     // Create graph from file: Duration { seconds: 1, nanoseconds: 814588300 } (Portable PC)
     let g = read_medium_gfa1();
     // nodes: 4058     edges: 9498     paths: 7
@@ -126,7 +126,7 @@ fn create_medium_graph() {
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
     //g.print_graph();
 
-    // Create graph from file: Duration { seconds: 1, nanoseconds: 291251200 } (main PC)
+    // Create graph from file: Duration { seconds: 1, nanoseconds: 240789600 } (main PC)
     // Create graph from file: Duration { seconds: 2, nanoseconds: 300047700 } (Portable PC)
     let g = read_medium_gfa2();
     // nodes: 4058     edges: 9498     paths: 7
@@ -134,16 +134,16 @@ fn create_medium_graph() {
     let edges = g.edges().count();
     let paths = g.paths().count();
     println!("nodes: {}\tedges: {}\tpaths: {}", nodes, edges, paths);
-    g.print_graph();
+    //g.print_graph();
 }
 
 #[test]
 fn mod_graph_from_medium_gfa() {
     /* MAIN PC
-    Create graph from file: Duration { seconds: 0, nanoseconds: 829720400 }
-    remove 1000 nodes from graph: Duration { seconds: 5, nanoseconds: 735074900 }
-    remove 1000 small edges: Duration { seconds: 5, nanoseconds: 527746600 }
-    remove 1 big edge (form of 1000 edges): Duration { seconds: 5, nanoseconds: 693144400 }
+    Create graph from file: Duration { seconds: 0, nanoseconds: 712439400 }
+    remove 1000 nodes from graph: Duration { seconds: 5, nanoseconds: 404610100 }
+    remove 1000 small edges: Duration { seconds: 5, nanoseconds: 498107900 }
+    remove 1 big edge (form of 1000 edges): Duration { seconds: 5, nanoseconds: 593331400 }
     */
     /* PORTABLE PC
     Create graph from file: Duration { seconds: 1, nanoseconds: 473749400 }
@@ -151,7 +151,15 @@ fn mod_graph_from_medium_gfa() {
     remove 1000 small edges: Duration { seconds: 10, nanoseconds: 147140900 }
     remove 1 big edge (form of 1000 edges): Duration { seconds: 10, nanoseconds: 7050100 }
      */
-    let mut graph = read_medium_gfa1();
+    //let mut graph = read_medium_gfa1();
+
+    /* MAIN PC
+    Create graph from file: Duration { seconds: 1, nanoseconds: 275933800 }
+    remove 1000 nodes from graph: Duration { seconds: 5, nanoseconds: 442340100 }
+    remove 1000 small edges: Duration { seconds: 5, nanoseconds: 434688800 }
+    remove 1 big edge (form of 1000 edges): Duration { seconds: 5, nanoseconds: 524103000 }
+    */
+    let mut graph = read_medium_gfa2();
 
     let start = Instant::now();
     for i in 1..1001_u64 {

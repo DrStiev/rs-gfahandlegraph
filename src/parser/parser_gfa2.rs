@@ -49,6 +49,21 @@ impl ParserBuilder {
         }
     }
 
+    pub fn segments(&mut self, include: bool) -> &mut Self {
+        self.segments = include;
+        self
+    }
+
+    pub fn edges(&mut self, include: bool) -> &mut Self {
+        self.edges = include;
+        self
+    }
+
+    pub fn groups_o(&mut self, include: bool) -> &mut Self {
+        self.groups_o = include;
+        self
+    }
+
     pub fn ignore_errors(mut self) -> Self {
         self.tolerance = ParserTolerance::IgnoreAll;
         self
@@ -100,6 +115,7 @@ impl Default for GFA2Parser {
 impl GFA2Parser {
     /// Create a new GFAParser that will parse all four GFA line
     /// types, and use the optional fields parser and storage `T`.
+    #[inline]
     pub fn new() -> Self {
         Default::default()
     }
@@ -109,10 +125,10 @@ impl GFA2Parser {
         match line_type {
             b'H' => false,
             b'S' => !self.segments,
-            b'E' => !self.edges,
-            b'O' => !self.groups_o,
-            b'G' => !self.gaps,
             b'F' => !self.fragments,
+            b'E' => !self.edges,
+            b'G' => !self.gaps,
+            b'O' => !self.groups_o,
             b'u' => !self.groups_u,
             _ => true,
         }
@@ -261,6 +277,7 @@ where
 
 /// function that parses the version of the header tag
 /// ```<header> <- {VN:Z:2.0}   {TS:i:<trace space>} <- ([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[+-]?[0-9]+\.?[0-9]+)?```
+#[inline]
 fn parse_header_tag<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
@@ -323,6 +340,7 @@ where
 
 /// function that parses the slen tag of the segment element
 /// ```<int> <- {-}[0-9]+```
+#[inline]
 fn parse_slen<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
@@ -371,6 +389,7 @@ impl Segment {
 
 /// function that parses the pos tag of the fragment element
 /// ```<pos> <- {-}[0-9]+{$}```
+#[inline]
 fn parse_pos<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
@@ -388,6 +407,7 @@ where
 
 /// function that parses the alignment tag
 /// ```<alignment> <- * | <trace> <- {-}[0-9]+(,{-}[0-9]+)* | <CIGAR> <- ([0-9]+[MDIP])+```
+#[inline]
 fn parse_alignment<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
@@ -485,25 +505,9 @@ impl Edge {
     }
 }
 
-/// function that parses the (dist)int tag of the gap element
-/// ```<int> <- {-}[0-9]+```
-fn parse_dist<I>(input: &mut I) -> ParserFieldResult<BString>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)\-?[0-9]+").unwrap();
-    }
-
-    let next = next_field(input)?;
-    RE.find(next.as_ref())
-        .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Distance"))
-}
-
 /// function that parses the (var)int tag of the gap element
-/// ```<int> <- {-}[0-9]+```
+/// ```<int> <- * | {-}[0-9]+```
+#[inline]
 fn parse_var<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
@@ -536,7 +540,7 @@ impl Gap {
         let id = usize::parse_next(&mut input, IdType::OPTIONALID())?;
         let sid1 = usize::parse_next(&mut input, IdType::REFERENCEID())?;
         let sid2 = usize::parse_next(&mut input, IdType::REFERENCEID())?;
-        let dist = parse_dist(&mut input)?;
+        let dist = parse_slen(&mut input)?;
         let var = parse_var(&mut input)?;
         let mut tag: BString = OptionalFields::parse_tag(input)
             .into_iter()
@@ -556,6 +560,7 @@ impl Gap {
 
 /// function that parses the ref tag og the o group element
 /// ```<ref> <- [!-~]+[+-]```
+#[inline]
 fn parse_group_ref<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
@@ -574,6 +579,7 @@ where
 
 /// function that parses the id tag og the o group element
 /// ```<id> <- [!-~]+```
+#[inline]
 fn parse_group_id<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,

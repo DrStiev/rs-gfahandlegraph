@@ -52,6 +52,11 @@ impl ParserBuilder {
         self
     }
 
+    pub fn paths(&mut self, include: bool) -> &mut Self {
+        self.paths = include;
+        self
+    }
+
     pub fn error_tolerance(&mut self, tol: ParserTolerance) -> &mut Self {
         self.tolerance = tol;
         self
@@ -112,6 +117,7 @@ impl Default for GFAParser {
 impl GFAParser {
     /// Create a new GFAParser that will parse all four GFA line
     /// types, and use the optional fields parser and storage `T`.
+    #[inline]
     pub fn new() -> Self {
         Default::default()
     }
@@ -122,8 +128,8 @@ impl GFAParser {
             b'H' => false,
             b'S' => !self.segments,
             b'L' => !self.links,
-            b'P' => !self.paths,
             b'C' => !self.containments,
+            b'P' => !self.paths,
             _ => true,
         }
     }
@@ -283,6 +289,7 @@ where
 
 /// function that parses the version of the header tag
 /// ```<header> <- {VN:Z:1.0}  <- ([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[0-9]+\.[0-9]+)?```
+#[inline]
 fn parse_header_tag<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
@@ -325,6 +332,7 @@ impl Header {
 
 /// function that parses the overlap tag
 /// ```<overlap> <- * | <CIGAR> <- ([0-9]+[MIDNSHPX=])+```
+#[inline]
 fn parse_overlap<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
@@ -457,6 +465,7 @@ impl Containment {
 
 /// function that parses the overlap tag
 /// ```<overlap> <- * | <CIGAR> <- [0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*```
+#[inline]
 fn parse_path_overlap<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,
@@ -475,7 +484,8 @@ where
 }
 
 /// function that parses the segment names tag
-/// ```<overlap> <- * | <CIGAR> <- [!-~]+(,[!-~]+)*```
+/// ```<overlap> <- * | [!-~]+(,[!-~]+)*```
+#[inline]
 fn parse_segment_names<I>(input: &mut I) -> ParserFieldResult<BString>
 where
     I: Iterator,

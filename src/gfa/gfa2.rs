@@ -6,6 +6,232 @@ use bstr::{BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+/// Returns a GFA2 object
+///
+/// [vec]: https://doc.rust-lang.org/std/vec/struct.Vec.html
+/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
+/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
+///
+/// ## Arguments
+///
+/// * `headers` - A [`vector`][vec] of [`Header`](struct.Header.html).
+/// * `segments` - A [`vector`][vec] of [`Segment`](struct.Segment.html).
+/// * `fragments` - A [`vector`][vec] of [`Fragment`](struct.Fragment.html).
+/// * `edges` - A [`vector`][vec] of [`Edge`](struct.Edge.html).
+/// * `gaps` - A [`vector`][vec] of [`Gap`](struct.Gap.html).
+/// * `o groups` - A [`vector`][vec] of [`OGroup`](struct.GroupO.html).
+/// * `u groups` - A [`vector`][vec] of [`UGroup`](struct.GroupU.html).
+///
+/// ## Examples
+///
+/// ```ignore
+/// let gfa2: GFA2 = GFA2 {
+///     headers: vec![
+///         Header::new("VN:Z:2.0".into(), b""),
+///     ],
+///     segments: vec![
+///         Segment::new(65, b"10", b"AAAAAAACGT", b""),
+///     ],
+///     fragments: vec![
+///         Fragment::new(15, convert_to_usize(b"r1-").unwrap(), b"10", b"10", b"20", b"20", b"*", b""),
+///     ],
+///     edges: vec![
+///         Edge::new(42, 243, 4543, b"2531", b"2591$", b"0", b"60", b"60M", b""),
+///     ],
+///     gaps: vec![
+///         Gap::new(convert_to_usize(b"g1").unwrap(), 743, 2243, b"10", b"*", b""),
+///     ],
+///     groups_o: vec![
+///         GroupO::new(b"P1", b"36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-", b""),
+///     ],
+///     groups_u: vec![
+///         GroupU::new(b"SG1", b"16 24 SG2 51_24 16_24", b""),
+///     ]
+/// };
+/// ```
+#[derive(
+    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
+)]
+pub struct GFA2 {
+    pub headers: Vec<Header>,
+    pub segments: Vec<Segment>,
+    pub fragments: Vec<Fragment>,
+    pub edges: Vec<Edge>,
+    pub gaps: Vec<Gap>,
+    pub groups_o: Vec<GroupO>,
+    pub groups_u: Vec<GroupU>,
+}
+
+impl fmt::Display for GFA2 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}{}{}{}{}{}{}",
+            self.headers
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.segments
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.fragments
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.edges
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.gaps
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.groups_o
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            self.groups_u
+                .iter()
+                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+        )
+    }
+}
+
+/// Enum containing the different kinds of GFA2 lines.
+#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
+pub enum Line {
+    Header(Header),
+    Segment(Segment),
+    Fragment(Fragment),
+    Edge(Edge),
+    Gap(Gap),
+    GroupO(GroupO),
+    GroupU(GroupU),
+}
+
+macro_rules! some_line_fn {
+    ($name:ident, $tgt:ty, $variant:path) => {
+        impl Line {
+            pub fn $name(self) -> Option<$tgt> {
+                if let $variant(x) = self {
+                    Some(x)
+                } else {
+                    None
+                }
+            }
+        }
+    };
+}
+
+some_line_fn!(some_header, Header, Line::Header);
+some_line_fn!(some_segment, Segment, Line::Segment);
+some_line_fn!(some_fragment, Fragment, Line::Fragment);
+some_line_fn!(some_edge, Edge, Line::Edge);
+some_line_fn!(some_gap, Gap, Line::Gap);
+some_line_fn!(some_ogroup, GroupO, Line::GroupO);
+some_line_fn!(some_ugroup, GroupU, Line::GroupU);
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub enum LineRef<'a> {
+    Header(&'a Header),
+    Segment(&'a Segment),
+    Fragment(&'a Fragment),
+    Edge(&'a Edge),
+    Gap(&'a Gap),
+    GroupO(&'a GroupO),
+    GroupU(&'a GroupU),
+}
+
+macro_rules! some_line_ref_fn {
+    ($name:ident, $tgt:ty, $variant:path) => {
+        impl<'a> LineRef<'a> {
+            pub fn $name(self) -> Option<&'a $tgt> {
+                if let $variant(x) = self {
+                    Some(x)
+                } else {
+                    None
+                }
+            }
+        }
+    };
+}
+
+some_line_ref_fn!(some_header, Header, LineRef::Header);
+some_line_ref_fn!(some_segment, Segment, LineRef::Segment);
+some_line_ref_fn!(some_fragment, Fragment, LineRef::Fragment);
+some_line_ref_fn!(some_edge, Edge, LineRef::Edge);
+some_line_ref_fn!(some_gap, Gap, LineRef::Gap);
+some_line_ref_fn!(some_ogroup, GroupO, LineRef::GroupO);
+some_line_ref_fn!(some_ugroup, GroupU, LineRef::GroupU);
+
+/// Insert a GFA line (wrapped in the Line enum) into an existing
+/// GFA. Simply pushes it into the corresponding Vec in the GFA,
+/// or replaces the header, so there's no deduplication or sorting
+/// taking place.
+impl GFA2 {
+    /// Insert a GFA line (wrapped in the Line enum) into an existing
+    /// GFA. Simply pushes it into the corresponding Vec in the GFA,
+    /// or replaces the header, so there's no deduplication or sorting
+    /// taking place.
+    #[inline]
+    pub fn insert_line(&mut self, line: Line) {
+        use Line::*;
+        match line {
+            Header(h) => self.headers.push(h),
+            Segment(s) => self.segments.push(s),
+            Fragment(f) => self.fragments.push(f),
+            Edge(e) => self.edges.push(e),
+            Gap(g) => self.gaps.push(g),
+            GroupO(o) => self.groups_o.push(o),
+            GroupU(u) => self.groups_u.push(u),
+        }
+    }
+
+    /// Consume a GFA2 object to produce an iterator over all the lines
+    /// contained within. The iterator first produces all headers then segments,
+    /// fragments, edges, gaps, groups, comments and finally custom records
+    pub fn lines_into_iter(self) -> impl Iterator<Item = Line> {
+        use Line::*;
+        let heads = self.headers.into_iter().map(Header);
+        let segs = self.segments.into_iter().map(Segment);
+        let frags = self.fragments.into_iter().map(Fragment);
+        let edges = self.edges.into_iter().map(Edge);
+        let gaps = self.gaps.into_iter().map(Gap);
+        let ogroups = self.groups_o.into_iter().map(GroupO);
+        let ugroups = self.groups_u.into_iter().map(GroupU);
+
+        heads
+            .chain(segs)
+            .chain(frags)
+            .chain(edges)
+            .chain(gaps)
+            .chain(ogroups)
+            .chain(ugroups)
+    }
+
+    /// Return an iterator over references to the lines in the GFA2
+    pub fn lines_iter(&'_ self) -> impl Iterator<Item = LineRef<'_>> {
+        use LineRef::*;
+        let heads = self.headers.iter().map(Header);
+        let segs = self.segments.iter().map(Segment);
+        let frags = self.fragments.iter().map(Fragment);
+        let edges = self.edges.iter().map(Edge);
+        let gaps = self.gaps.iter().map(Gap);
+        let ogroups = self.groups_o.iter().map(GroupO);
+        let ugroups = self.groups_u.iter().map(GroupU);
+
+        heads
+            .chain(segs)
+            .chain(frags)
+            .chain(edges)
+            .chain(gaps)
+            .chain(ogroups)
+            .chain(ugroups)
+    }
+}
+
+impl GFA2 {
+    #[inline]
+    pub fn new() -> Self {
+        Default::default()
+    }
+}
+
 /// Returns an Header line
 ///
 /// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
@@ -528,234 +754,6 @@ impl GroupU {
 impl fmt::Display for GroupU {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "U\t{}\t{}\t{}", self.id, self.var_field, self.tag,)
-    }
-}
-
-/// Returns a GFA2 object
-///
-/// [vec]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
-/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
-///
-/// ## Arguments
-///
-/// * `headers` - A [`vector`][vec] of [`Header`](struct.Header.html).
-/// * `segments` - A [`vector`][vec] of [`Segment`](struct.Segment.html).
-/// * `fragments` - A [`vector`][vec] of [`Fragment`](struct.Fragment.html).
-/// * `edges` - A [`vector`][vec] of [`Edge`](struct.Edge.html).
-/// * `gaps` - A [`vector`][vec] of [`Gap`](struct.Gap.html).
-/// * `o groups` - A [`vector`][vec] of [`OGroup`](struct.GroupO.html).
-/// * `u groups` - A [`vector`][vec] of [`UGroup`](struct.GroupU.html).
-///
-/// ## Examples
-///
-/// ```ignore
-/// let gfa2: GFA2 = GFA2 {
-///     headers: vec![
-///         Header::new("VN:Z:2.0".into(), b""),
-///     ],
-///     segments: vec![
-///         Segment::new(65, b"10", b"AAAAAAACGT", b""),
-///     ],
-///     fragments: vec![
-///         Fragment::new(15, convert_to_usize(b"r1-").unwrap(), b"10", b"10", b"20", b"20", b"*", b""),
-///     ],
-///     edges: vec![
-///         Edge::new(42, 243, 4543, b"2531", b"2591$", b"0", b"60", b"60M", b""),
-///     ],
-///     gaps: vec![
-///         Gap::new(convert_to_usize(b"g1").unwrap(), 743, 2243, b"10", b"*", b""),
-///     ],
-///     groups_o: vec![
-///         GroupO::new(b"P1", b"36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-", b""),
-///     ],
-///     groups_u: vec![
-///         GroupU::new(b"SG1", b"16 24 SG2 51_24 16_24", b""),
-///     ]
-/// };
-/// ```
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
-pub struct GFA2 {
-    // OptFields is used to encode the <tag>* item
-    // struct to hold the results of parsing a file; not actually a graph
-    pub headers: Vec<Header>,
-    pub segments: Vec<Segment>,
-    pub fragments: Vec<Fragment>,
-    pub edges: Vec<Edge>,
-    pub gaps: Vec<Gap>,
-    pub groups_o: Vec<GroupO>,
-    pub groups_u: Vec<GroupU>,
-}
-
-/// Enum containing the different kinds of GFA2 lines.
-#[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
-pub enum Line {
-    Header(Header),
-    Segment(Segment),
-    Fragment(Fragment),
-    Edge(Edge),
-    Gap(Gap),
-    GroupO(GroupO),
-    GroupU(GroupU),
-}
-
-macro_rules! some_line_fn {
-    ($name:ident, $tgt:ty, $variant:path) => {
-        impl Line {
-            pub fn $name(self) -> Option<$tgt> {
-                if let $variant(x) = self {
-                    Some(x)
-                } else {
-                    None
-                }
-            }
-        }
-    };
-}
-
-some_line_fn!(some_header, Header, Line::Header);
-some_line_fn!(some_segment, Segment, Line::Segment);
-some_line_fn!(some_fragment, Fragment, Line::Fragment);
-some_line_fn!(some_edge, Edge, Line::Edge);
-some_line_fn!(some_gap, Gap, Line::Gap);
-some_line_fn!(some_ogroup, GroupO, Line::GroupO);
-some_line_fn!(some_ugroup, GroupU, Line::GroupU);
-
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub enum LineRef<'a> {
-    Header(&'a Header),
-    Segment(&'a Segment),
-    Fragment(&'a Fragment),
-    Edge(&'a Edge),
-    Gap(&'a Gap),
-    GroupO(&'a GroupO),
-    GroupU(&'a GroupU),
-}
-
-macro_rules! some_line_ref_fn {
-    ($name:ident, $tgt:ty, $variant:path) => {
-        impl<'a> LineRef<'a> {
-            pub fn $name(self) -> Option<&'a $tgt> {
-                if let $variant(x) = self {
-                    Some(x)
-                } else {
-                    None
-                }
-            }
-        }
-    };
-}
-
-some_line_ref_fn!(some_header, Header, LineRef::Header);
-some_line_ref_fn!(some_segment, Segment, LineRef::Segment);
-some_line_ref_fn!(some_fragment, Fragment, LineRef::Fragment);
-some_line_ref_fn!(some_edge, Edge, LineRef::Edge);
-some_line_ref_fn!(some_gap, Gap, LineRef::Gap);
-some_line_ref_fn!(some_ogroup, GroupO, LineRef::GroupO);
-some_line_ref_fn!(some_ugroup, GroupU, LineRef::GroupU);
-
-/// Insert a GFA line (wrapped in the Line enum) into an existing
-/// GFA. Simply pushes it into the corresponding Vec in the GFA,
-/// or replaces the header, so there's no deduplication or sorting
-/// taking place.
-impl GFA2 {
-    /// Insert a GFA line (wrapped in the Line enum) into an existing
-    /// GFA. Simply pushes it into the corresponding Vec in the GFA,
-    /// or replaces the header, so there's no deduplication or sorting
-    /// taking place.
-    #[inline]
-    pub fn insert_line(&mut self, line: Line) {
-        use Line::*;
-        match line {
-            Header(h) => self.headers.push(h),
-            Segment(s) => self.segments.push(s),
-            Fragment(f) => self.fragments.push(f),
-            Edge(e) => self.edges.push(e),
-            Gap(g) => self.gaps.push(g),
-            GroupO(o) => self.groups_o.push(o),
-            GroupU(u) => self.groups_u.push(u),
-        }
-    }
-
-    /// Consume a GFA2 object to produce an iterator over all the lines
-    /// contained within. The iterator first produces all headers then segments,
-    /// fragments, edges, gaps, groups, comments and finally custom records
-    pub fn lines_into_iter(self) -> impl Iterator<Item = Line> {
-        use Line::*;
-        let heads = self.headers.into_iter().map(Header);
-        let segs = self.segments.into_iter().map(Segment);
-        let frags = self.fragments.into_iter().map(Fragment);
-        let edges = self.edges.into_iter().map(Edge);
-        let gaps = self.gaps.into_iter().map(Gap);
-        let ogroups = self.groups_o.into_iter().map(GroupO);
-        let ugroups = self.groups_u.into_iter().map(GroupU);
-
-        heads
-            .chain(segs)
-            .chain(frags)
-            .chain(edges)
-            .chain(gaps)
-            .chain(ogroups)
-            .chain(ugroups)
-    }
-
-    /// Return an iterator over references to the lines in the GFA2
-    pub fn lines_iter(&'_ self) -> impl Iterator<Item = LineRef<'_>> {
-        use LineRef::*;
-        let heads = self.headers.iter().map(Header);
-        let segs = self.segments.iter().map(Segment);
-        let frags = self.fragments.iter().map(Fragment);
-        let edges = self.edges.iter().map(Edge);
-        let gaps = self.gaps.iter().map(Gap);
-        let ogroups = self.groups_o.iter().map(GroupO);
-        let ugroups = self.groups_u.iter().map(GroupU);
-
-        heads
-            .chain(segs)
-            .chain(frags)
-            .chain(edges)
-            .chain(gaps)
-            .chain(ogroups)
-            .chain(ugroups)
-    }
-}
-
-impl GFA2 {
-    #[inline]
-    pub fn new() -> Self {
-        Default::default()
-    }
-}
-
-impl fmt::Display for GFA2 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}{}{}{}{}{}",
-            self.headers
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.segments
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.fragments
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.edges
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.gaps
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.groups_o
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.groups_u
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-        )
     }
 }
 
