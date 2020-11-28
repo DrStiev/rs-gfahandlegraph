@@ -104,13 +104,13 @@ impl SegmentId for BString {
 ///
 /// ## Example
 /// ```ignore
-/// let a = b"a";
+/// let a = 'a';
 /// let a_: usize = 97;
-/// assert_eq!(a_, get_code_from_char(a));
+/// assert_eq!(a_, get_code_from_char(&a));
 ///
-/// let number = b"7";
+/// let number: char = '7';
 /// let number_: usize = 7;
-/// assert_eq!(number_, get_code_from_char(number));
+/// assert_eq!(number_, get_code_from_char(&number));
 /// ```
 pub fn convert_to_usize(input: &[u8]) -> Option<usize> {
     let len = input.len();
@@ -118,11 +118,7 @@ pub fn convert_to_usize(input: &[u8]) -> Option<usize> {
     let mut x = 0;
     let mut res: String = "".to_string();
     while x < len {
-        res = format!(
-            "{}{}",
-            res,
-            &get_code_from_char(&my_vec[x].to_string()).to_string()
-        );
+        res = format!("{}{}", res, &get_code_from_char(&my_vec[x]).to_string());
         x += 1;
     }
     match res.len() {
@@ -160,11 +156,11 @@ const CHARS: [&str; 128] = [
 /// let a_: usize = 97;
 /// assert_eq!(a_, get_code_from_char(a));
 /// ```
-fn get_code_from_char(c: &str) -> usize {
-    if c.parse::<usize>().is_ok() {
-        c.parse::<usize>().unwrap()
+fn get_code_from_char(c: &char) -> usize {
+    if c.is_numeric() {
+        c.to_digit(10).unwrap() as usize
     } else {
-        CHARS.iter().position(|&x| x == c).unwrap()
+        CHARS.iter().position(|&x| x == c.to_string()).unwrap()
     }
 }
 

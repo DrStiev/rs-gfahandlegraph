@@ -591,7 +591,7 @@ impl GroupO {
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         tag.pop();
-        Ok(GroupO::new(id, var_field, &tag))
+        Ok(GroupO { id, var_field, tag })
     }
 }
 
@@ -616,7 +616,7 @@ impl GroupU {
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         tag.pop();
-        Ok(GroupU::new(id, var_field, &tag))
+        Ok(GroupU { id, var_field, tag })
     }
 }
 
@@ -753,11 +753,12 @@ mod tests {
 
     #[test]
     fn can_parse_ogroup() {
-        let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-";
+        let ogroup =
+            "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-\tAZ:i:87905\tHH:f:BAR";
         let ogroup_: GroupO = GroupO::new(
             "P1".into(),
             "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-            b"",
+            b"AZ:i:87905\tHH:f:BAR",
         );
 
         let fields = ogroup.split_terminator('\t');

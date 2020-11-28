@@ -34,7 +34,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                     }
                     tag = line_split.next();
                 }
-                let tag = opt_fields
+                let mut tag = opt_fields
                     .into_iter()
                     .map(|x| {
                         BString::from(
@@ -42,6 +42,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                         )
                     })
                     .collect::<BString>();
+                tag.pop();
 
                 let header = Header { version, tag };
                 gfa2.headers.push(header);
@@ -59,7 +60,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                     opt_fields.push(tag.unwrap().as_bytes());
                     tag = line_split.next();
                 }
-                let tag = opt_fields
+                let mut tag = opt_fields
                     .into_iter()
                     .map(|x| {
                         BString::from(
@@ -67,6 +68,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                         )
                     })
                     .collect::<BString>();
+                tag.pop();
 
                 let segment = Segment {
                     id,
@@ -136,7 +138,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                     opt_fields.push(tag.unwrap().as_bytes());
                     tag = line_split.next();
                 }
-                let tag = opt_fields
+                let mut tag = opt_fields
                     .into_iter()
                     .map(|x| {
                         BString::from(
@@ -144,6 +146,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                         )
                     })
                     .collect::<BString>();
+                tag.pop();
 
                 let edge = Edge {
                     id,
@@ -173,7 +176,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                     opt_fields.push(tag.unwrap().as_bytes());
                     tag = line_split.next();
                 }
-                let tag = opt_fields
+                let mut tag = opt_fields
                     .into_iter()
                     .map(|x| {
                         BString::from(
@@ -181,6 +184,7 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                         )
                     })
                     .collect::<BString>();
+                tag.pop();
 
                 let ogroup = GroupO {
                     id,

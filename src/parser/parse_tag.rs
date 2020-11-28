@@ -18,38 +18,15 @@ pub type NoOptionalFields = ();
 /// two characters matching [A-Za-z0-9][A-Za-z0-9].
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub struct OptField {
-    pub tag: [u8; 2],
-    pub value: OptFieldVal,
-}
-
-/// enum for representing each of the SAM optional field types.
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub enum OptFieldVal {
-    Z(BString),
-    I(BString),
-    F(BString),
-    A(BString),
-    J(BString),
-    H(BString),
-    B(BString),
+    pub value: BString,
 }
 
 impl OptField {
-    /// Panics if the provided tag doesn't match the regex
-    /// [A-Za-z0-9][A-Za-z0-9].
-    pub fn tag(t: &[u8]) -> [u8; 2] {
-        assert_eq!(t.len(), 2);
-        assert!(t[0].is_ascii_alphanumeric());
-        assert!(t[1].is_ascii_alphanumeric());
-        [t[0], t[1]]
-    }
-
     /// Create a new OptField from a tag name and a value, panicking
     /// if the provided tag doesn't fulfill the requirements of
     /// OptField::tag().
-    pub fn new(tag: &[u8], value: OptFieldVal) -> Self {
-        let tag = OptField::tag(tag);
-        OptField { tag, value }
+    pub fn new(value: BString) -> Self {
+        OptField { value }
     }
 
     /// Parses the header and optional fields from a bytestring in the format\
@@ -61,23 +38,10 @@ impl OptField {
                     .unwrap();
         }
 
-        use OptFieldVal::*;
+        let o_val: BString =
+            RE.find(input).map(|s| BString::from(s.as_bytes()))?;
 
-        let o_tag = input.get(0..=1)?;
-        let o_type = input.get(3)?;
-
-        let o_val = match o_type {
-            b'A' => RE.find(input).map(|s| s.as_bytes().into()).map(A),
-            b'i' => RE.find(input).map(|s| s.as_bytes().into()).map(I),
-            b'f' => RE.find(input).map(|s| s.as_bytes().into()).map(F),
-            b'Z' => RE.find(input).map(|s| s.as_bytes().into()).map(Z),
-            b'J' => RE.find(input).map(|s| s.as_bytes().into()).map(J),
-            b'H' => RE.find(input).map(|s| s.as_bytes().into()).map(H),
-            b'B' => RE.find(input).map(|s| s.as_bytes().into()).map(B),
-            _ => None,
-        }?;
-
-        Some(Self::new(o_tag, o_val))
+        Some(Self::new(o_val))
     }
 }
 
@@ -86,17 +50,7 @@ impl OptField {
 /// OptField::parse().
 impl std::fmt::Display for OptField {
     fn fmt(&self, form: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use OptFieldVal::*;
-
-        match &self.value {
-            A(x) => write!(form, "{}", x),
-            I(x) => write!(form, "{}", x),
-            F(x) => write!(form, "{}", x),
-            Z(x) => write!(form, "{}", x),
-            J(x) => write!(form, "{}", x),
-            H(x) => write!(form, "{}", x),
-            B(x) => write!(form, "{}", x),
-        }
+        write!(form, "{}", self.value)
     }
 }
 
@@ -106,9 +60,6 @@ impl std::fmt::Display for OptField {
 /// OptFields implementor can impact memory usage, which optional
 /// fields are parsed, and possibly more in the future
 pub trait OptFields: Sized + Default + Clone {
-    /// Return the optional field with the given tag, if it exists.
-    fn get_field(&self, tag: &[u8]) -> Option<&OptField>;
-
     /// Return a slice over all optional fields. NB: This may be
     /// replaced by an iterator or something else in the future
     fn fields(&self) -> &[OptField];
@@ -128,10 +79,6 @@ pub trait OptFields: Sized + Default + Clone {
 /// need any optional fields. () takes up zero space, and all
 /// methods are no-ops.
 impl OptFields for () {
-    fn get_field(&self, _: &[u8]) -> Option<&OptField> {
-        None
-    }
-
     fn fields(&self) -> &[OptField] {
         &[]
     }
@@ -149,10 +96,6 @@ impl OptFields for () {
 /// relatively small number of optional fields in practice, it should
 /// be efficient enough.
 impl OptFields for Vec<OptField> {
-    fn get_field(&self, tag: &[u8]) -> Option<&OptField> {
-        self.iter().find(|o| o.tag == tag)
-    }
-
     fn fields(&self) -> &[OptField] {
         self.as_slice()
     }
@@ -166,5 +109,45 @@ impl OptFields for Vec<OptField> {
             .into_iter()
             .filter_map(|f| OptField::parse_tag(f.as_ref()))
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bstr::ByteSlice;
+
+    #[test]
+    fn parse_single_tag() {
+        let tag = b"DP:i:1";
+        let result = OptField::parse_tag(tag);
+        match result {
+            None => println!("Tag not found"),
+            Some(t) => assert_eq!(tag.to_str().unwrap(), t.to_string()),
+        }
+    }
+
+    #[test]
+    fn parse_multiple_tag() {
+        let tag = "DP:i:1\tRC:i:1";
+        let fields = tag.split_terminator('\t');
+        let mut result: BString = OptionalFields::parse_tag(fields)
+            .into_iter()
+            .map(|x| BString::from(x.to_string() + "\t"))
+            .collect::<BString>();
+        // the last character of the result fields is always '\t' so
+        // remember to pop it out otherwise it will raise an error
+        result.pop();
+        assert_eq!(result, tag);
+    }
+
+    #[test]
+    fn parse_none_tag() {
+        let tag = b"";
+        let result = OptField::parse_tag(tag);
+        match result {
+            None => println!("Tag not found"),
+            Some(t) => assert_eq!(tag.to_str().unwrap(), t.to_string()),
+        }
     }
 }

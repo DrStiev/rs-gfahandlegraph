@@ -489,7 +489,12 @@ impl Path {
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         optional.pop();
-        Ok(Path::new(path_name, segment_names, overlaps, &optional))
+        Ok(Path {
+            path_name,
+            segment_names,
+            overlaps,
+            optional,
+        })
     }
 }
 
