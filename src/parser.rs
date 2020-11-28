@@ -38,7 +38,7 @@ use crate::hashgraph::HashGraph;
 ///     }
 ///     Paths: {
 ///         14: ACCTT -> CTTGATT
-///         15: ACCTT -> CCTTGA -(TCAAGG) -> CTTGATT
+///         15: ACCTT -> CCTTGA -> CTTGATT
 ///     }
 /// }
 /// */

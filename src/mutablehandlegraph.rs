@@ -11,7 +11,13 @@ pub trait SubtractiveHandleGraph {
     /// // Edges: 11 -> 12, 11 -> 13, 12 -> 13
     ///
     /// let remove_id: NodeId = 12.into();
-    /// graph.remove_handle(remove_id);
+    /// match graph.remove_handle(remove_id) {
+    ///     Ok(g) => {
+    ///         g.print_graph();
+    ///         println!("Handle removed!")
+    ///     },
+    ///     Err(why) => println!("Error: {}", why),
+    /// }
     ///
     /// // Nodes: 11, 13
     /// // Edges: 11 -> 13
@@ -31,7 +37,13 @@ pub trait SubtractiveHandleGraph {
     ///
     /// let h1: NodeId = 11.into();
     /// let h3: NodeId = 13.into();
-    /// graph.remove_edge(Edge(h1, h3));
+    /// match graph.remove_edge(Edge(h1, h3)){
+    ///     Ok(g) => {
+    ///         g.print_graph();
+    ///         println!("Edge removed!")
+    ///     },
+    ///     Err(why) => println!("Error: {}", why),
+    /// }
     ///
     /// // Nodes: 11, 12, 13
     /// // Edges: 11 -> 12, 12 -> 13
