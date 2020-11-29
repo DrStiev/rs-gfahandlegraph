@@ -240,6 +240,17 @@ where
     Orientation::parse_error(parsed)
 }
 
+lazy_static! {
+    static ref RE_HEADER: Regex = Regex::new(r"(?-u)(VN:Z:1\.0)?").unwrap();
+    static ref RE_OVERLAP: Regex =
+        Regex::new(r"(?-u)\*|([0-9]+[MIDNSHPX=])+").unwrap();
+    static ref RE_SEQUENCE: Regex = Regex::new(r"(?-u)\*|[A-Za-z=.]+").unwrap();
+    static ref RE_PATH_OVERLAP: Regex =
+        Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*").unwrap();
+    static ref RE_SEGMENT_NAMES: Regex =
+        Regex::new(r"(?-u)[!-~]+(,[!-~]+)*").unwrap();
+}
+
 /// function that parses the version of the header tag
 /// ```<header> <- {VN:Z:1.0}  <- (VN:Z:1\.0)?```
 #[inline]
@@ -248,12 +259,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)(VN:Z:1\.0)?").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_HEADER
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Version"))
 }
@@ -288,13 +296,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"(?-u)\*|([0-9]+[MIDNSHPX=])+").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_OVERLAP
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Overlap"))
 }
@@ -307,12 +311,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)\*|[A-Za-z=.]+").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_SEQUENCE
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Sequence"))
 }
@@ -421,14 +422,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*")
-                .unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_PATH_OVERLAP
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Overlap"))
 }
@@ -441,13 +437,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        // that's a little meh but still ok
-        static ref RE: Regex = Regex::new(r"(?-u)[!-~]+(,[!-~]+)*").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_SEGMENT_NAMES
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Segment names"))
 }

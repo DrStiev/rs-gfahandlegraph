@@ -235,6 +235,22 @@ where
     input.next().ok_or(ParseFieldError::MissingFields)
 }
 
+lazy_static! {
+    static ref RE_HEADER: Regex =
+        Regex::new(r"(?-u)((VN:Z:2\.0)?\t?(TS:i:[+-]?[0-9]+)?)?").unwrap();
+    static ref RE_SEQUENCE: Regex = Regex::new(r"(?-u)\*|[!-~]+").unwrap();
+    static ref RE_LEN: Regex = Regex::new(r"(?-u)\-?[0-9]+").unwrap();
+    static ref RE_POS: Regex = Regex::new(r"(?-u)\-?[0-9]+\$?").unwrap();
+    static ref RE_ALIGNMENT: Regex =
+        Regex::new(r"(?-u)\*|([0-9]+[MDIP])+|(\-?[0-9]+(,\-?[0-9]+)*)")
+            .unwrap();
+    static ref RE_VAR: Regex = Regex::new(r"(?-u)\*|\-?[0-9]+").unwrap();
+    static ref RE_GROUP_REF: Regex =
+        Regex::new(r"(?-u)[!-~]+[+-]([ ][!-~]+[+-])*").unwrap();
+    static ref RE_GROUP_ID: Regex =
+        Regex::new(r"(?-u)[!-~]+([ ][!-~]+)*").unwrap();
+}
+
 /// function that parses the version of the header tag
 /// ```<header> <- {VN:Z:2.0}   {TS:i:<trace space>} <- ((VN:Z:2\.0)?\t?(TS:i:[+-]?[0-9]+)?)?```
 #[inline]
@@ -243,13 +259,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"(?-u)((VN:Z:2\.0)?\t?(TS:i:[+-]?[0-9]+)?)?").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_HEADER
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Version"))
 }
@@ -286,12 +298,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)\*|[!-~]+").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_SEQUENCE
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Sequence"))
 }
@@ -304,12 +313,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)\-?[0-9]+").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_LEN
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Length"))
 }
@@ -353,12 +359,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)\-?[0-9]+\$?").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_POS
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Position"))
 }
@@ -371,14 +374,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"(?-u)\*|([0-9]+[MDIP])+|(\-?[0-9]+(,\-?[0-9]+)*)")
-                .unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_ALIGNMENT
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Alignment"))
 }
@@ -471,12 +469,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)\*|\-?[0-9]+").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_VAR
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Variance"))
 }
@@ -524,13 +519,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"(?-u)[!-~]+[+-]([ ][!-~]+[+-])*").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_GROUP_REF
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Reference Group Id"))
 }
@@ -543,12 +534,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"(?-u)[!-~]+([ ][!-~]+)*").unwrap();
-    }
-
     let next = next_field(input)?;
-    RE.find(next.as_ref())
+    RE_GROUP_ID
+        .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Id Group Id"))
 }

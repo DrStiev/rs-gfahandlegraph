@@ -21,6 +21,11 @@ pub struct OptField {
     pub value: BString,
 }
 
+lazy_static! {
+    static ref RE: Regex =
+        Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*").unwrap();
+}
+
 impl OptField {
     /// Create a new OptField from a tag name and a value, panicking
     /// if the provided tag doesn't fulfill the requirements of
@@ -32,12 +37,6 @@ impl OptField {
     /// Parses the header and optional fields from a bytestring in the format\
     /// ```<tag> <- <TAG>:<TYPE>:<VALUE> <- [A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*```
     pub fn parse_tag(input: &[u8]) -> Option<Self> {
-        lazy_static! {
-            static ref RE: Regex =
-                Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*")
-                    .unwrap();
-        }
-
         let o_val: BString =
             RE.find(input).map(|s| BString::from(s.as_bytes()))?;
 
