@@ -121,20 +121,6 @@ impl GFA2Parser {
     }
 
     #[inline]
-    pub fn ignore_line(&self, line_type: u8) -> bool {
-        match line_type {
-            b'H' => false,
-            b'S' => !self.segments,
-            b'F' => !self.fragments,
-            b'E' => !self.edges,
-            b'G' => !self.gaps,
-            b'O' => !self.groups_o,
-            b'u' => !self.groups_u,
-            _ => true,
-        }
-    }
-
-    #[inline]
     fn parse_gfa_line(&self, bytes: &[u8]) -> ParserResult<Line> {
         let line: &BStr = bytes.trim().as_ref();
 
@@ -145,45 +131,19 @@ impl GFA2Parser {
             |e: ParseFieldError| ParseError::invalid_line(e, bytes);
 
         let line = match hdr {
-            b"H" => Header::parse_line(fields).map(Header::wrap),
-
+            // most common lines and more important ones
             b"S" => Segment::parse_line(fields).map(Segment::wrap),
-            b"F" => Fragment::parse_line(fields).map(Fragment::wrap),
             b"E" => Edge::parse_line(fields).map(Edge::wrap),
-            b"G" => Gap::parse_line(fields).map(Gap::wrap),
             b"O" => GroupO::parse_line(fields).map(GroupO::wrap),
+            // less common lines and less important ones
+            b"H" => Header::parse_line(fields).map(Header::wrap),
+            b"F" => Fragment::parse_line(fields).map(Fragment::wrap),
+            b"G" => Gap::parse_line(fields).map(Gap::wrap),
             b"U" => GroupU::parse_line(fields).map(GroupU::wrap),
             _ => return Err(ParseError::UnknownLineType),
         }
         .map_err(invalid_line)?;
         Ok(line)
-    }
-
-    pub fn parse_lines<I>(&self, lines: I) -> ParserResult<GFA2>
-    where
-        I: Iterator,
-        I::Item: AsRef<[u8]>,
-    {
-        let mut gfa2 = GFA2::new();
-
-        for line in lines {
-            let line = line.as_ref();
-            if let Some(c) = line.first() {
-                if !self.ignore_line(*c) {
-                    match self.parse_gfa_line(line.as_ref()) {
-                        Ok(parsed) => gfa2.insert_line(parsed),
-                        Err(err)
-                            if err.can_safely_continue(&self.tolerance) =>
-                        {
-                            ()
-                        }
-                        Err(err) => return Err(err),
-                    };
-                }
-            }
-        }
-
-        Ok(gfa2)
     }
 
     /// Function that return a Result<
@@ -220,8 +180,7 @@ impl GFA2Parser {
         let mut gfa2 = GFA2::new();
 
         for line in lines {
-            let line = line?;
-            match self.parse_gfa_line(line.as_ref()) {
+            match self.parse_gfa_line(line?.as_ref()) {
                 Ok(parsed) => gfa2.insert_line(parsed),
                 Err(err) if err.can_safely_continue(&self.tolerance) => (),
                 Err(err) => return Err(err),
@@ -232,38 +191,39 @@ impl GFA2Parser {
     }
 }
 
-pub struct GFA2ParserLineIter<I>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    parser: GFA2Parser,
-    iter: I,
+#[inline]
+pub const fn type_header() -> u8 {
+    b'H'
 }
 
-impl<I> GFA2ParserLineIter<I>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    pub fn from_parser(parser: GFA2Parser, iter: I) -> Self {
-        Self { parser, iter }
-    }
+#[inline]
+pub const fn type_segment() -> u8 {
+    b'S'
 }
 
-impl<I> Iterator for GFA2ParserLineIter<I>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    type Item = ParserResult<Line>;
+#[inline]
+pub const fn type_fragment() -> u8 {
+    b'F'
+}
 
-    #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        let next_line = self.iter.next()?;
-        let result = self.parser.parse_gfa_line(next_line.as_ref());
-        Some(result)
-    }
+#[inline]
+pub const fn type_edge() -> u8 {
+    b'E'
+}
+
+#[inline]
+pub const fn type_gap() -> u8 {
+    b'G'
+}
+
+#[inline]
+pub const fn type_ogroup() -> u8 {
+    b'O'
+}
+
+#[inline]
+pub const fn type_ugroup() -> u8 {
+    b'U'
 }
 
 #[inline]
@@ -276,7 +236,7 @@ where
 }
 
 /// function that parses the version of the header tag
-/// ```<header> <- {VN:Z:2.0}   {TS:i:<trace space>} <- ([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[+-]?[0-9]+\.?[0-9]+)?```
+/// ```<header> <- {VN:Z:2.0}   {TS:i:<trace space>} <- ((VN:Z:2\.0)?\t?(TS:i:[+-]?[0-9]+)?)?```
 #[inline]
 fn parse_header_tag<I>(input: &mut I) -> ParserFieldResult<BString>
 where
@@ -284,10 +244,8 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE: Regex = Regex::new(
-            r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[+-]?[0-9]+\.?[0-9]+)?"
-        )
-        .unwrap();
+        static ref RE: Regex =
+            Regex::new(r"(?-u)((VN:Z:2\.0)?\t?(TS:i:[+-]?[0-9]+)?)?").unwrap();
     }
 
     let next = next_field(input)?;
@@ -353,7 +311,7 @@ where
     let next = next_field(input)?;
     RE.find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Lenght"))
+        .ok_or(ParseFieldError::InvalidField("Length"))
 }
 
 /// function that parses the SEGMENT element
@@ -648,6 +606,7 @@ impl GroupU {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use time::Instant;
 
     #[test]
     fn blank_header() {
@@ -900,5 +859,17 @@ mod tests {
             .parse_file("./tests/gfa2_files/spec_q7.gfa2")
             .unwrap();
         println!("{}", gfa2);
+    }
+
+    #[test]
+    #[ignore]
+    fn parse_big_file() {
+        // Create gfa from file: Duration { seconds: 418, nanoseconds: 278731700 }
+        let parser = GFA2Parser::default();
+        let start = Instant::now();
+        let _gfa2: GFA2 = parser
+            .parse_file("./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2")
+            .unwrap();
+        println!("Create gfa from file: {:?}", start.elapsed());
     }
 }

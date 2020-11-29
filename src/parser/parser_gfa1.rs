@@ -123,18 +123,6 @@ impl GFAParser {
     }
 
     #[inline]
-    pub fn ignore_line(&self, line_type: u8) -> bool {
-        match line_type {
-            b'H' => false,
-            b'S' => !self.segments,
-            b'L' => !self.links,
-            b'C' => !self.containments,
-            b'P' => !self.paths,
-            _ => true,
-        }
-    }
-
-    #[inline]
     pub fn parse_gfa_line(&self, bytes: &[u8]) -> ParserResult<Line> {
         let line: &BStr = bytes.trim().as_ref();
 
@@ -145,42 +133,17 @@ impl GFAParser {
             |e: ParseFieldError| ParseError::invalid_line(e, bytes);
 
         let line = match hdr {
-            b"H" => Header::parse_line(fields).map(Header::wrap),
+            // most common lines and more important ones
             b"S" => Segment::parse_line(fields).map(Segment::wrap),
             b"L" => Link::parse_line(fields).map(Link::wrap),
-            b"C" => Containment::parse_line(fields).map(Containment::wrap),
             b"P" => Path::parse_line(fields).map(Path::wrap),
+            // less common lines and less important ones
+            b"H" => Header::parse_line(fields).map(Header::wrap),
+            b"C" => Containment::parse_line(fields).map(Containment::wrap),
             _ => return Err(ParseError::UnknownLineType),
         }
         .map_err(invalid_line)?;
         Ok(line)
-    }
-
-    pub fn parse_lines<I>(&self, lines: I) -> ParserResult<GFA>
-    where
-        I: Iterator,
-        I::Item: AsRef<[u8]>,
-    {
-        let mut gfa = GFA::new();
-
-        for line in lines {
-            let line = line.as_ref();
-            if let Some(c) = line.first() {
-                if !self.ignore_line(*c) {
-                    match self.parse_gfa_line(line.as_ref()) {
-                        Ok(parsed) => gfa.insert_line(parsed),
-                        Err(err)
-                            if err.can_safely_continue(&self.tolerance) =>
-                        {
-                            ()
-                        }
-                        Err(err) => return Err(err),
-                    };
-                }
-            }
-        }
-
-        Ok(gfa)
     }
 
     /// Function that return a Result<
@@ -221,8 +184,7 @@ impl GFAParser {
         let mut gfa = GFA::new();
 
         for line in lines {
-            let line = line?;
-            match self.parse_gfa_line(line.as_ref()) {
+            match self.parse_gfa_line(line?.as_ref()) {
                 Ok(parsed) => gfa.insert_line(parsed),
                 Err(err) if err.can_safely_continue(&self.tolerance) => (),
                 Err(err) => return Err(err),
@@ -233,38 +195,29 @@ impl GFAParser {
     }
 }
 
-pub struct GFAParserLineIter<I>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    parser: GFAParser,
-    iter: I,
+#[inline]
+pub const fn type_header() -> u8 {
+    b'H'
 }
 
-impl<I> GFAParserLineIter<I>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    pub fn from_parser(parser: GFAParser, iter: I) -> Self {
-        Self { parser, iter }
-    }
+#[inline]
+pub const fn type_segment() -> u8 {
+    b'S'
 }
 
-impl<I> Iterator for GFAParserLineIter<I>
-where
-    I: Iterator,
-    I::Item: AsRef<[u8]>,
-{
-    type Item = ParserResult<Line>;
+#[inline]
+pub const fn type_link() -> u8 {
+    b'L'
+}
 
-    #[inline]
-    fn next(&mut self) -> Option<Self::Item> {
-        let next_line = self.iter.next()?;
-        let result = self.parser.parse_gfa_line(next_line.as_ref());
-        Some(result)
-    }
+#[inline]
+pub const fn type_path() -> u8 {
+    b'P'
+}
+
+#[inline]
+pub const fn type_containment() -> u8 {
+    b'C'
 }
 
 #[inline]
@@ -288,7 +241,7 @@ where
 }
 
 /// function that parses the version of the header tag
-/// ```<header> <- {VN:Z:1.0}  <- ([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[0-9]+\.[0-9]+)?```
+/// ```<header> <- {VN:Z:1.0}  <- (VN:Z:1\.0)?```
 #[inline]
 fn parse_header_tag<I>(input: &mut I) -> ParserFieldResult<BString>
 where
@@ -296,10 +249,7 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE: Regex = Regex::new(
-            r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[0-9]+\.[0-9]+)?"
-        )
-        .unwrap();
+        static ref RE: Regex = Regex::new(r"(?-u)(VN:Z:1\.0)?").unwrap();
     }
 
     let next = next_field(input)?;
@@ -536,6 +486,7 @@ impl Path {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use time::Instant;
 
     #[test]
     fn blank_header() {
@@ -703,5 +654,17 @@ mod tests {
                 println!("{}", u);
             }
         }
+    }
+
+    #[test]
+    #[ignore]
+    fn parse_big_file() {
+        // Create gfa from file: Duration { seconds: 432, nanoseconds: 428425000 }
+        let parser = GFAParser::default();
+        let start = Instant::now();
+        let _gfa2: GFA = parser
+            .parse_file("./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa")
+            .unwrap();
+        println!("Create gfa from file: {:?}", start.elapsed());
     }
 }
