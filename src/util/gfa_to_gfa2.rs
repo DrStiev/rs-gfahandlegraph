@@ -1,22 +1,22 @@
 use bstr::{BString, ByteSlice};
 use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write};
 use std::str;
 
-use crate::gfa::gfa2::{Edge, GroupO, Header, Segment, GFA2};
-use crate::gfa::segment_id::*;
+use rayon::iter::{ParallelBridge, ParallelIterator};
+use std::sync::Mutex;
 
 /// Very BASIC converter from
 /// [`GFA`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa1/struct.GFA.html) format to
 /// [`GFA2`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/gfa/gfa2/struct.GFA2.html) format.\
 /// For now it consider only S-, L- and P- lines,
 /// ignoring all the others.
-pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
-    let mut gfa2 = GFA2::default();
-    let file = File::open(path).unwrap();
-    let reader = BufReader::new(file);
+pub fn gfa_file_to_gfa2(path: String) -> std::io::Result<()> {
+    let res = Mutex::new(File::create(format!("{}{}", path, 2))?);
+    let file = File::open(path)?;
+    let reader = BufReader::new(file).lines();
 
-    reader.lines().for_each(|line| {
+    reader.par_bridge().for_each(|line| {
         let line = line.unwrap();
         let mut line_split = line.split_whitespace();
         let prefix = line_split.next().unwrap();
@@ -44,13 +44,13 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                     .collect::<BString>();
                 tag.pop();
 
-                let header = Header { version, tag };
-                gfa2.headers.push(header);
+                res.lock()
+                    .unwrap()
+                    .write(format!("H\t{}\t{}\n", version, tag).as_bytes())
+                    .expect("unable to write file");
             }
             "S" => {
-                let id =
-                    convert_to_usize(line_split.next().unwrap().as_bytes())
-                        .unwrap();
+                let id = line_split.next().unwrap().to_string();
                 let sequence = BString::from(line_split.next().unwrap());
                 let len = BString::from(sequence.len().to_string());
 
@@ -70,30 +70,22 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                     .collect::<BString>();
                 tag.pop();
 
-                let segment = Segment {
-                    id,
-                    len,
-                    sequence,
-                    tag,
-                };
-                gfa2.segments.push(segment);
+                res.lock()
+                    .unwrap()
+                    .write(
+                        format!("S\t{}\t{}\t{}\t{}\n", id, len, sequence, tag)
+                            .as_bytes(),
+                    )
+                    .expect("unable to write file");
             }
             "L" => {
                 // placeholder value
-                let id = convert_to_usize(b"*").unwrap();
+                let id = "*".to_string();
 
-                let from_node =
-                    convert_to_usize(line_split.next().unwrap().as_bytes())
-                        .unwrap();
-                let from_node_orient =
-                    convert_to_usize(line_split.next().unwrap().as_bytes())
-                        .unwrap();
-                let to_node =
-                    convert_to_usize(line_split.next().unwrap().as_bytes())
-                        .unwrap();
-                let to_node_orient =
-                    convert_to_usize(line_split.next().unwrap().as_bytes())
-                        .unwrap();
+                let from_node = line_split.next().unwrap().to_string();
+                let from_node_orient = line_split.next().unwrap().to_string();
+                let to_node = line_split.next().unwrap().to_string();
+                let to_node_orient = line_split.next().unwrap().to_string();
                 let alignment = BString::from(line_split.next().unwrap());
 
                 // placeholder values
@@ -110,20 +102,20 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                         .parse::<i64>()
                         .unwrap();
 
-                    if from_node_orient == 43 && to_node_orient == 43 {
+                    if from_node_orient == "+" && to_node_orient == "+" {
                         let x = (100 - dist).abs();
                         beg1 = BString::from(x.to_string());
                         end1 = BString::from("100$");
                         end2 = BString::from(dist.to_string());
-                    } else if from_node_orient == 45 && to_node_orient == 45 {
+                    } else if from_node_orient == "-" && to_node_orient == "-" {
                         let x = (100 - dist).abs();
                         end1 = BString::from(dist.to_string());
                         beg2 = BString::from(x.to_string());
                         end2 = BString::from("100$");
-                    } else if from_node_orient == 45 && to_node_orient == 43 {
+                    } else if from_node_orient == "-" && to_node_orient == "+" {
                         end1 = BString::from(dist.to_string());
                         end2 = BString::from(dist.to_string());
-                    } else if from_node_orient == 43 && to_node_orient == 45 {
+                    } else if from_node_orient == "+" && to_node_orient == "-" {
                         let x = (100 - dist).abs();
                         beg1 = BString::from(x.to_string());
                         end1 = BString::from("100$");
@@ -148,27 +140,31 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                     .collect::<BString>();
                 tag.pop();
 
-                let edge = Edge {
-                    id,
-                    sid1: format!("{}{}", from_node, from_node_orient)
-                        .parse::<usize>()
-                        .unwrap(),
-                    sid2: format!("{}{}", to_node, to_node_orient)
-                        .parse::<usize>()
-                        .unwrap(),
-                    beg1,
-                    end1,
-                    beg2,
-                    end2,
-                    alignment,
-                    tag,
-                };
-                gfa2.edges.push(edge);
+                res.lock()
+                    .unwrap()
+                    .write(
+                        format!(
+                            "E\t{}\t{}{}\t{}{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+                            id,
+                            from_node,
+                            from_node_orient,
+                            to_node,
+                            to_node_orient,
+                            beg1,
+                            end1,
+                            beg2,
+                            end2,
+                            alignment,
+                            tag
+                        )
+                        .as_bytes(),
+                    )
+                    .expect("unable to write file");
             }
             "P" => {
                 let id = BString::from(line_split.next().unwrap());
                 let seg_ids = line_split.next().unwrap();
-                let res = BString::from(str::replace(seg_ids, ",", " "));
+                let var_field = BString::from(str::replace(seg_ids, ",", " "));
 
                 let mut tag = line_split.next();
                 let mut opt_fields: Vec<&[u8]> = vec![];
@@ -186,38 +182,33 @@ pub fn gfa_file_to_gfa2(path: String) -> GFA2 {
                     .collect::<BString>();
                 tag.pop();
 
-                let ogroup = GroupO {
-                    id,
-                    var_field: res,
-                    tag,
-                };
-                gfa2.groups_o.push(ogroup);
+                res.lock()
+                    .unwrap()
+                    .write(
+                        format!("P\t{}\t{}\t{}\n", id, var_field, tag)
+                            .as_bytes(),
+                    )
+                    .expect("unable to write file");
             }
             // ignore all the other lines (typically C- and comment-lines)
             _ => (),
         }
     });
-
-    gfa2
+    Ok(())
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::util::save_file::save_on_file;
-    use crate::util::ObjectType;
     use time::Instant;
 
     #[test]
     #[ignore]
     fn can_parse_and_write_big_file() {
         /*
-        Convert file from GFA to GFA2 Duration { seconds: 350, nanoseconds: 671452100 }
-        Save file Duration { seconds: 55, nanoseconds: 875581000 }
-        Convert file from GFA to GFA2 Duration { seconds: 285, nanoseconds: 260840200 }
-        Save file Duration { seconds: 32, nanoseconds: 348270800 }
-        Convert file from GFA to GFA2 Duration { seconds: 263, nanoseconds: 999098400 }
-        Save file Duration { seconds: 29, nanoseconds: 484974600 }
+        Convert file from GFA to GFA2 Duration { seconds: 55, nanoseconds: 894165300 }
+        Convert file from GFA to GFA2 Duration { seconds: 49, nanoseconds: 224287200 }
+        Convert file from GFA to GFA2 Duration { seconds: 46, nanoseconds: 612642400 }
         */
         const FILES: [&str; 3] = [
             "./tests/big_files/ape-4-0.10b.gfa",
@@ -227,48 +218,39 @@ mod test {
         for i in 0..3 {
             let start = Instant::now();
             let path: String = FILES[i].to_string();
-            let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
-            println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
-            let start = Instant::now();
-            match save_on_file(
-                ObjectType::GFA2(gfa2),
-                Some(format!("{}{}", path, "2")),
-            ) {
-                Ok(_) => println!("Save file {:?}", start.elapsed()),
+            match gfa_file_to_gfa2(path.clone()) {
                 Err(why) => println!("Error: {}", why),
+                _ => println!(
+                    "Convert file from GFA to GFA2 {:?}",
+                    start.elapsed()
+                ),
             }
         }
     }
 
     #[test]
     fn can_parse_and_write_medium_file() {
-        // Convert file from GFA to GFA2: Duration { seconds: 0, nanoseconds: 386670300 }
+        // Convert file from GFA to GFA2 Duration { seconds: 0, nanoseconds: 149387100 }
         let start = Instant::now();
         let path: String = "./tests/big_files/test.gfa".to_string();
-        let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
-        println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
-        match save_on_file(
-            ObjectType::GFA2(gfa2),
-            Some(format!("{}{}", path, "2")),
-        ) {
-            Ok(_) => println!("File converted and saved correctly!"),
+        match gfa_file_to_gfa2(path.clone()) {
             Err(why) => println!("Error: {}", why),
+            _ => {
+                println!("Convert file from GFA to GFA2 {:?}", start.elapsed())
+            }
         }
     }
 
     #[test]
     fn can_parse_and_write_medium_file_with_tag() {
-        // Convert file from GFA to GFA2: Duration { seconds: 0, nanoseconds: 449616800 }
+        // Convert file from GFA to GFA2 Duration { seconds: 0, nanoseconds: 214957300 }
         let start = Instant::now();
         let path: String = "./tests/big_files/A-3105.sort.gfa".to_string();
-        let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
-        println!("Convert file from GFA to GFA2 {:?}", start.elapsed());
-        match save_on_file(
-            ObjectType::GFA2(gfa2),
-            Some(format!("{}{}", path, "2")),
-        ) {
-            Ok(_) => println!("File converted and saved correctly!"),
+        match gfa_file_to_gfa2(path.clone()) {
             Err(why) => println!("Error: {}", why),
+            _ => {
+                println!("Convert file from GFA to GFA2 {:?}", start.elapsed())
+            }
         }
     }
 
@@ -283,13 +265,9 @@ mod test {
         ];
         for i in 0..4 {
             let path = FILES[i].to_string();
-            let gfa2: GFA2 = gfa_file_to_gfa2(path.clone());
-            match save_on_file(
-                ObjectType::GFA2(gfa2),
-                Some(format!("{}{}", path, "2")),
-            ) {
-                Ok(_) => println!("File converted and saved correctly!"),
+            match gfa_file_to_gfa2(path.clone()) {
                 Err(why) => println!("Error: {}", why),
+                _ => (),
             }
         }
     }
