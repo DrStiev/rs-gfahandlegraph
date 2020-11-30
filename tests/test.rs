@@ -161,6 +161,12 @@ fn mod_graph_from_medium_gfa() {
     remove 1000 small edges: Duration { seconds: 5, nanoseconds: 434688800 }
     remove 1 big edge (form of 1000 edges): Duration { seconds: 5, nanoseconds: 524103000 }
     */
+    /* PORTABLE PC
+    Create graph from file: Duration { seconds: 1, nanoseconds: 226037200 }
+    remove 1000 nodes from graph: Duration { seconds: 9, nanoseconds: 656815000 }
+    small edge: Duration { seconds: 9, nanoseconds: 262195800 }
+    big edge: Duration { seconds: 9, nanoseconds: 490590700 }
+     */
     let mut graph = read_medium_gfa2();
 
     let start = Instant::now();
