@@ -1,4 +1,6 @@
 use crate::gfa::{gfa1::GFA, gfa2::GFA2};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 
 // creates JSON or BINCODE OBject by serializing data structures
 pub enum GFAType {
@@ -57,6 +59,20 @@ pub fn to_yaml(gfa: GFAType) -> serde_yaml::Result<String> {
     }
 }
 
+pub fn to_hash(gfa: GFAType) -> Result<DefaultHasher, String> {
+    let mut hasher = DefaultHasher::new();
+    match gfa {
+        GFAType::GFA(g) => {
+            g.hash(&mut hasher);
+            Ok(hasher)
+        }
+        GFAType::GFA2(g) => {
+            g.hash(&mut hasher);
+            Ok(hasher)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -75,8 +91,12 @@ mod tests {
                     Ok(j) => println!("{}", j),
                     Err(why) => println!("Error: {}", why),
                 }
-                match to_yaml(GFAType::GFA2(file)) {
+                match to_yaml(GFAType::GFA2(file.clone())) {
                     Ok(y) => println!("{}", y),
+                    Err(why) => println!("Error: {}", why),
+                }
+                match to_hash(GFAType::GFA2(file)) {
+                    Ok(h) => println!("{:X}", h.finish()),
                     Err(why) => println!("Error: {}", why),
                 }
             }
