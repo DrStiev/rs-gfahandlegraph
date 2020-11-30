@@ -57,7 +57,7 @@ impl fmt::Display for GFA {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}{}{}{}{}",
+            "{}{}{}{}",
             self.headers
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
@@ -67,9 +67,9 @@ impl fmt::Display for GFA {
             self.links
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.containments
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            /*self.containments
+            .iter()
+            .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),*/
             self.paths
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
@@ -207,21 +207,21 @@ impl GFA {
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Header {
     pub version: BString,
-    pub optional: BString,
+    //pub optional: BString,
 }
 
 impl Header {
-    pub fn new(version: &[u8], optional: &[u8]) -> Self {
+    pub fn new(version: &[u8] /*optional: &[u8]*/) -> Self {
         Header {
             version: version.into(),
-            optional: optional.into(),
+            //optional: optional.into(),
         }
     }
 }
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "H\t{}\t{}", self.version, self.optional,)
+        write!(f, "H\t{}", self.version /*self.optional,*/,)
     }
 }
 
@@ -251,16 +251,16 @@ impl fmt::Display for Header {
 pub struct Segment {
     pub name: usize,
     pub sequence: BString,
-    pub optional: BString,
+    //pub optional: BString,
 }
 
 impl Segment {
     #[inline]
-    pub fn new(name: usize, sequence: &[u8], optional: &[u8]) -> Self {
+    pub fn new(name: usize, sequence: &[u8] /*optional: &[u8]*/) -> Self {
         Segment {
             name,
             sequence: BString::from(sequence),
-            optional: optional.into(),
+            //optional: optional.into(),
         }
     }
 }
@@ -269,12 +269,13 @@ impl fmt::Display for Segment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "S\t{}\t{}\t{}",
+            "S\t{}\t{}",
             self.name,
             self.sequence,
-            self.optional
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            /*self.optional
+            .iter()
+            .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+            */
         )
     }
 }
@@ -314,8 +315,8 @@ pub struct Link {
     pub from_orient: Orientation,
     pub to_segment: usize,
     pub to_orient: Orientation,
-    pub overlap: BString,
-    pub optional: BString,
+    //pub overlap: BString,
+    //pub optional: BString,
 }
 
 impl Link {
@@ -325,16 +326,16 @@ impl Link {
         from_orient: Orientation,
         to_segment: usize,
         to_orient: Orientation,
-        overlap: &[u8],
-        optional: &[u8],
+        //overlap: &[u8],
+        //optional: &[u8],
     ) -> Link {
         Link {
             from_segment,
             from_orient,
             to_segment,
             to_orient,
-            overlap: overlap.into(),
-            optional: optional.into(),
+            //overlap: overlap.into(),
+            //optional: optional.into(),
         }
     }
 }
@@ -343,13 +344,13 @@ impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "L\t{}\t{}\t{}\t{}\t{}\t{}",
+            "L\t{}\t{}\t{}\t{}",
             self.from_segment,
             self.from_orient,
             self.to_segment,
             self.to_orient,
-            self.overlap,
-            self.optional,
+            //self.overlap,
+            //self.optional,
         )
     }
 }
@@ -387,18 +388,20 @@ impl fmt::Display for Link {
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
 pub struct Containment {
-    pub container_name: usize,
-    pub container_orient: Orientation,
-    pub contained_name: usize,
-    pub contained_orient: Orientation,
-    pub pos: usize,
-    pub overlap: BString,
-    pub optional: BString,
-}
+    /*
+pub container_name: usize,
+pub container_orient: Orientation,
+pub contained_name: usize,
+pub contained_orient: Orientation,
+pub pos: usize,
+pub overlap: BString,
+pub optional: BString,
+*/}
 
+/*
 impl Containment {
     #[inline]
-    pub fn new(
+    pub fn new(/*
         container_name: usize,
         container_orient: Orientation,
         contained_name: usize,
@@ -406,8 +409,9 @@ impl Containment {
         pos: usize,
         overlap: &[u8],
         optional: &[u8],
-    ) -> Containment {
+         */) -> Containment {
         Containment {
+            /*
             container_name,
             container_orient,
             contained_name,
@@ -415,10 +419,12 @@ impl Containment {
             pos,
             overlap: overlap.into(),
             optional: optional.into(),
+             */
         }
     }
 }
-
+ */
+/*
 impl fmt::Display for Containment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -434,6 +440,7 @@ impl fmt::Display for Containment {
         )
     }
 }
+ */
 
 /// Returns a Path line
 ///
@@ -463,8 +470,8 @@ impl fmt::Display for Containment {
 pub struct Path {
     pub path_name: BString,
     pub segment_names: BString,
-    pub overlaps: BString,
-    pub optional: BString,
+    //pub overlaps: BString,
+    //pub optional: BString,
 }
 
 impl Path {
@@ -472,14 +479,14 @@ impl Path {
     pub fn new(
         path_name: BString,
         segment_names: BString,
-        overlaps: BString,
-        optional: &[u8],
+        //overlaps: BString,
+        //optional: &[u8],
     ) -> Self {
         Path {
             path_name,
             segment_names,
-            overlaps,
-            optional: optional.into(),
+            //overlaps,
+            //optional: optional.into(),
         }
     }
 
@@ -514,13 +521,15 @@ impl fmt::Display for Path {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "P\t{}\t{}\t{}\t{}",
+            "P\t{}\t{}",
             self.path_name,
             self.segment_names,
+            /*
             self.overlaps,
             self.optional
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
+             */
         )
     }
 }

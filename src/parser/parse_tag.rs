@@ -39,7 +39,6 @@ impl OptField {
     pub fn parse_tag(input: &[u8]) -> Option<Self> {
         let o_val: BString =
             RE.find(input).map(|s| BString::from(s.as_bytes()))?;
-
         Some(Self::new(o_val))
     }
 }

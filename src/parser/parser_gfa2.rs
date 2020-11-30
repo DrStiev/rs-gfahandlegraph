@@ -1,10 +1,11 @@
 /// This file provides the function to parse all the fields of a GFA2 file
 use crate::gfa::{gfa2::*, segment_id::*};
 use crate::parser::error::ParserTolerance;
-use crate::parser::{error::*, parse_tag::*};
+use crate::parser::error::*;
 
 use bstr::{BStr, BString, ByteSlice};
 use lazy_static::lazy_static;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 use regex::bytes::Regex;
 
 /// Builder struct for GFAParsers
@@ -177,7 +178,8 @@ impl GFA2Parser {
 
         let file = File::open(path.as_ref())?;
         let lines = BufReader::new(file).byte_lines();
-        let mut gfa2 = GFA2::new();
+
+        let mut gfa2 = GFA2::default();
 
         for line in lines {
             match self.parse_gfa_line(line?.as_ref()) {
@@ -186,7 +188,6 @@ impl GFA2Parser {
                 Err(err) => return Err(err),
             };
         }
-
         Ok(gfa2)
     }
 }
@@ -235,20 +236,14 @@ where
     input.next().ok_or(ParseFieldError::MissingFields)
 }
 
-lazy_static! {
-    static ref RE_HEADER: Regex =
-        Regex::new(r"(?-u)((VN:Z:2\.0)?\t?(TS:i:[+-]?[0-9]+)?)?").unwrap();
-    static ref RE_SEQUENCE: Regex = Regex::new(r"(?-u)\*|[!-~]+").unwrap();
-    static ref RE_LEN: Regex = Regex::new(r"(?-u)\-?[0-9]+").unwrap();
-    static ref RE_POS: Regex = Regex::new(r"(?-u)\-?[0-9]+\$?").unwrap();
-    static ref RE_ALIGNMENT: Regex =
-        Regex::new(r"(?-u)\*|([0-9]+[MDIP])+|(\-?[0-9]+(,\-?[0-9]+)*)")
-            .unwrap();
-    static ref RE_VAR: Regex = Regex::new(r"(?-u)\*|\-?[0-9]+").unwrap();
-    static ref RE_GROUP_REF: Regex =
-        Regex::new(r"(?-u)[!-~]+[+-]([ ][!-~]+[+-])*").unwrap();
-    static ref RE_GROUP_ID: Regex =
-        Regex::new(r"(?-u)[!-~]+([ ][!-~]+)*").unwrap();
+#[inline]
+fn parse_tag(input: &[u8]) -> Option<bool> {
+    lazy_static! {
+        static ref RE_TAG: Regex =
+            Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*")
+                .unwrap();
+    }
+    Some(RE_TAG.is_match(input))
 }
 
 /// function that parses the version of the header tag
@@ -259,6 +254,10 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_HEADER: Regex =
+            Regex::new(r"(?-u)((VN:Z:2\.0)?\t?(TS:i:[+-]?[0-9]+)?)?").unwrap();
+    }
     let next = next_field(input)?;
     RE_HEADER
         .find(next.as_ref())
@@ -281,12 +280,15 @@ impl Header {
         I::Item: AsRef<[u8]>,
     {
         let version = parse_header_tag(&mut input)?;
+        /*
         let mut tag: BString = OptionalFields::parse_tag(input)
             .into_iter()
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         tag.pop();
-        Ok(Header { version, tag })
+         */
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        Ok(Header { version, /*tag*/ })
     }
 }
 
@@ -298,6 +300,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_SEQUENCE: Regex = Regex::new(r"(?-u)\*|[!-~]+").unwrap();
+    }
     let next = next_field(input)?;
     RE_SEQUENCE
         .find(next.as_ref())
@@ -308,16 +313,26 @@ where
 /// function that parses the slen tag of the segment element
 /// ```<int> <- {-}[0-9]+```
 #[inline]
-fn parse_slen<I>(input: &mut I) -> ParserFieldResult<BString>
+fn parse_slen<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_LEN: Regex = Regex::new(r"(?-u)\-?[0-9]+").unwrap();
+    }
     let next = next_field(input)?;
+    /*
     RE_LEN
         .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Length"))
+     */
+    if RE_LEN.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Length"))
+    }
 }
 
 /// function that parses the SEGMENT element
@@ -335,18 +350,22 @@ impl Segment {
         I::Item: AsRef<[u8]>,
     {
         let id = usize::parse_next(&mut input, IdType::ID())?;
-        let len = parse_slen(&mut input)?;
+        parse_slen(&mut input)?;
+        //let len = parse_slen(&mut input)?;
         let sequence = parse_sequence(&mut input)?;
+        /*
         let mut tag: BString = OptionalFields::parse_tag(input)
             .into_iter()
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         tag.pop();
+         */
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
         Ok(Segment {
             id,
-            len,
+            //len,
             sequence,
-            tag,
+            //tag,
         })
     }
 }
@@ -354,31 +373,124 @@ impl Segment {
 /// function that parses the pos tag of the fragment element
 /// ```<pos> <- {-}[0-9]+{$}```
 #[inline]
-fn parse_pos<I>(input: &mut I) -> ParserFieldResult<BString>
+fn parse_pos<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_POS: Regex = Regex::new(r"(?-u)\-?[0-9]+\$?").unwrap();
+    }
     let next = next_field(input)?;
+    /*
     RE_POS
         .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Position"))
+     */
+    if RE_POS.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Position"))
+    }
 }
 
 /// function that parses the alignment tag
 /// ```<alignment> <- * | <trace> <- {-}[0-9]+(,{-}[0-9]+)* | <CIGAR> <- ([0-9]+[MDIP])+```
 #[inline]
-fn parse_alignment<I>(input: &mut I) -> ParserFieldResult<BString>
+fn parse_alignment<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_ALIGNMENT: Regex =
+            Regex::new(r"(?-u)\*|([0-9]+[MDIP])+|(\-?[0-9]+(,\-?[0-9]+)*)")
+                .unwrap();
+    }
     let next = next_field(input)?;
+    /*
     RE_ALIGNMENT
         .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Alignment"))
+     */
+    if RE_ALIGNMENT.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Length"))
+    }
+}
+
+#[inline]
+fn parse_id<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    lazy_static! {
+        static ref RE_ID: Regex = Regex::new(r"(?-u)[!-~]+").unwrap();
+    }
+    let next = next_field(input)?;
+    /*
+    RE_LEN
+        .find(next.as_ref())
+        .map(|s| BString::from(s.as_bytes()))
+        .ok_or(ParseFieldError::InvalidField("Length"))
+     */
+    if RE_ID.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("ID"))
+    }
+}
+
+#[inline]
+fn parse_opt_id<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    lazy_static! {
+        static ref RE_OPTIONAL_ID: Regex =
+            Regex::new(r"(?-u)[!-~]+|\*").unwrap();
+    }
+    let next = next_field(input)?;
+    /*
+    RE_LEN
+        .find(next.as_ref())
+        .map(|s| BString::from(s.as_bytes()))
+        .ok_or(ParseFieldError::InvalidField("Length"))
+     */
+    if RE_OPTIONAL_ID.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Optional ID"))
+    }
+}
+
+#[inline]
+fn parse_ref_id<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    lazy_static! {
+        static ref RE_REFERENCE_ID: Regex =
+            Regex::new(r"(?-u)[!-~]+[+-]").unwrap();
+    }
+    let next = next_field(input)?;
+    /*
+    RE_LEN
+        .find(next.as_ref())
+        .map(|s| BString::from(s.as_bytes()))
+        .ok_or(ParseFieldError::InvalidField("Length"))
+     */
+    if RE_REFERENCE_ID.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Reference ID"))
+    }
 }
 
 /// function that parses the FRAGMENT element
@@ -395,6 +507,7 @@ impl Fragment {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
+        /*
         let id = usize::parse_next(&mut input, IdType::ID())?;
         let ext_ref = usize::parse_next(&mut input, IdType::REFERENCEID())?;
         let sbeg = parse_pos(&mut input)?;
@@ -407,7 +520,18 @@ impl Fragment {
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         tag.pop();
+         */
+        parse_id(&mut input)?;
+        parse_ref_id(&mut input)?;
+        parse_pos(&mut input)?;
+        parse_pos(&mut input)?;
+        parse_pos(&mut input)?;
+        parse_pos(&mut input)?;
+        parse_alignment(&mut input)?;
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+
         Ok(Fragment {
+            /*
             id,
             ext_ref,
             sbeg,
@@ -416,6 +540,7 @@ impl Fragment {
             fend,
             alignment,
             tag,
+             */
         })
     }
 }
@@ -434,9 +559,11 @@ impl Edge {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        let id = usize::parse_next(&mut input, IdType::OPTIONALID())?;
+        parse_opt_id(&mut input)?;
+        //let id = usize::parse_next(&mut input, IdType::OPTIONALID())?;
         let sid1 = usize::parse_next(&mut input, IdType::OPTIONALID())?;
         let sid2 = usize::parse_next(&mut input, IdType::OPTIONALID())?;
+        /*
         let beg1 = parse_pos(&mut input)?;
         let end1 = parse_pos(&mut input)?;
         let beg2 = parse_pos(&mut input)?;
@@ -447,16 +574,26 @@ impl Edge {
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         tag.pop();
+         */
+        parse_pos(&mut input)?;
+        parse_pos(&mut input)?;
+        parse_pos(&mut input)?;
+        parse_pos(&mut input)?;
+        parse_alignment(&mut input)?;
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+
         Ok(Edge {
-            id,
+            //id,
             sid1,
             sid2,
+            /*
             beg1,
             end1,
             beg2,
             end2,
             alignment,
             tag,
+             */
         })
     }
 }
@@ -464,16 +601,26 @@ impl Edge {
 /// function that parses the (var)int tag of the gap element
 /// ```<int> <- * | {-}[0-9]+```
 #[inline]
-fn parse_var<I>(input: &mut I) -> ParserFieldResult<BString>
+fn parse_var<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_VAR: Regex = Regex::new(r"(?-u)\*|\-?[0-9]+").unwrap();
+    }
     let next = next_field(input)?;
+    /*
     RE_VAR
         .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Variance"))
+     */
+    if RE_VAR.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Variance"))
+    }
 }
 
 /// function that parses the GAP element
@@ -490,6 +637,7 @@ impl Gap {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
+        /*
         let id = usize::parse_next(&mut input, IdType::OPTIONALID())?;
         let sid1 = usize::parse_next(&mut input, IdType::REFERENCEID())?;
         let sid2 = usize::parse_next(&mut input, IdType::REFERENCEID())?;
@@ -500,13 +648,23 @@ impl Gap {
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         tag.pop();
+         */
+        parse_opt_id(&mut input)?;
+        parse_ref_id(&mut input)?;
+        parse_ref_id(&mut input)?;
+        parse_slen(&mut input)?;
+        parse_var(&mut input)?;
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+
         Ok(Gap {
+            /*
             id,
             sid1,
             sid2,
             dist,
             var,
             tag,
+             */
         })
     }
 }
@@ -519,26 +677,41 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_GROUP_REF: Regex =
+            Regex::new(r"(?-u)[!-~]+[+-]([ ][!-~]+[+-])*").unwrap();
+    }
     let next = next_field(input)?;
     RE_GROUP_REF
         .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Reference Group Id"))
+        .ok_or(ParseFieldError::InvalidField("Reference Group ID"))
 }
 
 /// function that parses the id tag og the o group element
 /// ```<id> <- [!-~]+```
 #[inline]
-fn parse_group_id<I>(input: &mut I) -> ParserFieldResult<BString>
+fn parse_group_id<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_GROUP_ID: Regex =
+            Regex::new(r"(?-u)[!-~]+([ ][!-~]+)*").unwrap();
+    }
     let next = next_field(input)?;
+    /*
     RE_GROUP_ID
         .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Id Group Id"))
+     */
+    if RE_GROUP_ID.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Group ID"))
+    }
 }
 
 /// function that parses the GROUPO element
@@ -557,12 +730,18 @@ impl GroupO {
     {
         let id = BString::parse_next(&mut input, IdType::OPTIONALID())?;
         let var_field = parse_group_ref(&mut input)?;
+        /*
         let mut tag: BString = OptionalFields::parse_tag(input)
             .into_iter()
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         tag.pop();
-        Ok(GroupO { id, var_field, tag })
+         */
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        Ok(GroupO {
+            id,
+            var_field, /*tag*/
+        })
     }
 }
 
@@ -580,6 +759,7 @@ impl GroupU {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
+        /*
         let id = BString::parse_next(&mut input, IdType::OPTIONALID())?;
         let var_field = parse_group_id(&mut input)?;
         let mut tag: BString = OptionalFields::parse_tag(input)
@@ -587,7 +767,11 @@ impl GroupU {
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         tag.pop();
-        Ok(GroupU { id, var_field, tag })
+         */
+        parse_opt_id(&mut input)?;
+        parse_group_id(&mut input)?;
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        Ok(GroupU { /*id, var_field, tag*/ })
     }
 }
 
@@ -596,6 +780,138 @@ mod tests {
     use super::*;
     use time::Instant;
 
+    #[test]
+    #[ignore]
+    fn parse_big_file() {
+        // Create gfa from file: Duration { seconds: 418, nanoseconds: 278731700 } (with find)
+        // Create gfa from file: Duration { seconds: 398, nanoseconds: 194378000 } (with is_match)
+        let parser = GFA2Parser::default();
+        let start = Instant::now();
+        let _gfa2: GFA2 = parser
+            .parse_file("./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2")
+            .unwrap();
+        println!("Create gfa from file: {:?}", start.elapsed());
+    }
+
+    #[test]
+    fn parse_med_file() {
+        // Create gfa from file: Duration { seconds: 0, nanoseconds: 729470500 } (with is_match)
+        let parser = GFA2Parser::default();
+        let start = Instant::now();
+        let _gfa2: GFA2 =
+            parser.parse_file("./tests/big_files/test.gfa2").unwrap();
+        println!("Create gfa from file: {:?}", start.elapsed());
+    }
+
+    #[test]
+    #[ignore]
+    fn parse_big_file1() {
+        // Create gfa from file: Duration { seconds: 462, nanoseconds: 820784800 } (with is_match)
+        let parser = GFA2Parser::default();
+        let start = Instant::now();
+        let _gfa2: GFA2 = parser
+            .parse_file("./tests/big_files/ape-4-0.10b.gfa2")
+            .unwrap();
+        println!("Create gfa from file: {:?}", start.elapsed());
+    }
+
+    #[test]
+    fn can_parse_header() {
+        let header = "VN:Z:2.0\tHD:Z:20.20\tuR:i:AAAAAAAA";
+        let header_ = Header {
+            version: "VN:Z:2.0".into(),
+        };
+
+        let fields = header.split_terminator('\t');
+        match Header::parse_line(fields) {
+            Err(why) => println!("Error: {}", why),
+            Ok(h) => assert_eq!(h, header_),
+        }
+    }
+
+    #[test]
+    fn can_parse_segment() {
+        let segment = "A\t10\tAAAAAAACGT";
+        let segment_ = Segment {
+            id: convert_to_usize(b"A").unwrap(),
+            sequence: "AAAAAAACGT".into(),
+        };
+
+        let fields = segment.split_terminator('\t');
+        match Segment::parse_line(fields) {
+            Err(why) => println!("Error: {}", why),
+            Ok(s) => assert_eq!(s, segment_),
+        }
+    }
+
+    #[test]
+    fn can_parse_fragment() {
+        let fragment = "15\tr1-\t10\t10\t20\t20\t*";
+        let fragment_: Fragment = Fragment {};
+
+        let fields = fragment.split_terminator('\t');
+        match Fragment::parse_line(fields) {
+            Err(why) => println!("Error: {}", why),
+            Ok(f) => assert_eq!(f, fragment_),
+        }
+    }
+
+    #[test]
+    fn can_parse_edge() {
+        let edge = "*\t2+\t45+\t2531\t2591$\t0\t60\t60M";
+        let edge_: Edge = Edge {
+            sid1: convert_to_usize(b"2+").unwrap(),
+            sid2: convert_to_usize(b"45+").unwrap(),
+        };
+
+        let fields = edge.split_terminator('\t');
+        match Edge::parse_line(fields) {
+            Err(why) => println!("Error: {}", why),
+            Ok(e) => assert_eq!(e, edge_),
+        }
+    }
+
+    #[test]
+    fn can_parse_gap() {
+        let gap = "g1\t7+\t22+\t10\t*";
+        let gap_: Gap = Gap {};
+
+        let fields = gap.split_terminator('\t');
+        match Gap::parse_line(fields) {
+            Err(why) => println!("Error: {}", why),
+            Ok(g) => assert_eq!(g, gap_),
+        }
+    }
+
+    #[test]
+    fn can_parse_ogroup() {
+        let ogroup =
+            "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-\tAZ:i:87905\tHH:f:BAR";
+        let ogroup_: GroupO = GroupO {
+            id: "P1".into(),
+            var_field: "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
+        };
+
+        let fields = ogroup.split_terminator('\t');
+        match GroupO::parse_line(fields) {
+            Err(why) => println!("Error {}", why),
+            Ok(o) => assert_eq!(o, ogroup_),
+        }
+    }
+
+    #[test]
+    fn can_parse_ugroup() {
+        let ugroup = "SG1\t16 24 SG2 51_24 16_24";
+        let ugroup_: GroupU = GroupU {};
+
+        let fields = ugroup.split_terminator('\t');
+        match GroupU::parse_line(fields) {
+            Err(why) => println!("Error: {}", why),
+            Ok(u) => assert_eq!(u, ugroup_),
+        }
+    }
+
+    /*
     #[test]
     fn blank_header() {
         let header = "";
@@ -848,16 +1164,5 @@ mod tests {
             .unwrap();
         println!("{}", gfa2);
     }
-
-    #[test]
-    #[ignore]
-    fn parse_big_file() {
-        // Create gfa from file: Duration { seconds: 418, nanoseconds: 278731700 }
-        let parser = GFA2Parser::default();
-        let start = Instant::now();
-        let _gfa2: GFA2 = parser
-            .parse_file("./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2")
-            .unwrap();
-        println!("Create gfa from file: {:?}", start.elapsed());
-    }
+     */
 }

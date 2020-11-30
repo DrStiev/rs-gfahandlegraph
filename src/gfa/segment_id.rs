@@ -58,21 +58,21 @@ impl SegmentId for usize {
                 if RE_ID.is_match(input) {
                     convert_to_usize(input)
                 } else {
-                    panic!("Error! the reference tag it's not correct")
+                    panic!("Error! the ID tag it's not correct")
                 }
             }
             IdType::OPTIONALID() => {
                 if RE_OPTIONAL_ID.is_match(input) {
                     convert_to_usize(input)
                 } else {
-                    panic!("Error! the reference tag it's not correct")
+                    panic!("Error! the Optional ID tag it's not correct")
                 }
             }
             IdType::REFERENCEID() => {
                 if RE_REFERENCE_ID.is_match(input) {
                     convert_to_usize(input)
                 } else {
-                    panic!("Error! the reference tag it's not correct")
+                    panic!("Error! the reference ID tag it's not correct")
                 }
             }
         }

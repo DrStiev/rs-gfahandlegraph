@@ -1,5 +1,5 @@
 pub mod error;
-pub mod parse_tag;
+//pub mod parse_tag;
 pub mod parser_gfa1;
 pub mod parser_gfa2;
 

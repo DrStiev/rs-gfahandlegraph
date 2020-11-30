@@ -1,6 +1,6 @@
 /// This file provides the function to parse all the fields of a GFA file
 use crate::gfa::{gfa1::*, orientation::Orientation, segment_id::*};
-use crate::parser::{error::*, parse_tag::*};
+use crate::parser::error::*;
 
 use bstr::{BStr, BString, ByteSlice};
 use lazy_static::lazy_static;
@@ -181,7 +181,7 @@ impl GFAParser {
 
         let file = File::open(path.as_ref())?;
         let lines = BufReader::new(file).byte_lines();
-        let mut gfa = GFA::new();
+        let mut gfa = GFA::default();
 
         for line in lines {
             match self.parse_gfa_line(line?.as_ref()) {
@@ -240,15 +240,14 @@ where
     Orientation::parse_error(parsed)
 }
 
-lazy_static! {
-    static ref RE_HEADER: Regex = Regex::new(r"(?-u)(VN:Z:1\.0)?").unwrap();
-    static ref RE_OVERLAP: Regex =
-        Regex::new(r"(?-u)\*|([0-9]+[MIDNSHPX=])+").unwrap();
-    static ref RE_SEQUENCE: Regex = Regex::new(r"(?-u)\*|[A-Za-z=.]+").unwrap();
-    static ref RE_PATH_OVERLAP: Regex =
-        Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*").unwrap();
-    static ref RE_SEGMENT_NAMES: Regex =
-        Regex::new(r"(?-u)[!-~]+(,[!-~]+)*").unwrap();
+#[inline]
+fn parse_tag(input: &[u8]) -> Option<bool> {
+    lazy_static! {
+        static ref RE_TAG: Regex =
+            Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*")
+                .unwrap();
+    }
+    Some(RE_TAG.is_match(input))
 }
 
 /// function that parses the version of the header tag
@@ -259,6 +258,9 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_HEADER: Regex = Regex::new(r"(?-u)(VN:Z:1\.0)?").unwrap();
+    }
     let next = next_field(input)?;
     RE_HEADER
         .find(next.as_ref())
@@ -279,28 +281,44 @@ impl Header {
         I::Item: AsRef<[u8]>,
     {
         let version = parse_header_tag(&mut input)?;
+        /*
         let mut optional: BString = OptionalFields::parse_tag(input)
             .into_iter()
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         optional.pop();
-        Ok(Header { version, optional })
+         */
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        Ok(Header {
+            version, /*optional*/
+        })
     }
 }
 
 /// function that parses the overlap tag
 /// ```<overlap> <- * | <CIGAR> <- ([0-9]+[MIDNSHPX=])+```
 #[inline]
-fn parse_overlap<I>(input: &mut I) -> ParserFieldResult<BString>
+fn parse_overlap<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_OVERLAP: Regex =
+            Regex::new(r"(?-u)\*|([0-9]+[MIDNSHPX=])+").unwrap();
+    }
     let next = next_field(input)?;
+    /*
     RE_OVERLAP
         .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Overlap"))
+     */
+    if RE_OVERLAP.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Overlap"))
+    }
 }
 
 /// function that parses the sequence tag of the segment element
@@ -311,6 +329,10 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_SEQUENCE: Regex =
+            Regex::new(r"(?-u)\*|[A-Za-z=.]+").unwrap();
+    }
     let next = next_field(input)?;
     RE_SEQUENCE
         .find(next.as_ref())
@@ -332,15 +354,18 @@ impl Segment {
     {
         let name = usize::parse_next(&mut input, IdType::ID())?;
         let sequence = parse_sequence(&mut input)?;
+        /*
         let mut optional: BString = OptionalFields::parse_tag(input)
             .into_iter()
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         optional.pop();
+         */
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
         Ok(Segment {
             name,
             sequence,
-            optional,
+            //optional,
         })
     }
 }
@@ -361,20 +386,75 @@ impl Link {
         let from_orient = parse_orientation(&mut input)?;
         let to_segment = usize::parse_next(&mut input, IdType::ID())?;
         let to_orient = parse_orientation(&mut input)?;
+        /*
         let overlap = parse_overlap(&mut input)?;
         let mut optional: BString = OptionalFields::parse_tag(input)
             .into_iter()
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         optional.pop();
+         */
+        parse_overlap(&mut input)?;
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
         Ok(Link {
             from_segment,
             from_orient,
             to_segment,
             to_orient,
-            overlap,
-            optional,
+            //overlap,
+            //optional,
         })
+    }
+}
+
+#[inline]
+fn parse_id<I>(input: &mut I) -> ParserFieldResult<bool>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    lazy_static! {
+        static ref RE_ID: Regex = Regex::new(r"(?-u)[!-~]+").unwrap();
+    }
+    let next = next_field(input)?;
+    if RE_ID.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("ID"))
+    }
+}
+
+#[inline]
+fn parse_orient<I>(input: &mut I) -> ParserFieldResult<bool>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    lazy_static! {
+        static ref RE_ORIENTATION: Regex = Regex::new(r"(?-u)[+-]").unwrap();
+    }
+    let next = next_field(input)?;
+    if RE_ORIENTATION.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Orientation"))
+    }
+}
+
+#[inline]
+fn parse_pos<I>(input: &mut I) -> ParserFieldResult<bool>
+where
+    I: Iterator,
+    I::Item: AsRef<[u8]>,
+{
+    lazy_static! {
+        static ref RE_POS: Regex = Regex::new(r"(?-u)[0-9]*").unwrap();
+    }
+    let next = next_field(input)?;
+    if RE_POS.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Position"))
     }
 }
 
@@ -390,6 +470,7 @@ impl Containment {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
+        /*
         let container_name = usize::parse_next(&mut input, IdType::ID())?;
         let container_orient = parse_orientation(&mut input)?;
         let contained_name = usize::parse_next(&mut input, IdType::ID())?;
@@ -402,7 +483,17 @@ impl Containment {
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         optional.pop();
+         */
+        parse_id(&mut input)?;
+        parse_orient(&mut input)?;
+        parse_id(&mut input)?;
+        parse_orient(&mut input)?;
+        parse_pos(&mut input)?;
+        parse_overlap(&mut input)?;
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+
         Ok(Containment {
+            /*
             container_name,
             container_orient,
             contained_name,
@@ -410,6 +501,7 @@ impl Containment {
             overlap,
             pos,
             optional,
+             */
         })
     }
 }
@@ -417,16 +509,28 @@ impl Containment {
 /// function that parses the overlap tag
 /// ```<overlap> <- * | <CIGAR> <- [0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*```
 #[inline]
-fn parse_path_overlap<I>(input: &mut I) -> ParserFieldResult<BString>
+fn parse_path_overlap<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_PATH_OVERLAP: Regex =
+            Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*")
+                .unwrap();
+    }
     let next = next_field(input)?;
+    /*
     RE_PATH_OVERLAP
         .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Overlap"))
+     */
+    if RE_PATH_OVERLAP.is_match(next.as_ref()) {
+        Ok(true)
+    } else {
+        Err(ParseFieldError::InvalidField("Overlap"))
+    }
 }
 
 /// function that parses the segment names tag
@@ -437,6 +541,10 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    lazy_static! {
+        static ref RE_SEGMENT_NAMES: Regex =
+            Regex::new(r"(?-u)[!-~]+(,[!-~]+)*").unwrap();
+    }
     let next = next_field(input)?;
     RE_SEGMENT_NAMES
         .find(next.as_ref())
@@ -460,17 +568,21 @@ impl Path {
         // just always BString
         let path_name = BString::parse_next(&mut input, IdType::ID())?;
         let segment_names = parse_segment_names(&mut input)?;
+        /*
         let overlaps = parse_path_overlap(&mut input)?;
         let mut optional: BString = OptionalFields::parse_tag(input)
             .into_iter()
             .map(|x| BString::from(x.to_string() + "\t"))
             .collect::<BString>();
         optional.pop();
+         */
+        parse_path_overlap(&mut input)?;
+        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
         Ok(Path {
             path_name,
             segment_names,
-            overlaps,
-            optional,
+            //overlaps,
+            //optional,
         })
     }
 }
@@ -480,6 +592,111 @@ mod tests {
     use super::*;
     use time::Instant;
 
+    #[test]
+    #[ignore]
+    fn parse_big_file() {
+        // Create gfa from file: Duration { seconds: 432, nanoseconds: 428425000 } (with find)
+        // Create gfa from file: Duration { seconds: 423, nanoseconds: 311465600 } (with is_match)
+        let parser = GFAParser::default();
+        let start = Instant::now();
+        let _gfa2: GFA = parser
+            .parse_file("./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa")
+            .unwrap();
+        println!("Create gfa from file: {:?}", start.elapsed());
+    }
+
+    #[test]
+    fn parse_med_file() {
+        // Create gfa from file: Duration { seconds: 0, nanoseconds: 271638800 } (with is_match)
+        let parser = GFAParser::default();
+        let start = Instant::now();
+        let _gfa2: GFA =
+            parser.parse_file("./tests/big_files/test.gfa").unwrap();
+        println!("Create gfa from file: {:?}", start.elapsed());
+    }
+
+    #[test]
+    #[ignore]
+    fn parse_big_file1() {
+        // Create gfa from file: Duration { seconds: 535, nanoseconds: 662080200 } (with is_match)
+        let parser = GFAParser::default();
+        let start = Instant::now();
+        let _gfa2: GFA = parser
+            .parse_file("./tests/big_files/ape-4-0.10b.gfa")
+            .unwrap();
+        println!("Create gfa from file: {:?}", start.elapsed());
+    }
+
+    #[test]
+    fn parse_header() {
+        let header = "VN:Z:1.0";
+        let header_ = Header {
+            version: "VN:Z:1.0".into(),
+        };
+        let fields = header.split_terminator('\t');
+        match Header::parse_line(fields) {
+            Ok(h) => assert_eq!(h, header_),
+            Err(why) => println!("Error: {}", why),
+        }
+    }
+    #[test]
+    fn can_parse_segment() {
+        let segment = "A\tAAAAAAACGT";
+        let segment_: Segment = Segment {
+            name: convert_to_usize(b"A").unwrap(),
+            sequence: "AAAAAAACGT".into(),
+        };
+
+        let fields = segment.split_terminator('\t');
+        match Segment::parse_line(fields) {
+            Err(why) => println!("Error: {}", why),
+            Ok(s) => assert_eq!(s, segment_),
+        }
+    }
+
+    #[test]
+    fn can_parse_link() {
+        let link = "15\t-\t10\t+\t20M";
+        let link_: Link = Link {
+            from_segment: 15,
+            from_orient: Orientation::Backward,
+            to_segment: 10,
+            to_orient: Orientation::Forward,
+        };
+        let fields = link.split_terminator('\t');
+        match Link::parse_line(fields) {
+            Err(why) => println!("Error: {}", why),
+            Ok(l) => assert_eq!(l, link_),
+        }
+    }
+
+    #[test]
+    fn can_parse_containments() {
+        let containment = "15\t-\t10\t+\t4\t20M";
+        let containment_: Containment = Containment {};
+
+        let fields = containment.split_terminator('\t');
+        match Containment::parse_line(fields) {
+            Err(why) => println!("Error: {}", why),
+            Ok(c) => assert_eq!(c, containment_),
+        }
+    }
+
+    #[test]
+    fn can_parse_path() {
+        let path = "14\t11+,12-,13+\t4M,5M";
+        let path_: Path = Path {
+            path_name: "14".into(),
+            segment_names: "11+,12-,13+".into(),
+        };
+
+        let fields = path.split_terminator('\t');
+        match Path::parse_line(fields) {
+            Err(why) => println!("Error: {}", why),
+            Ok(p) => assert_eq!(p, path_),
+        }
+    }
+    /*
     #[test]
     fn blank_header() {
         let header = "";
@@ -647,16 +864,5 @@ mod tests {
             }
         }
     }
-
-    #[test]
-    #[ignore]
-    fn parse_big_file() {
-        // Create gfa from file: Duration { seconds: 432, nanoseconds: 428425000 }
-        let parser = GFAParser::default();
-        let start = Instant::now();
-        let _gfa2: GFA = parser
-            .parse_file("./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa")
-            .unwrap();
-        println!("Create gfa from file: {:?}", start.elapsed());
-    }
+     */
 }

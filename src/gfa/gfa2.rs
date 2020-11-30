@@ -66,28 +66,28 @@ impl fmt::Display for GFA2 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}{}{}{}{}{}{}",
+            "{}{}{}{}",
             self.headers
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
             self.segments
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.fragments
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            /*self.fragments
+            .iter()
+            .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),*/
             self.edges
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.gaps
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            /*self.gaps
+            .iter()
+            .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),*/
             self.groups_o
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            self.groups_u
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
+            /*self.groups_u
+            .iter()
+            .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),*/
         )
     }
 }
@@ -252,21 +252,21 @@ impl GFA2 {
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Header {
     pub version: BString,
-    pub tag: BString,
+    //pub tag: BString,
 }
 
 impl Header {
-    pub fn new(version: &[u8], tag: &[u8]) -> Self {
+    pub fn new(version: &[u8] /*tag: &[u8]*/) -> Self {
         Header {
             version: version.into(),
-            tag: tag.into(),
+            //tag: tag.into(),
         }
     }
 }
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "H\t{}\t{}", self.version, self.tag,)
+        write!(f, "H\t{}", self.version /*self.tag,*/,)
     }
 }
 
@@ -297,19 +297,22 @@ impl fmt::Display for Header {
 )]
 pub struct Segment {
     pub id: usize,
-    pub len: BString,
+    //pub len: BString,
     pub sequence: BString,
-    pub tag: BString,
+    //pub tag: BString,
 }
 
 impl Segment {
     #[inline]
-    pub fn new(id: usize, len: &[u8], sequence: &[u8], tag: &[u8]) -> Self {
+    pub fn new(
+        id: usize,
+        /*len: &[u8],*/ sequence: &[u8], /*tag: &[u8]*/
+    ) -> Self {
         Segment {
             id,
-            len: BString::from(len),
+            //len: BString::from(len),
             sequence: BString::from(sequence),
-            tag: BString::from(tag),
+            //tag: BString::from(tag),
         }
     }
 }
@@ -318,8 +321,8 @@ impl fmt::Display for Segment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "S\t{}\t{}\t{}\t{}",
-            self.id, self.len, self.sequence, self.tag,
+            "S\t{}\t{}",
+            self.id, /*self.len,*/ self.sequence, /*self.tag,*/
         )
     }
 }
@@ -361,19 +364,20 @@ impl fmt::Display for Segment {
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
 pub struct Fragment {
-    pub id: usize,
-    pub ext_ref: usize, // orientation as final char (+-)
-    pub sbeg: BString,
-    pub send: BString, // dollar character as optional final char
-    pub fbeg: BString,
-    pub fend: BString,
-    pub alignment: BString, // alignment field can be *, trace or CIGAR
-    pub tag: BString,
-}
-
+    /*
+pub id: usize,
+pub ext_ref: usize, // orientation as final char (+-)
+pub sbeg: BString,
+pub send: BString, // dollar character as optional final char
+pub fbeg: BString,
+pub fend: BString,
+pub alignment: BString, // alignment field can be *, trace or CIGAR
+pub tag: BString,
+ */}
+/*
 impl Fragment {
     #[inline]
-    pub fn new(
+    pub fn new(/*
         id: usize,
         ext_ref: usize,
         sbeg: &[u8],
@@ -382,8 +386,9 @@ impl Fragment {
         fend: &[u8],
         alignment: &[u8],
         tag: &[u8],
-    ) -> Self {
+         */) -> Self {
         Fragment {
+            /*
             id,
             ext_ref,
             sbeg: sbeg.into(),
@@ -392,10 +397,12 @@ impl Fragment {
             fend: fend.into(),
             alignment: alignment.into(),
             tag: tag.into(),
+             */
         }
     }
 }
-
+ */
+/*
 impl fmt::Display for Fragment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let len = self.ext_ref.to_string().len() - 2;
@@ -421,6 +428,7 @@ impl fmt::Display for Fragment {
         )
     }
 }
+ */
 
 /// Returns an Edge line
 ///
@@ -461,40 +469,46 @@ impl fmt::Display for Fragment {
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
 pub struct Edge {
-    pub id: usize,   // optional id, can be either * or id tag
+    //pub id: usize,   // optional id, can be either * or id tag
     pub sid1: usize, // orientation as final char (+-)
     pub sid2: usize, // orientation as final char (+-)
-    pub beg1: BString,
-    pub end1: BString, // dollar character as optional final char
-    pub beg2: BString,
-    pub end2: BString, // dollar character as optional final char
-    pub alignment: BString, // alignment field can be *, trace or CIGAR
-    pub tag: BString,
+                     /*
+                     pub beg1: BString,
+                     pub end1: BString, // dollar character as optional final char
+                     pub beg2: BString,
+                     pub end2: BString, // dollar character as optional final char
+                     pub alignment: BString, // alignment field can be *, trace or CIGAR
+                     pub tag: BString,
+                      */
 }
 
 impl Edge {
     #[inline]
     pub fn new(
-        id: usize,
+        //id: usize,
         sid1: usize,
         sid2: usize,
+        /*
         beg1: &[u8],
         end1: &[u8],
         beg2: &[u8],
         end2: &[u8],
         alignment: &[u8],
         tag: &[u8],
+         */
     ) -> Self {
         Edge {
-            id,
+            //id,
             sid1,
             sid2,
+            /*
             beg1: beg1.into(),
             end1: end1.into(),
             beg2: beg2.into(),
             end2: end2.into(),
             alignment: alignment.into(),
             tag: tag.into(),
+             */
         }
     }
 }
@@ -519,18 +533,20 @@ impl fmt::Display for Edge {
 
         write!(
             f,
-            "E\t{}\t{}{}\t{}{}\t{}\t{}\t{}\t{}\t{}\t{}",
-            self.id,
+            "E\t{}{}\t{}{}",
+            //self.id,
             sid1,
             sgn1,
             sid2,
             sgn2,
+            /*
             self.beg1,
             self.end1,
             self.beg2,
             self.end2,
             self.alignment,
             self.tag,
+             */
         )
     }
 }
@@ -566,35 +582,41 @@ impl fmt::Display for Edge {
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
 pub struct Gap {
-    pub id: usize,   // optional id, can be either * or id tag
-    pub sid1: usize, // orientation as final char (+-)
-    pub sid2: usize, // orientation as final char (+-)
-    pub dist: BString,
-    pub var: BString,
-    pub tag: BString,
-}
-
+    /*
+pub id: usize,   // optional id, can be either * or id tag
+pub sid1: usize, // orientation as final char (+-)
+pub sid2: usize, // orientation as final char (+-)
+pub dist: BString,
+pub var: BString,
+pub tag: BString,
+ */}
+/*
 impl Gap {
     #[inline]
-    pub fn new(
+    pub fn new(/*
         id: usize,
         sid1: usize,
         sid2: usize,
         dist: &[u8],
         var: &[u8],
         tag: &[u8],
-    ) -> Self {
+         */) -> Self {
         Gap {
+            /*
             id,
             sid1,
             sid2,
             dist: dist.into(),
             var: var.into(),
             tag: tag.into(),
+             */
         }
     }
 }
 
+ */
+
+/*
 impl fmt::Display for Gap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let len = self.sid1.to_string().len() - 2;
@@ -620,6 +642,7 @@ impl fmt::Display for Gap {
         )
     }
 }
+ */
 
 /// Returns an O-Group line
 ///
@@ -649,16 +672,16 @@ pub struct GroupO {
     // this field can implment or not an optional tag (using * char)
     pub id: BString, // optional id, can be either * or id tag
     pub var_field: BString, // "array" of ref (from 1 to n)
-    pub tag: BString,
+                     //pub tag: BString,
 }
 
 impl GroupO {
     #[inline]
-    pub fn new(id: BString, var_field: BString, tag: &[u8]) -> Self {
+    pub fn new(id: BString, var_field: BString /*tag: &[u8]*/) -> Self {
         GroupO {
             id,
             var_field,
-            tag: tag.into(),
+            //tag: tag.into(),
         }
     }
 
@@ -690,7 +713,7 @@ impl GroupO {
 
 impl fmt::Display for GroupO {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "O\t{}\t{}\t{}", self.id, self.var_field, self.tag,)
+        write!(f, "O\t{}\t{}", self.id, self.var_field /*self.tag,*/,)
     }
 }
 
@@ -718,44 +741,51 @@ impl fmt::Display for GroupO {
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
 pub struct GroupU {
-    // O-Group and U-Group are different only for one field
-    // this field can implment or not an optional tag (using * char)
-    pub id: BString, // optional id, can be either * or id tag
-    pub var_field: BString, // "array" of id (from 1 to n)
-    pub tag: BString,
-}
-
+    /*
+// O-Group and U-Group are different only for one field
+// this field can implment or not an optional tag (using * char)
+pub id: BString, // optional id, can be either * or id tag
+pub var_field: BString, // "array" of id (from 1 to n)
+pub tag: BString,
+ */}
+/*
 impl GroupU {
     #[inline]
-    pub fn new(id: BString, var_field: BString, tag: &[u8]) -> Self {
+    pub fn new(/*id: BString, var_field: BString, tag: &[u8]*/) -> Self {
         GroupU {
+            /*
             id,
             var_field,
             tag: tag.into(),
+             */
         }
     }
+    /*
+       /// parses (and copies) a segment ID in the group segment list
+       #[inline]
+       fn parse_segment_id(input: &[u8]) -> Option<usize> {
+           let id = usize::parse_id(IdType::OPTIONALID(), input)?;
+           Some(id)
+       }
 
-    /// parses (and copies) a segment ID in the group segment list
-    #[inline]
-    fn parse_segment_id(input: &[u8]) -> Option<usize> {
-        let id = usize::parse_id(IdType::OPTIONALID(), input)?;
-        Some(id)
-    }
-
-    /// Produces an iterator over the usize segments of the given group
-    #[inline]
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = usize> + 'a {
-        self.var_field
-            .split_str(b" ")
-            .filter_map(Self::parse_segment_id)
-    }
+       /// Produces an iterator over the usize segments of the given group
+       #[inline]
+       pub fn iter<'a>(&'a self) -> impl Iterator<Item = usize> + 'a {
+           self.var_field
+               .split_str(b" ")
+               .filter_map(Self::parse_segment_id)
+       }
+    */
 }
 
+ */
+/*
 impl fmt::Display for GroupU {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "U\t{}\t{}\t{}", self.id, self.var_field, self.tag,)
     }
 }
+ */
 
 #[cfg(test)]
 mod test {
@@ -766,13 +796,14 @@ mod test {
         let ogroup_: GroupO = GroupO::new(
             "P1".into(),
             "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-            b"",
+            //b"",
         );
         for (name, orientation) in ogroup_.iter() {
             println!("{}{}", name, orientation);
         }
     }
 
+    /*
     #[test]
     fn u_group_iter() {
         let ugroup_: GroupU =
@@ -781,4 +812,5 @@ mod test {
             println!("{}", name);
         }
     }
+     */
 }
