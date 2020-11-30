@@ -16,6 +16,7 @@ pub mod path;
 pub use self::graph::HashGraph;
 pub use self::node::Node;
 pub use self::path::{Path, PathId, PathStep};
+use std::sync::Mutex;
 
 impl<'a> AllHandles for &'a HashGraph {
     type Handles = NodeIdRefHandles<
@@ -240,6 +241,7 @@ impl SubtractiveHandleGraph for HashGraph {
                     }
                 }
             }
+
             for i in r.iter() {
                 if let Some(right) = self.graph.get_mut(&i.id()) {
                     if i.is_reverse() {
@@ -266,7 +268,6 @@ impl SubtractiveHandleGraph for HashGraph {
                     self.paths.remove(&path);
                 }
             }
-
             Ok(true)
         } else {
             Err(GraphError::NodeNotExist(node_id.to_string()))

@@ -189,19 +189,11 @@ impl GFAParser {
             match self.parse_gfa_line(line.unwrap().as_ref()) {
                 Ok(parsed) => gfa.lock().unwrap().insert_line(parsed),
                 Err(err) if err.can_safely_continue(&self.tolerance) => (),
-                Err(err) => panic!("Error: {}", err), // this line should return the error not panic, but for now it's ok
+                // this line should return the error not panic, but for now it's ok
+                Err(err) => panic!("Error: {}", err),
             }
         });
-        /*
-               for line in lines {
-                   match self.parse_gfa_line(line?.as_ref()) {
-                       Ok(parsed) => gfa.insert_line(parsed),
-                       Err(err) if err.can_safely_continue(&self.tolerance) => (),
-                       Err(err) => return Err(err),
-                   };
-               }
 
-        */
         Ok(gfa.into_inner().unwrap())
     }
 }
@@ -292,26 +284,17 @@ impl Header {
         I::Item: AsRef<[u8]>,
     {
         let version = parse_header_tag(&mut input)?;
-        /*
-        let mut optional: BString = OptionalFields::parse_tag(input)
-            .into_iter()
-            .map(|x| BString::from(x.to_string() + "\t"))
-            .collect::<BString>();
-        optional.pop();
-         */
         for f in input.into_iter() {
             parse_tag(f.as_ref());
         }
-        Ok(Header {
-            version, /*optional*/
-        })
+        Ok(Header { version })
     }
 }
 
 /// function that parses the overlap tag
 /// ```<overlap> <- * | <CIGAR> <- ([0-9]+[MIDNSHPX=])+```
 #[inline]
-fn parse_overlap<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
+fn parse_overlap<I>(input: &mut I) -> ParserFieldResult<bool>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
@@ -321,12 +304,6 @@ where
             Regex::new(r"(?-u)\*|([0-9]+[MIDNSHPX=])+").unwrap();
     }
     let next = next_field(input)?;
-    /*
-    RE_OVERLAP
-        .find(next.as_ref())
-        .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Overlap"))
-     */
     if RE_OVERLAP.is_match(next.as_ref()) {
         Ok(true)
     } else {
@@ -367,21 +344,10 @@ impl Segment {
     {
         let name = usize::parse_next(&mut input, IdType::ID())?;
         let sequence = parse_sequence(&mut input)?;
-        /*
-        let mut optional: BString = OptionalFields::parse_tag(input)
-            .into_iter()
-            .map(|x| BString::from(x.to_string() + "\t"))
-            .collect::<BString>();
-        optional.pop();
-         */
         for f in input.into_iter() {
             parse_tag(f.as_ref());
         }
-        Ok(Segment {
-            name,
-            sequence,
-            //optional,
-        })
+        Ok(Segment { name, sequence })
     }
 }
 
@@ -401,14 +367,6 @@ impl Link {
         let from_orient = parse_orientation(&mut input)?;
         let to_segment = usize::parse_next(&mut input, IdType::ID())?;
         let to_orient = parse_orientation(&mut input)?;
-        /*
-        let overlap = parse_overlap(&mut input)?;
-        let mut optional: BString = OptionalFields::parse_tag(input)
-            .into_iter()
-            .map(|x| BString::from(x.to_string() + "\t"))
-            .collect::<BString>();
-        optional.pop();
-         */
         parse_overlap(&mut input)?;
         for f in input.into_iter() {
             parse_tag(f.as_ref());
@@ -418,8 +376,6 @@ impl Link {
             from_orient,
             to_segment,
             to_orient,
-            //overlap,
-            //optional,
         })
     }
 }
@@ -487,20 +443,6 @@ impl Containment {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        /*
-        let container_name = usize::parse_next(&mut input, IdType::ID())?;
-        let container_orient = parse_orientation(&mut input)?;
-        let contained_name = usize::parse_next(&mut input, IdType::ID())?;
-        let contained_orient = parse_orientation(&mut input)?;
-        let pos = next_field(&mut input)?;
-        let pos = pos.as_ref().to_str()?.parse()?;
-        let overlap = parse_overlap(&mut input)?;
-        let mut optional: BString = OptionalFields::parse_tag(input)
-            .into_iter()
-            .map(|x| BString::from(x.to_string() + "\t"))
-            .collect::<BString>();
-        optional.pop();
-         */
         parse_id(&mut input)?;
         parse_orient(&mut input)?;
         parse_id(&mut input)?;
@@ -511,24 +453,14 @@ impl Containment {
             parse_tag(f.as_ref());
         }
 
-        Ok(Containment {
-            /*
-            container_name,
-            container_orient,
-            contained_name,
-            contained_orient,
-            overlap,
-            pos,
-            optional,
-             */
-        })
+        Ok(Containment {})
     }
 }
 
 /// function that parses the overlap tag
 /// ```<overlap> <- * | <CIGAR> <- [0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*```
 #[inline]
-fn parse_path_overlap<I>(input: &mut I) -> ParserFieldResult</*BString*/ bool>
+fn parse_path_overlap<I>(input: &mut I) -> ParserFieldResult<bool>
 where
     I: Iterator,
     I::Item: AsRef<[u8]>,
@@ -539,12 +471,6 @@ where
                 .unwrap();
     }
     let next = next_field(input)?;
-    /*
-    RE_PATH_OVERLAP
-        .find(next.as_ref())
-        .map(|s| BString::from(s.as_bytes()))
-        .ok_or(ParseFieldError::InvalidField("Overlap"))
-     */
     if RE_PATH_OVERLAP.is_match(next.as_ref()) {
         Ok(true)
     } else {
@@ -583,18 +509,9 @@ impl Path {
         I: Iterator,
         I::Item: AsRef<[u8]>,
     {
-        // Use the SegmentId parser for the path name as well; it's
-        // just always BString
         let path_name = BString::parse_next(&mut input, IdType::ID())?;
         let segment_names = parse_segment_names(&mut input)?;
-        /*
-        let overlaps = parse_path_overlap(&mut input)?;
-        let mut optional: BString = OptionalFields::parse_tag(input)
-            .into_iter()
-            .map(|x| BString::from(x.to_string() + "\t"))
-            .collect::<BString>();
-        optional.pop();
-         */
+
         parse_path_overlap(&mut input)?;
         for f in input.into_iter() {
             parse_tag(f.as_ref());
@@ -602,8 +519,6 @@ impl Path {
         Ok(Path {
             path_name,
             segment_names,
-            //overlaps,
-            //optional,
         })
     }
 }
@@ -618,6 +533,7 @@ mod tests {
     fn parse_big_file() {
         // Create gfa from file: Duration { seconds: 432, nanoseconds: 428425000 } (with find)
         // Create gfa from file: Duration { seconds: 423, nanoseconds: 311465600 } (with is_match)
+        // Create gfa from file: Duration { seconds: 48, nanoseconds: 646661800 }(with rayon) (with is_match) (MAIN PC)
         let parser = GFAParser::default();
         let start = Instant::now();
         let _gfa2: GFA = parser
@@ -630,6 +546,7 @@ mod tests {
     fn parse_med_file() {
         // Create gfa from file: Duration { seconds: 0, nanoseconds: 271638800 } (with is_match) (MAIN PC)
         // Create gfa from file: Duration { seconds: 0, nanoseconds: 494128300 } (with is_match) (PORTABLE PC)
+        // Create gfa from file: Duration { seconds: 0, nanoseconds: 47069800 } (with rayon) (with is_match) (MAIN PC)
         // Create gfa from file: Duration { seconds: 0, nanoseconds: 205899300 } (with rayon) (with is_match) (PORTABLE PC)
         let parser = GFAParser::default();
         let start = Instant::now();
@@ -642,6 +559,7 @@ mod tests {
     #[ignore]
     fn parse_big_file1() {
         // Create gfa from file: Duration { seconds: 535, nanoseconds: 662080200 } (with is_match)
+        // Create gfa from file: Duration { seconds: 63, nanoseconds: 340782100 } (with rayon) (with is_match) (MAIN PC)
         let parser = GFAParser::default();
         let start = Instant::now();
         let _gfa2: GFA = parser
@@ -719,173 +637,4 @@ mod tests {
             Ok(p) => assert_eq!(p, path_),
         }
     }
-    /*
-    #[test]
-    fn blank_header() {
-        let header = "";
-        let header_ = Header {
-            version: "".into(),
-            optional: BString::from(""),
-        };
-
-        let fields = header.split_terminator('\t');
-        let result = Header::parse_line(fields);
-
-        match result {
-            Err(why) => println!("Error: {}", why),
-            Ok(h) => assert_eq!(h, header_),
-        }
-    }
-
-    #[test]
-    fn can_parse_header() {
-        let header = "VN:Z:1.0";
-        let header_ = Header {
-            version: "VN:Z:1.0".into(),
-            optional: BString::from(""),
-        };
-
-        let fields = header.split_terminator('\t');
-        let result = Header::parse_line(fields);
-
-        match result {
-            Err(why) => println!("Error: {}", why),
-            Ok(h) => assert_eq!(h, header_),
-        }
-    }
-
-    #[test]
-    fn can_parse_segment() {
-        let segment = "A\tAAAAAAACGT";
-        let segment_: Segment = Segment {
-            name: convert_to_usize(b"A").unwrap(),
-            sequence: "AAAAAAACGT".into(),
-            optional: BString::from(""),
-        };
-
-        let fields = segment.split_terminator('\t');
-        let result = Segment::parse_line(fields);
-
-        match result {
-            Err(why) => println!("Error: {}", why),
-            Ok(s) => assert_eq!(s, segment_),
-        }
-    }
-
-    #[test]
-    fn can_parse_link() {
-        let link = "15\t-\t10\t+\t20M";
-        let link_: Link = Link {
-            from_segment: 15,
-            from_orient: Orientation::Backward,
-            to_segment: 10,
-            to_orient: Orientation::Forward,
-            overlap: "20M".into(),
-            optional: BString::from(""),
-        };
-
-        let fields = link.split_terminator('\t');
-        let result = Link::parse_line(fields);
-
-        match result {
-            Err(why) => println!("Error: {}", why),
-            Ok(l) => assert_eq!(l, link_),
-        }
-    }
-
-    #[test]
-    fn can_parse_containments() {
-        let containment = "15\t-\t10\t+\t4\t20M";
-        let containment_: Containment = Containment {
-            container_name: 15,
-            container_orient: Orientation::Backward,
-            contained_name: 10,
-            contained_orient: Orientation::Forward,
-            pos: 4,
-            overlap: "20M".into(),
-            optional: BString::from(""),
-        };
-
-        let fields = containment.split_terminator('\t');
-        let result = Containment::parse_line(fields);
-
-        match result {
-            Err(why) => println!("Error: {}", why),
-            Ok(c) => assert_eq!(c, containment_),
-        }
-    }
-
-    #[test]
-    fn can_parse_path() {
-        let path = "14\t11+,12-,13+\t4M,5M";
-        let path_: Path =
-            Path::new("14".into(), "11+,12-,13+".into(), "4M,5M".into(), b"");
-
-        let fields = path.split_terminator('\t');
-        let result = Path::parse_line(fields);
-
-        match result {
-            Err(why) => println!("Error: {}", why),
-            Ok(p) => assert_eq!(p, path_),
-        }
-    }
-
-    #[test]
-    fn can_parse_alignment_cigar() {
-        let cigar = vec!["1M1I1M1I2M"];
-        let result = parse_overlap(&mut cigar.iter());
-
-        match result {
-            Err(why) => println!("Error: {}", why),
-            Ok(u) => {
-                assert_eq!(
-                    cigar
-                        .iter()
-                        .fold(String::new(), |acc, str| acc + &str.to_string()),
-                    u
-                );
-                println!("{}", u);
-            }
-        }
-    }
-
-    #[test]
-    fn can_parse_no_alignment() {
-        let no_aligment = vec!["*"];
-        let result = parse_overlap(&mut no_aligment.iter());
-
-        match result {
-            Err(why) => println!("Error: {}", why),
-            Ok(u) => {
-                assert_eq!(
-                    no_aligment
-                        .iter()
-                        .fold(String::new(), |acc, str| acc + &str.to_string()),
-                    u
-                );
-                println!("{}", u);
-            }
-        }
-    }
-
-    #[test]
-    fn can_parse_error_alignment() {
-        // this should return an error message (and it does)
-        let error = vec!["ERROR"];
-        let result = parse_overlap(&mut error.iter());
-
-        match result {
-            Err(why) => println!("Error: {}", why),
-            Ok(u) => {
-                assert_eq!(
-                    error
-                        .iter()
-                        .fold(String::new(), |acc, str| acc + &str.to_string()),
-                    u
-                );
-                println!("{}", u);
-            }
-        }
-    }
-     */
 }

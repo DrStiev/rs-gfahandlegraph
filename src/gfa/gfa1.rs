@@ -6,42 +6,6 @@ use bstr::{BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-/// Simple representation of a parsed GFA file, using a Vec<T> to
-/// store each separate GFA line type.\
-/// Returns a GFA object
-///
-/// [vec]: https://doc.rust-lang.org/std/vec/struct.Vec.html
-/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
-/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
-///
-/// ## Arguments
-///
-/// * `headers` - A [`vector`][vec] of [`Header`](struct.Header.html).
-/// * `segments` - A [`vector`][vec] of [`Segment`](struct.Segment.html).
-/// * `links` - A [`vector`][vec] of [`Link`](struct.Link.html).
-/// * `containments` - A [`vector`][vec] of [`Containment`](struct.Containment.html).
-/// * `paths` - A [`vector`][vec] of [`Path`](struct.Path.html).
-///
-/// ## Examples
-/// ```ignore
-/// let gfa: GFA = GFA {
-///     headers: vec![
-///         Header::new("VN:Z:1.0".into(), b""),
-///     ],
-///     segments: vec![
-///         Segment::new(65, b"AAAAAAACGT", b""),
-///     ],
-///     links: vec![
-///         Link::new(15, Orientation::Backward, 10, Orientation::Forward, b"4M", b""),
-///     ],
-///     containments: vec![
-///         Containmnet::new(1, Orientation::Backward, 2, Orientation::Forward, b"110", b"100M", b""),
-///     ],
-///     paths: vec![
-///         Path::new(b"14", b"11+,12-,13+", vec![b"4M", b"5M"], b""),
-///     ],
-/// };
-/// ```
 #[derive(
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
@@ -67,9 +31,6 @@ impl fmt::Display for GFA {
             self.links
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
-            /*self.containments
-            .iter()
-            .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),*/
             self.paths
                 .iter()
                 .fold(String::new(), |acc, str| acc + &str.to_string() + "\n"),
@@ -187,126 +148,49 @@ impl GFA {
     }
 }
 
-/// Returns an Header line
-///
-/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
-///
-/// ## Arguments
-///
-/// * `version` - A [`bstring`][bstring] slice.
-/// * `optional field` - A [`bstring`][bstring] slice.
-///
-/// ## Examples
-/// ```ignore
-/// let header = "VN:Z:1.0";
-/// let header_ = Header {
-///     version: "VN:Z:1.0".into(),
-///     optional: b"",
-/// };
-/// ```
 #[derive(Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Header {
     pub version: BString,
-    //pub optional: BString,
 }
 
 impl Header {
-    pub fn new(version: &[u8] /*optional: &[u8]*/) -> Self {
+    pub fn new(version: &[u8]) -> Self {
         Header {
             version: version.into(),
-            //optional: optional.into(),
         }
     }
 }
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "H\t{}", self.version /*self.optional,*/,)
+        write!(f, "H\t{}", self.version)
     }
 }
 
-/// Returns a Segment line
-///
-/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
-/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
-///
-/// ## Arguments
-///
-/// * `name` - An [`usize`][usize] identifier
-/// * `sequence` - A [`bstring`][bstring] slice.
-/// * `optional field` - A [`bstring`][bstring] slice.
-///
-/// ## Examples
-/// ```ignore
-/// let segment = "1\tAAAAAAACGT";
-/// let segment_: Segment = Segment {
-///     name: 1,
-///     sequence: "AAAAAAACGT".into(),
-///     optional: b"",
-/// };
-/// ```
 #[derive(
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
 pub struct Segment {
     pub name: usize,
     pub sequence: BString,
-    //pub optional: BString,
 }
 
 impl Segment {
     #[inline]
-    pub fn new(name: usize, sequence: &[u8] /*optional: &[u8]*/) -> Self {
+    pub fn new(name: usize, sequence: &[u8]) -> Self {
         Segment {
             name,
             sequence: BString::from(sequence),
-            //optional: optional.into(),
         }
     }
 }
 
 impl fmt::Display for Segment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "S\t{}\t{}",
-            self.name,
-            self.sequence,
-            /*self.optional
-            .iter()
-            .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
-            */
-        )
+        write!(f, "S\t{}\t{}", self.name, self.sequence,)
     }
 }
 
-/// Returns a Link line
-///
-/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
-/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
-/// [cigar]: https://samtools.github.io/hts-specs/SAMv1.pdf
-///
-/// ## Arguments
-///
-/// * `from_segment` - An [`usize`][usize] identifier
-/// * `from_orient` - An orientation identifier, it can be Forward or Backward (+-)
-/// * `to_segment` - An [`usize`][usize] identifier
-/// * `to_orient` - An orientation identifier, it can be Forward or Backward (+-)
-/// * `overlap` - A [`bstring`][bstring] slice encoding a [`CIGAR`][cigar] alignment
-/// * `optional field` - A [`bstring`][bstring] slice.
-///
-/// ## Examples
-/// ```ignore
-/// let link = "15\t-\t10\t+\t20M";
-/// let link_: Link = Link {
-///     from_segment: 15,
-///     from_orient: Orientation::Backward,
-///     to_segment: 10,
-///     to_orient: Orientation::Forward,
-///     overlap: 20M
-///     optional: b"",
-/// };
-/// ```
 #[derive(
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
@@ -315,8 +199,6 @@ pub struct Link {
     pub from_orient: Orientation,
     pub to_segment: usize,
     pub to_orient: Orientation,
-    //pub overlap: BString,
-    //pub optional: BString,
 }
 
 impl Link {
@@ -326,16 +208,12 @@ impl Link {
         from_orient: Orientation,
         to_segment: usize,
         to_orient: Orientation,
-        //overlap: &[u8],
-        //optional: &[u8],
     ) -> Link {
         Link {
             from_segment,
             from_orient,
             to_segment,
             to_orient,
-            //overlap: overlap.into(),
-            //optional: optional.into(),
         }
     }
 }
@@ -349,144 +227,29 @@ impl fmt::Display for Link {
             self.from_orient,
             self.to_segment,
             self.to_orient,
-            //self.overlap,
-            //self.optional,
         )
     }
 }
 
-/// Returns a Containment line
-///
-/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
-/// [usize]: https://doc.rust-lang.org/std/primitive.usize.html
-/// [cigar]: https://samtools.github.io/hts-specs/SAMv1.pdf
-///
-/// ## Arguments
-///
-/// * `container_name` - An [`usize`][usize] identifier
-/// * `container_orient` - An orientation identifier, it can be Forward or Backward (+-)
-/// * `contained_name` - An [`usize`][usize] identifier
-/// * `contained_orient` - An orientation identifier, it can be Forward or Backward (+-)
-/// * `pos` - An [`usize`][usize] identifier
-/// * `overlap` - A [`bstring`][bstring] slice encoding a [`CIGAR`][cigar] alignment
-/// * `optional field` - A [`bstring`][bstring] slice.
-///
-/// ## Examples
-/// ```ignore
-/// let containment = "15\t-\t10\t+\t4\t20M";
-/// let containment_: Containment = Containment {
-///     container_name: 15,
-///     container_orient: Orientation::Backward,
-///     contained_name: 10,
-///     contained_orient: Orientation::Forward,
-///     pos: 4
-///     overlap: 20M
-///     optional: b"",
-/// };
-/// ```
 #[derive(
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
-pub struct Containment {
-    /*
-pub container_name: usize,
-pub container_orient: Orientation,
-pub contained_name: usize,
-pub contained_orient: Orientation,
-pub pos: usize,
-pub overlap: BString,
-pub optional: BString,
-*/}
+pub struct Containment {}
 
-/*
-impl Containment {
-    #[inline]
-    pub fn new(/*
-        container_name: usize,
-        container_orient: Orientation,
-        contained_name: usize,
-        contained_orient: Orientation,
-        pos: usize,
-        overlap: &[u8],
-        optional: &[u8],
-         */) -> Containment {
-        Containment {
-            /*
-            container_name,
-            container_orient,
-            contained_name,
-            contained_orient,
-            pos,
-            overlap: overlap.into(),
-            optional: optional.into(),
-             */
-        }
-    }
-}
- */
-/*
-impl fmt::Display for Containment {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "C\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
-            self.container_name,
-            self.container_orient,
-            self.contained_name,
-            self.contained_orient,
-            self.pos,
-            self.overlap,
-            self.optional,
-        )
-    }
-}
- */
-
-/// Returns a Path line
-///
-/// [bstring]: https://docs.rs/bstr/0.2.14/bstr/struct.BString.html
-/// [cigar]: https://samtools.github.io/hts-specs/SAMv1.pdf
-///
-/// ## Arguments
-///
-/// * `path_name` - A [`bstring`][bstring] identifier
-/// * `segment_names` - A [`bstring`][bstring] identifier
-/// * `overlap` - A [`bstring`][bstring] slice encoding a [`CIGAR`][cigar] alignment
-/// * `optional field` - A [`bstring`][bstring] slice.
-///
-/// ## Examples
-/// ```ignore
-/// let path = "14\t11+,12-,13+\t4M,5M";
-/// let path_: Path = Path {
-///     path_name: "14".into(),
-///     segment_names: "11+,12-,13+".into(),
-///     overlaps: "4M,5M".into(),
-///     optional: "".into(),
-/// };
-/// ```
 #[derive(
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
 pub struct Path {
     pub path_name: BString,
     pub segment_names: BString,
-    //pub overlaps: BString,
-    //pub optional: BString,
 }
 
 impl Path {
     #[inline]
-    pub fn new(
-        path_name: BString,
-        segment_names: BString,
-        //overlaps: BString,
-        //optional: &[u8],
-    ) -> Self {
+    pub fn new(path_name: BString, segment_names: BString) -> Self {
         Path {
             path_name,
             segment_names,
-            //overlaps,
-            //optional: optional.into(),
         }
     }
 
@@ -519,17 +282,6 @@ impl Path {
 
 impl fmt::Display for Path {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "P\t{}\t{}",
-            self.path_name,
-            self.segment_names,
-            /*
-            self.overlaps,
-            self.optional
-                .iter()
-                .fold(String::new(), |acc, str| acc + &str.to_string() + "\t"),
-             */
-        )
+        write!(f, "P\t{}\t{}", self.path_name, self.segment_names,)
     }
 }

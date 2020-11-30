@@ -115,26 +115,20 @@ mod test {
     #[test]
     #[ignore]
     fn big_file() {
-        /* The real bottleneck is the creation of the GFAObject, for now IDK if it's the parsing part
-        so the regex and the checking or if it's the building of the struct GFA inserting each line in
-        the right field
-        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa: Duration { seconds: 568, nanoseconds: 359199900 }
-        Create HashGraph: Duration { seconds: 6, nanoseconds: 28818400 }
+        /*
+        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa: Duration { seconds: 61, nanoseconds: 40235100 }
+        Create HashGraph: Duration { seconds: 6, nanoseconds: 49317600 }
+        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa: Duration { seconds: 49, nanoseconds: 137663600 }
+        Create HashGraph: Duration { seconds: 3, nanoseconds: 58660000 }
+        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa: Duration { seconds: 47, nanoseconds: 557945800 }
+        Create HashGraph: Duration { seconds: 2, nanoseconds: 649968800 }
+        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa2: Duration { seconds: 58, nanoseconds: 741242600 }
+        Create HashGraph: Duration { seconds: 8, nanoseconds: 553002000 }
+        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2: Duration { seconds: 48, nanoseconds: 430275300 }
+        Create HashGraph: Duration { seconds: 3, nanoseconds: 712860200 }
+        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa2: Duration { seconds: 43, nanoseconds: 906121400 }
+        Create HashGraph: Duration { seconds: 2, nanoseconds: 629492300 }
 
-        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa: Duration { seconds: 433, nanoseconds: 506246400 }
-        Create HashGraph: Duration { seconds: 2, nanoseconds: 980813800 }
-
-        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa: Duration { seconds: 393, nanoseconds: 569971300 }
-        Create HashGraph: Duration { seconds: 2, nanoseconds: 233447000 }
-
-        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa2: Duration { seconds: 508, nanoseconds: 68815000 }
-        Create HashGraph: Duration { seconds: 7, nanoseconds: 691810000 }
-
-        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2: Duration { seconds: 414, nanoseconds: 719255900 }
-        Create HashGraph: Duration { seconds: 3, nanoseconds: 738306100 }
-
-        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa2: Duration { seconds: 381, nanoseconds: 183538000 }
-        Create HashGraph: Duration { seconds: 2, nanoseconds: 744088900 }
          */
         const FILES: [&str; 3] = [
             "./tests/big_files/ape-4-0.10b.gfa",
