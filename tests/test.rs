@@ -118,6 +118,7 @@ fn ditto() {
 fn create_medium_graph() {
     // Create graph from file: Duration { seconds: 0, nanoseconds: 711420200 } (main PC)
     // Create graph from file: Duration { seconds: 1, nanoseconds: 814588300 } (Portable PC)
+    // Create graph from file: Duration { seconds: 0, nanoseconds: 912034700 } (Portable PC with rayon)
     let g = read_medium_gfa1();
     // nodes: 4058     edges: 9498     paths: 7
     let nodes = g.handles().count();
@@ -128,6 +129,7 @@ fn create_medium_graph() {
 
     // Create graph from file: Duration { seconds: 1, nanoseconds: 153754100 } (main PC)
     // Create graph from file: Duration { seconds: 2, nanoseconds: 300047700 } (Portable PC)
+    // Create graph from file: Duration { seconds: 1, nanoseconds: 230163700 } (Portable PC with rayon)
     let g = read_medium_gfa2();
     // nodes: 4058     edges: 9498     paths: 7
     let nodes = g.handles().count();

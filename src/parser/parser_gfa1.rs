@@ -4,7 +4,9 @@ use crate::parser::error::*;
 
 use bstr::{BStr, BString, ByteSlice};
 use lazy_static::lazy_static;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 use regex::bytes::Regex;
+use std::sync::Mutex;
 
 /// Builder struct for GFAParsers
 #[derive(Debug, Default, Clone, Copy)]
@@ -181,17 +183,26 @@ impl GFAParser {
 
         let file = File::open(path.as_ref())?;
         let lines = BufReader::new(file).byte_lines();
-        let mut gfa = GFA::default();
+        let gfa = Mutex::new(GFA::default());
 
-        for line in lines {
-            match self.parse_gfa_line(line?.as_ref()) {
-                Ok(parsed) => gfa.insert_line(parsed),
+        lines.par_bridge().for_each(|line| {
+            match self.parse_gfa_line(line.unwrap().as_ref()) {
+                Ok(parsed) => gfa.lock().unwrap().insert_line(parsed),
                 Err(err) if err.can_safely_continue(&self.tolerance) => (),
-                Err(err) => return Err(err),
-            };
-        }
+                Err(err) => panic!("Error: {}", err), // this line should return the error not panic, but for now it's ok
+            }
+        });
+        /*
+               for line in lines {
+                   match self.parse_gfa_line(line?.as_ref()) {
+                       Ok(parsed) => gfa.insert_line(parsed),
+                       Err(err) if err.can_safely_continue(&self.tolerance) => (),
+                       Err(err) => return Err(err),
+                   };
+               }
 
-        Ok(gfa)
+        */
+        Ok(gfa.into_inner().unwrap())
     }
 }
 
@@ -288,7 +299,9 @@ impl Header {
             .collect::<BString>();
         optional.pop();
          */
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
         Ok(Header {
             version, /*optional*/
         })
@@ -361,7 +374,9 @@ impl Segment {
             .collect::<BString>();
         optional.pop();
          */
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
         Ok(Segment {
             name,
             sequence,
@@ -395,7 +410,9 @@ impl Link {
         optional.pop();
          */
         parse_overlap(&mut input)?;
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
         Ok(Link {
             from_segment,
             from_orient,
@@ -490,7 +507,9 @@ impl Containment {
         parse_orient(&mut input)?;
         parse_pos(&mut input)?;
         parse_overlap(&mut input)?;
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
 
         Ok(Containment {
             /*
@@ -577,7 +596,9 @@ impl Path {
         optional.pop();
          */
         parse_path_overlap(&mut input)?;
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
         Ok(Path {
             path_name,
             segment_names,
@@ -607,7 +628,9 @@ mod tests {
 
     #[test]
     fn parse_med_file() {
-        // Create gfa from file: Duration { seconds: 0, nanoseconds: 271638800 } (with is_match)
+        // Create gfa from file: Duration { seconds: 0, nanoseconds: 271638800 } (with is_match) (MAIN PC)
+        // Create gfa from file: Duration { seconds: 0, nanoseconds: 494128300 } (with is_match) (PORTABLE PC)
+        // Create gfa from file: Duration { seconds: 0, nanoseconds: 205899300 } (with rayon) (with is_match) (PORTABLE PC)
         let parser = GFAParser::default();
         let start = Instant::now();
         let _gfa2: GFA =

@@ -7,6 +7,7 @@ use bstr::{BStr, BString, ByteSlice};
 use lazy_static::lazy_static;
 use rayon::iter::{ParallelBridge, ParallelIterator};
 use regex::bytes::Regex;
+use std::sync::Mutex;
 
 /// Builder struct for GFAParsers
 #[derive(Debug, Default, Clone, Copy)]
@@ -179,8 +180,16 @@ impl GFA2Parser {
         let file = File::open(path.as_ref())?;
         let lines = BufReader::new(file).byte_lines();
 
-        let mut gfa2 = GFA2::default();
+        let gfa2 = Mutex::new(GFA2::default());
 
+        lines.par_bridge().for_each(|line| {
+            match self.parse_gfa_line(line.unwrap().as_ref()) {
+                Ok(parsed) => gfa2.lock().unwrap().insert_line(parsed),
+                Err(err) if err.can_safely_continue(&self.tolerance) => (),
+                Err(err) => panic!("Error: {}", err), // this line should return the error not panic, but for now it's ok
+            }
+        });
+        /*
         for line in lines {
             match self.parse_gfa_line(line?.as_ref()) {
                 Ok(parsed) => gfa2.insert_line(parsed),
@@ -188,7 +197,8 @@ impl GFA2Parser {
                 Err(err) => return Err(err),
             };
         }
-        Ok(gfa2)
+         */
+        Ok(gfa2.into_inner().unwrap())
     }
 }
 
@@ -287,7 +297,9 @@ impl Header {
             .collect::<BString>();
         tag.pop();
          */
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
         Ok(Header { version, /*tag*/ })
     }
 }
@@ -360,7 +372,9 @@ impl Segment {
             .collect::<BString>();
         tag.pop();
          */
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
         Ok(Segment {
             id,
             //len,
@@ -528,7 +542,9 @@ impl Fragment {
         parse_pos(&mut input)?;
         parse_pos(&mut input)?;
         parse_alignment(&mut input)?;
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
 
         Ok(Fragment {
             /*
@@ -580,7 +596,9 @@ impl Edge {
         parse_pos(&mut input)?;
         parse_pos(&mut input)?;
         parse_alignment(&mut input)?;
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
 
         Ok(Edge {
             //id,
@@ -654,7 +672,9 @@ impl Gap {
         parse_ref_id(&mut input)?;
         parse_slen(&mut input)?;
         parse_var(&mut input)?;
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
 
         Ok(Gap {
             /*
@@ -737,7 +757,9 @@ impl GroupO {
             .collect::<BString>();
         tag.pop();
          */
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
         Ok(GroupO {
             id,
             var_field, /*tag*/
@@ -770,7 +792,9 @@ impl GroupU {
          */
         parse_opt_id(&mut input)?;
         parse_group_id(&mut input)?;
-        input.into_iter().filter_map(|f| parse_tag(f.as_ref()));
+        for f in input.into_iter() {
+            parse_tag(f.as_ref());
+        }
         Ok(GroupU { /*id, var_field, tag*/ })
     }
 }
@@ -795,7 +819,9 @@ mod tests {
 
     #[test]
     fn parse_med_file() {
-        // Create gfa from file: Duration { seconds: 0, nanoseconds: 729470500 } (with is_match)
+        // Create gfa from file: Duration { seconds: 0, nanoseconds: 729470500 } (with is_match) (MAIN PC)
+        // Create gfa from file: Duration { seconds: 1, nanoseconds: 331284300 } (with is_match) (PORTABLE PC)
+        // Create gfa from file: Duration { seconds: 0, nanoseconds: 487090400 } (with rayon) (with is_match) (PORTABLE PC)
         let parser = GFA2Parser::default();
         let start = Instant::now();
         let _gfa2: GFA2 =
