@@ -9,7 +9,11 @@ use crate::{
 };
 
 use super::{Node, Path, PathId};
+use crate::util::dna;
+use bstr::BString;
 use rayon::prelude::*;
+use std::fmt;
+use std::sync::Mutex;
 
 /// New type
 /// # Example
@@ -40,6 +44,83 @@ impl Default for HashGraph {
             path_id: Default::default(),
             paths: Default::default(),
         }
+    }
+}
+
+impl fmt::Display for HashGraph {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let nodes = Mutex::new(String::new());
+        // get all the nodes
+        self.handles_par().for_each(|handle| {
+            let node_id: String = handle.id().to_string();
+            let sequence: BString =
+                self.sequence_iter(handle.forward()).collect();
+            nodes
+                .lock()
+                .unwrap()
+                .push_str(&format!("\t\t{}: {}\n", node_id, sequence));
+        });
+
+        let edges = Mutex::new(String::new());
+        // get all the link (edge) between nodes
+        self.edges_par().for_each(|edge| {
+            let orient = |rev: bool| {
+                if rev {
+                    "-".to_string()
+                } else {
+                    "+".to_string()
+                }
+            };
+            let GraphEdge(left, right) = edge;
+            let from_node: String = left.id().to_string();
+            let to_node: String = right.id().to_string();
+            let left_orient: String = orient(left.is_reverse());
+            let right_orient: String = orient(right.is_reverse());
+
+            edges.lock().unwrap().push_str(&format!(
+                "\t\t{}{} -- {}{}\n",
+                from_node, left_orient, to_node, right_orient
+            ));
+        });
+
+        let mut paths: String = String::new();
+        // get all the path
+        self.paths().for_each(|path_id| {
+            let path = self.paths.get(&path_id).unwrap();
+            //get the id or path name of a path
+            let name = &path.name;
+            let mut first: bool = true;
+
+            for (ix, handle) in path.nodes.iter().enumerate() {
+                let node = self.get_node(&handle.id()).unwrap();
+                if first {
+                    first = false;
+                    paths.push_str(&format!("\t\t{}: ", name));
+                }
+                if ix != 0 {
+                    paths.push_str(&format!(" -> "));
+                }
+                // print correct reverse and complement sequence to display the correct path
+                if handle.is_reverse() {
+                    let rev_sequence: String = String::from_utf8(
+                        dna::rev_comp(node.sequence.as_slice()),
+                    )
+                    .expect("Unable to convert from UTF8");
+                    paths.push_str(&format!("{}", rev_sequence));
+                } else {
+                    paths.push_str(&format!("{}", node.sequence));
+                }
+            }
+            paths.push_str(&format!("\n"));
+        });
+
+        write!(
+            f,
+            "Graph {{\n\tNodes:\n{}\tEdges:\n{}\tPaths:\n{}}}",
+            nodes.into_inner().unwrap(),
+            edges.into_inner().unwrap(),
+            paths
+        )
     }
 }
 
@@ -151,116 +232,6 @@ impl HashGraph {
                 });
                 Ok(self.to_owned())
             }
-        }
-    }
-
-    /// Print an [`HashGraph`](struct.HashGraph.html) object in a simplified way
-    /// # Example
-    /// ```ignore
-    /// graph.print_simple_graph();
-    /// /*
-    /// Graph: {
-    ///     Nodes: {
-    ///         13: CTTGATT
-    ///         12: TCAAGG
-    ///         11: ACCTT
-    ///     }
-    ///     Edges: {
-    ///         12- -- 13+
-    ///         11+ -- 12-
-    ///         11+ -- 13+
-    ///     }
-    ///     Paths: {
-    ///         14: ACCTT -> CTTGATT
-    ///         15: ACCTT -> CCTTGA -> CTTGATT
-    ///     }
-    /// }
-    /// */
-    /// ```
-    pub fn print_graph(&self) {
-        println!("Graph: {{");
-        // print all the segments
-        println!("\tNodes: {{");
-        self.print_segments();
-        println!("\t}}");
-        // print all the edges
-        println!("\tEdges: {{");
-        self.print_edges();
-        println!("\t}}");
-        // print all the paths
-        println!("\tPaths: {{");
-        self.print_paths();
-        println!("\t}}");
-        println!("}}");
-    }
-
-    /// Function that prints all the segments in a graph
-    fn print_segments(&self) {
-        use bstr::BString;
-        // get all the nodeid and sequence associated with them
-        self.handles_par().for_each(|handle| {
-            let node_id: String = handle.id().to_string();
-            let sequence: BString =
-                self.sequence_iter(handle.forward()).collect();
-            println!("\t\t{}: {}", node_id, sequence);
-        });
-    }
-
-    /// Function that prints all the edges in a graph
-    fn print_edges(&self) {
-        // get all the link (edge) between nodes
-        self.edges_par().for_each(|edge| {
-            let orient = |rev: bool| {
-                if rev {
-                    "-".to_string()
-                } else {
-                    "+".to_string()
-                }
-            };
-            let GraphEdge(left, right) = edge;
-            let from_node: String = left.id().to_string();
-            let to_node: String = right.id().to_string();
-            let left_orient: String = orient(left.is_reverse());
-            let right_orient: String = orient(right.is_reverse());
-
-            println!(
-                "\t\t{}{} -- {}{}",
-                from_node, left_orient, to_node, right_orient
-            );
-        });
-    }
-
-    /// Function that prints all the paths in a graph
-    fn print_paths(&self) {
-        use crate::util::dna;
-        use bstr::BString;
-
-        // get all the path
-        for path_id in self.paths() {
-            let path = self.paths.get(&path_id).unwrap();
-            //get the id or path name of a path
-            let name = &path.name;
-            let mut first: bool = true;
-
-            for (ix, handle) in path.nodes.iter().enumerate() {
-                let node = self.get_node(&handle.id()).unwrap();
-                if first {
-                    first = false;
-                    print!("\t\t{}: ", name);
-                }
-                if ix != 0 {
-                    print!(" -> ");
-                }
-                // print correct reverse and complement sequence to display the correct path
-                if handle.is_reverse() {
-                    let rev_sequence: BString =
-                        dna::rev_comp(node.sequence.as_slice()).into();
-                    print!("{}", rev_sequence);
-                } else {
-                    print!("{}", node.sequence);
-                }
-            }
-            println!();
         }
     }
 

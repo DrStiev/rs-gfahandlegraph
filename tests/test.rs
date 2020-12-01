@@ -88,15 +88,12 @@ fn clear_big_graph() {
 #[test]
 fn ditto() {
     let mut graph = read_ditto();
-    //println!("{:#?}", graph);
-    //graph.print_graph();
     let node: u64 = 1;
     let start = Instant::now();
     match graph.remove_handle(node) {
         Ok(_) => {
             println!("{:?}", start.elapsed());
-            //println!("{:#?}", graph);
-            graph.print_graph();
+            println!("{}", graph);
         }
         Err(why) => println!("Error: {}", why),
     }
@@ -357,7 +354,7 @@ fn add_node() {
     let sequence = b"TEST_SEQUENCE";
 
     match graph.create_handle(node, sequence) {
-        Ok(_) => graph.print_graph(),
+        Ok(_) => println!("{}", graph),
         Err(why) => println!("Error {}", why),
     }
 }
@@ -374,7 +371,7 @@ fn add_edge() {
             let right: Handle = Handle::new(13_u64, Orientation::Forward);
             let edge: Edge = Edge(left, right);
             match graph.create_edge(edge) {
-                Ok(_) => graph.print_graph(),
+                Ok(_) => println!("{}", graph),
                 Err(why) => println!("Error {}", why),
             }
         }
@@ -417,7 +414,7 @@ fn add_path() {
                             Err(why) => println!("Error: {}", why),
                         };
                     }
-                    graph.print_graph()
+                    println!("{}", graph)
                 }
                 Err(why) => println!("Error {}", why),
             }
@@ -432,7 +429,7 @@ fn remove_node() {
     let node: NodeId = 12.into();
 
     match graph.remove_handle(node) {
-        Ok(_) => graph.print_graph(),
+        Ok(_) => println!("{}", graph),
         Err(why) => println!("Error {}", why),
     }
 }
@@ -445,7 +442,7 @@ fn remove_edge() {
     let right: Handle = Handle::new(13_u64, Orientation::Forward);
     let edge: Edge = Edge(left, right);
     match graph.remove_edge(edge) {
-        Ok(_) => graph.print_graph(),
+        Ok(_) => println!("{}", graph),
         Err(why) => println!("Error {}", why),
     }
 }
@@ -459,7 +456,7 @@ fn remove_path() {
         .name_to_path_handle(path)
         .expect("Error, path did not exists");
     graph.destroy_path(&path_id);
-    graph.print_graph();
+    println!("{}", graph);
 }
 
 #[test]
@@ -470,7 +467,7 @@ fn remove_node_from_path() {
     let node: u64 = 11_u64;
 
     match graph.remove_step(path, node) {
-        Ok(_) => graph.print_graph(),
+        Ok(_) => println!("{}", graph),
         Err(why) => println!("Error: {}", why),
     }
 }
@@ -484,7 +481,7 @@ fn modify_node_from_path() {
     let nodea = Handle::new(13_u64, Orientation::Forward);
 
     match graph.modify_step(path, node, nodea) {
-        Ok(_) => graph.print_graph(),
+        Ok(_) => println!("{}", graph),
         Err(why) => println!("Error: {}", why),
     }
 }
@@ -496,7 +493,7 @@ fn modify_node() {
     let sequence = b"MODIFIED_SEQUENCE";
 
     match graph.modify_handle(node, sequence) {
-        Ok(_) => graph.print_graph(),
+        Ok(_) => println!("{}", graph),
         Err(why) => println!("Error {}", why),
     }
 }
@@ -511,7 +508,7 @@ fn modify_edge() {
     let new_left: Handle = Handle::new(11_u64, Orientation::Forward);
     let new_right: Handle = Handle::new(11_u64, Orientation::Forward);
     match graph.modify_edge(edge, Some(new_left), Some(new_right)) {
-        Ok(_) => graph.print_graph(),
+        Ok(_) => println!("{}", graph),
         Err(why) => println!("Error {}", why),
     }
 }
@@ -527,7 +524,7 @@ fn modify_path() {
         Handle::new(11_u64, Orientation::Forward),
     ];
     match graph.rewrite_path(path, path_sequence) {
-        Ok(_) => graph.print_graph(),
+        Ok(_) => println!("{}", graph),
         Err(why) => println!("Error {}", why),
     }
 }

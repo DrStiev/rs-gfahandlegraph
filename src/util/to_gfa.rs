@@ -196,7 +196,7 @@ mod test {
     fn can_convert_graph_to_gfa() {
         match parse_file_to_graph("./tests/gfa1_files/lil.gfa") {
             Ok(g) => {
-                g.print_graph();
+                println!("{}", g); //g.print_graph(),
                 match to_gfa(&g, "gfa".to_string(), None) {
                     Err(why) => println!("Error: {}", why),
                     _ => (),
@@ -210,7 +210,7 @@ mod test {
     fn can_convert_graph_to_gfa2() {
         match parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
             Ok(g) => {
-                g.print_graph();
+                println!("{}", g); //g.print_graph(),
                 match to_gfa(&g, "gfa2".to_string(), None) {
                     Err(why) => println!("Error: {}", why),
                     _ => (),

@@ -1,5 +1,4 @@
 pub mod error;
-//pub mod parse_tag;
 pub mod parser_gfa1;
 pub mod parser_gfa2;
 
@@ -91,7 +90,7 @@ mod test {
     #[test]
     fn can_create_graph_from_gfa2_file() {
         match parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
-            Ok(g) => g.print_graph(),
+            Ok(g) => println!("{}", g), //g.print_graph(),
             Err(why) => println!("Error {}", why),
         }
     }
@@ -99,7 +98,7 @@ mod test {
     #[test]
     fn ditto_test() {
         match parse_file_to_graph("./tests/gfa2_files/irl.gfa2") {
-            Ok(g) => g.print_graph(),
+            Ok(g) => println!("{}", g), //g.print_graph(),
             Err(why) => println!("Error {}", why),
         }
     }
@@ -107,7 +106,7 @@ mod test {
     #[test]
     fn can_create_graph_from_gfa1_file() {
         match parse_file_to_graph("./tests/gfa1_files/lil.gfa") {
-            Ok(g) => g.print_graph(),
+            Ok(g) => println!("{}", g), //g.print_graph(),
             Err(why) => println!("Error {}", why),
         }
     }
@@ -118,17 +117,21 @@ mod test {
         /*
         Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa: Duration { seconds: 61, nanoseconds: 40235100 }
         Create HashGraph: Duration { seconds: 6, nanoseconds: 49317600 }
+
         Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa: Duration { seconds: 49, nanoseconds: 137663600 }
         Create HashGraph: Duration { seconds: 3, nanoseconds: 58660000 }
+
         Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa: Duration { seconds: 47, nanoseconds: 557945800 }
         Create HashGraph: Duration { seconds: 2, nanoseconds: 649968800 }
+
         Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa2: Duration { seconds: 58, nanoseconds: 741242600 }
         Create HashGraph: Duration { seconds: 8, nanoseconds: 553002000 }
+
         Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2: Duration { seconds: 48, nanoseconds: 430275300 }
         Create HashGraph: Duration { seconds: 3, nanoseconds: 712860200 }
+
         Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa2: Duration { seconds: 43, nanoseconds: 906121400 }
         Create HashGraph: Duration { seconds: 2, nanoseconds: 629492300 }
-
          */
         const FILES: [&str; 3] = [
             "./tests/big_files/ape-4-0.10b.gfa",
