@@ -195,7 +195,7 @@ impl Header {
 
 impl fmt::Display for Header {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "H\t{}", self.version /*self.tag,*/,)
+        write!(f, "H\t{}", self.version)
     }
 }
 
@@ -219,7 +219,7 @@ impl Segment {
 
 impl fmt::Display for Segment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "S\t{}\t{}", self.id, self.sequence,)
+        write!(f, "S\t{}\t{}", self.id, self.sequence)
     }
 }
 
@@ -261,7 +261,7 @@ impl fmt::Display for Edge {
             _ => panic!("Orientation not found!"),
         };
 
-        write!(f, "E\t{}{}\t{}{}", sid1, sgn1, sid2, sgn2,)
+        write!(f, "E\t{}{}\t{}{}", sid1, sgn1, sid2, sgn2)
     }
 }
 
@@ -314,7 +314,7 @@ impl GroupO {
 
 impl fmt::Display for GroupO {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "O\t{}\t{}", self.id, self.var_field /*self.tag,*/,)
+        write!(f, "O\t{}\t{}", self.id, self.var_field)
     }
 }
 

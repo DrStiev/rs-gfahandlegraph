@@ -187,7 +187,7 @@ impl Segment {
 
 impl fmt::Display for Segment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "S\t{}\t{}", self.name, self.sequence,)
+        write!(f, "S\t{}\t{}", self.name, self.sequence)
     }
 }
 
@@ -282,6 +282,6 @@ impl Path {
 
 impl fmt::Display for Path {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "P\t{}\t{}", self.path_name, self.segment_names,)
+        write!(f, "P\t{}\t{}", self.path_name, self.segment_names)
     }
 }
