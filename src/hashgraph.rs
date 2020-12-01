@@ -227,6 +227,8 @@ impl SubtractiveHandleGraph for HashGraph {
                         if let Some(ll) = left
                             .left_edges
                             .par_iter()
+                            // see: https://docs.rs/rayon/1.5.0/rayon/iter/trait.IndexedParallelIterator.html#method.position_any
+                            // see: https://docs.rs/rayon/1.5.0/rayon/iter/trait.IndexedParallelIterator.html#method.position_first
                             .position_any(|x| x.id() == node_id)
                         {
                             left.left_edges.remove(ll);

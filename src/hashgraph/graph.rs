@@ -15,6 +15,7 @@ use rayon::prelude::*;
 use std::fmt;
 use std::sync::Mutex;
 
+// see: https://github.com/vgteam/libhandlegraph
 /// New type
 /// # Example
 /// ```ignore

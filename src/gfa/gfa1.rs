@@ -6,6 +6,7 @@ use bstr::{BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+// see: https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md
 #[derive(
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]

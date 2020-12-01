@@ -183,8 +183,11 @@ impl GFAParser {
 
         let file = File::open(path.as_ref())?;
         let lines = BufReader::new(file).byte_lines();
+        // see: https://doc.rust-lang.org/std/sync/struct.Mutex.html
         let gfa = Mutex::new(GFA::default());
 
+        // see: https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html
+        // see: https://doc.rust-lang.org/rust-by-example/scope/borrow/mut.html
         lines.par_bridge().for_each(|line| {
             match self.parse_gfa_line(line.unwrap().as_ref()) {
                 Ok(parsed) => gfa.lock().unwrap().insert_line(parsed),
@@ -261,11 +264,13 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
+    // see: https://docs.rs/regex/1.4.2/regex/#example-avoid-compiling-the-same-regex-in-a-loop
     lazy_static! {
         static ref RE_HEADER: Regex = Regex::new(r"(?-u)(VN:Z:1\.0)?").unwrap();
     }
     let next = next_field(input)?;
     RE_HEADER
+        // see: https://docs.rs/regex/1.4.2/regex/#pay-for-what-you-use
         .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Version"))

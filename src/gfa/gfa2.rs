@@ -2,10 +2,12 @@
 use crate::gfa::orientation::*;
 use crate::gfa::segment_id::*;
 
+// see: https://stackoverflow.com/questions/41034635/idiomatic-transformations-for-string-str-vecu8-and-u8
 use bstr::{BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+// see: https://github.com/GFA-spec/GFA-spec/blob/master/GFA2.md
 #[derive(
     Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
 )]
