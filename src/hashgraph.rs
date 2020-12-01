@@ -1,3 +1,11 @@
+pub mod graph;
+pub mod node;
+pub mod path;
+
+pub use self::graph::HashGraph;
+pub use self::node::Node;
+pub use self::path::{Path, PathId, PathStep};
+
 use bstr::BString;
 use rayon::iter::*;
 
@@ -8,15 +16,6 @@ use crate::{
     pathgraph::PathHandleGraph,
     util::dna,
 };
-
-pub mod graph;
-pub mod node;
-pub mod path;
-
-pub use self::graph::HashGraph;
-pub use self::node::Node;
-pub use self::path::{Path, PathId, PathStep};
-use std::sync::Mutex;
 
 impl<'a> AllHandles for &'a HashGraph {
     type Handles = NodeIdRefHandles<
@@ -222,7 +221,7 @@ impl SubtractiveHandleGraph for HashGraph {
             let l = node.left_edges;
             let r = node.right_edges;
 
-            for i in l.iter() {
+            l.iter().for_each(|i| {
                 if let Some(left) = self.graph.get_mut(&i.id()) {
                     if i.is_reverse() {
                         if let Some(ll) = left
@@ -240,9 +239,9 @@ impl SubtractiveHandleGraph for HashGraph {
                         left.right_edges.remove(lr);
                     }
                 }
-            }
+            });
 
-            for i in r.iter() {
+            r.iter().for_each(|i| {
                 if let Some(right) = self.graph.get_mut(&i.id()) {
                     if i.is_reverse() {
                         if let Some(rr) = right
@@ -260,14 +259,15 @@ impl SubtractiveHandleGraph for HashGraph {
                         right.left_edges.remove(rl);
                     }
                 }
-            }
+            });
 
-            for path in self.clone().paths() {
+            self.clone().paths().for_each(|path| {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;
                 if nodes.par_iter().any(|x| x.id() == node_id) {
                     self.paths.remove(&path);
                 }
-            }
+            });
+
             Ok(true)
         } else {
             Err(GraphError::NodeNotExist(node_id.to_string()))
