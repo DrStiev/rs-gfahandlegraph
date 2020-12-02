@@ -106,7 +106,10 @@ mod test {
     #[test]
     fn can_create_graph_from_gfa1_file() {
         match parse_file_to_graph("./tests/gfa1_files/lil.gfa") {
-            Ok(g) => println!("{}", g), //g.print_graph(),
+            Ok(g) => {
+                println!("{}", g);
+                println!("{:#?}", g)
+            } //g.print_graph(),
             Err(why) => println!("Error {}", why),
         }
     }
@@ -115,23 +118,29 @@ mod test {
     #[ignore]
     fn big_file() {
         /*
-        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa: Duration { seconds: 61, nanoseconds: 40235100 }
-        Create HashGraph: Duration { seconds: 6, nanoseconds: 49317600 }
+        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa: Duration { seconds: 59, nanoseconds: 987184300 }
+        Nodes: 715018	Edges: 985462	Paths: 0
+        Create HashGraph: Duration { seconds: 5, nanoseconds: 679481900 }
 
-        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa: Duration { seconds: 49, nanoseconds: 137663600 }
-        Create HashGraph: Duration { seconds: 3, nanoseconds: 58660000 }
+        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa: Duration { seconds: 45, nanoseconds: 815419500 }
+        Nodes: 241419	Edges: 355105	Paths: 0
+        Create HashGraph: Duration { seconds: 2, nanoseconds: 923615000 }
 
-        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa: Duration { seconds: 47, nanoseconds: 557945800 }
-        Create HashGraph: Duration { seconds: 2, nanoseconds: 649968800 }
+        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa: Duration { seconds: 42, nanoseconds: 244556300 }
+        Nodes: 148618	Edges: 214995	Paths: 0
+        Create HashGraph: Duration { seconds: 2, nanoseconds: 211683500 }
 
-        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa2: Duration { seconds: 58, nanoseconds: 741242600 }
-        Create HashGraph: Duration { seconds: 8, nanoseconds: 553002000 }
+        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa2: Duration { seconds: 65, nanoseconds: 819299300 }
+        Nodes: 715018	Edges: 985462	Paths: 0
+        Create HashGraph: Duration { seconds: 7, nanoseconds: 343440900 }
 
-        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2: Duration { seconds: 48, nanoseconds: 430275300 }
-        Create HashGraph: Duration { seconds: 3, nanoseconds: 712860200 }
+        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2: Duration { seconds: 48, nanoseconds: 158447700 }
+        Nodes: 241419	Edges: 355105	Paths: 0
+        Create HashGraph: Duration { seconds: 3, nanoseconds: 494897800 }
 
-        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa2: Duration { seconds: 43, nanoseconds: 906121400 }
-        Create HashGraph: Duration { seconds: 2, nanoseconds: 629492300 }
+        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa2: Duration { seconds: 44, nanoseconds: 281001200 }
+        Nodes: 148618	Edges: 214995	Paths: 0
+        Create HashGraph: Duration { seconds: 2, nanoseconds: 568562000 }
          */
         const FILES: [&str; 3] = [
             "./tests/big_files/ape-4-0.10b.gfa",
@@ -146,6 +155,12 @@ mod test {
                 "Create GFAObject from {}: {:?}",
                 FILES[i].to_string(),
                 start.elapsed()
+            );
+            println!(
+                "Nodes: {}\tEdges: {}\tPaths: {}",
+                gfa.segments.len(),
+                gfa.links.len(),
+                gfa.paths.len()
             );
 
             let start = Instant::now();
@@ -171,6 +186,12 @@ mod test {
                 "Create GFAObject from {}: {:?}",
                 FILES2[i].to_string(),
                 start.elapsed()
+            );
+            println!(
+                "Nodes: {}\tEdges: {}\tPaths: {}",
+                gfa.segments.len(),
+                gfa.edges.len(),
+                gfa.groups_o.len()
             );
 
             let start = Instant::now();

@@ -242,6 +242,20 @@ mod test {
     }
 
     #[test]
+    #[ignore]
+    fn can_parse_and_write_single_big_file() {
+        // Convert file from GFA to GFA2 Duration { seconds: 0, nanoseconds: 149387100 }
+        let start = Instant::now();
+        let path: String = "./tests/big_files/ape-4-0.10b.gfa".to_string();
+        match gfa_file_to_gfa2(path.clone()) {
+            Err(why) => println!("Error: {}", why),
+            _ => {
+                println!("Convert file from GFA to GFA2 {:?}", start.elapsed())
+            }
+        }
+    }
+
+    #[test]
     fn can_parse_and_write_medium_file_with_tag() {
         // Convert file from GFA to GFA2 Duration { seconds: 0, nanoseconds: 214957300 }
         let start = Instant::now();

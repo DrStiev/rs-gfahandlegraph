@@ -141,31 +141,19 @@ fn create_medium_graph() {
 #[test]
 fn mod_graph_from_medium_gfa() {
     /* MAIN PC
-    Create graph from file: Duration { seconds: 0, nanoseconds: 712439400 }
-    remove 1000 nodes from graph: Duration { seconds: 5, nanoseconds: 404610100 }
-    remove 1000 small edges: Duration { seconds: 5, nanoseconds: 498107900 }
-    remove 1 big edge (form of 1000 edges): Duration { seconds: 5, nanoseconds: 593331400 }
+    Create graph from file: Duration { seconds: 0, nanoseconds: 530796700 }
+    remove 1000 nodes from graph: Duration { seconds: 5, nanoseconds: 495879100 }
+    remove 1000 small edges: Duration { seconds: 5, nanoseconds: 457561000 }
+    remove 1 big edge (form of 1000 edges): Duration { seconds: 5, nanoseconds: 647415900 }
     */
-    /* PORTABLE PC
-    Create graph from file: Duration { seconds: 1, nanoseconds: 473749400 }
-    remove 1000 nodes from graph: Duration { seconds: 10, nanoseconds: 552469200 }
-    remove 1000 small edges: Duration { seconds: 10, nanoseconds: 147140900 }
-    remove 1 big edge (form of 1000 edges): Duration { seconds: 10, nanoseconds: 7050100 }
-     */
     //let mut graph = read_medium_gfa1();
 
     /* MAIN PC
-    Create graph from file: Duration { seconds: 1, nanoseconds: 275933800 }
-    remove 1000 nodes from graph: Duration { seconds: 5, nanoseconds: 442340100 }
-    remove 1000 small edges: Duration { seconds: 5, nanoseconds: 434688800 }
-    remove 1 big edge (form of 1000 edges): Duration { seconds: 5, nanoseconds: 524103000 }
+    Create graph from file: Duration { seconds: 0, nanoseconds: 153546100 }
+    remove 1000 nodes from graph: Duration { seconds: 3, nanoseconds: 815668300 }
+    remove 1000 small edges: Duration { seconds: 3, nanoseconds: 961064600 }
+    remove 1 big edge (form of 1000 edges): Duration { seconds: 4, nanoseconds: 85354900 }
     */
-    /* PORTABLE PC
-    Create graph from file: Duration { seconds: 1, nanoseconds: 226037200 }
-    remove 1000 nodes from graph: Duration { seconds: 9, nanoseconds: 656815000 }
-    small edge: Duration { seconds: 9, nanoseconds: 262195800 }
-    big edge: Duration { seconds: 9, nanoseconds: 490590700 }
-     */
     let mut graph = read_medium_gfa2();
 
     let start = Instant::now();
