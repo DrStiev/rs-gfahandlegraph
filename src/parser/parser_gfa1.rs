@@ -183,20 +183,15 @@ impl GFAParser {
 
         let file = File::open(path.as_ref())?;
         let lines = BufReader::new(file).byte_lines();
-        // see: https://doc.rust-lang.org/std/sync/struct.Mutex.html
         let gfa = Mutex::new(GFA::default());
-
-        // see: https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html
-        // see: https://doc.rust-lang.org/rust-by-example/scope/borrow/mut.html
         lines.par_bridge().for_each(|line| {
             match self.parse_gfa_line(line.unwrap().as_ref()) {
                 Ok(parsed) => gfa.lock().unwrap().insert_line(parsed),
                 Err(err) if err.can_safely_continue(&self.tolerance) => (),
                 // this line should return the error not panic, but for now it's ok
-                Err(err) => panic!("Error: {}", err),
+                Err(err) => panic!("{}", err),
             }
         });
-
         Ok(gfa.into_inner().unwrap())
     }
 }
@@ -532,6 +527,13 @@ impl Path {
 mod tests {
     use super::*;
     use time::Instant;
+
+    #[test]
+    #[should_panic]
+    fn parse_err_file() {
+        let parser = GFAParser::default();
+        let _gfa = parser.parse_file("./tests/gfa2_files/big.gfa2").unwrap();
+    }
 
     #[test]
     #[ignore]

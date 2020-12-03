@@ -135,7 +135,7 @@ pub fn convert_to_usize(input: &[u8]) -> Option<usize> {
 }
 
 // + => 43, - => 45
-/// array to perform the conversion from symbols to usize and viceversa
+/// array to perform the conversion from symbols to usize
 const CHARS: [&str; 128] = [
     // unprintable characters, never used but they need to be here
     "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF",

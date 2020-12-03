@@ -270,14 +270,16 @@ mod test {
 
     #[test]
     #[ignore]
-    fn convert_files() {
-        const FILES: [&str; 4] = [
+    fn convert_medium_files() {
+        const FILES: [&str; 6] = [
             "./tests/big_files/A-3105.sort.gfa",
             "./tests/big_files/DRB1-3123.sort.gfa",
             "./tests/big_files/A-3105.gfa",
             "./tests/big_files/DRB1-3123.gfa",
+            "./tests/big_files/diatom.gfa",
+            "./tests/big_files/test.gfa",
         ];
-        for i in 0..4 {
+        for i in 0..6 {
             let path = FILES[i].to_string();
             match gfa_file_to_gfa2(path.clone()) {
                 Err(why) => println!("Error: {}", why),

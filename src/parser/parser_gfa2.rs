@@ -187,7 +187,7 @@ impl GFA2Parser {
                 Ok(parsed) => gfa2.lock().unwrap().insert_line(parsed),
                 Err(err) if err.can_safely_continue(&self.tolerance) => (),
                 // this line should return the error not panic, but for now it's ok
-                Err(err) => panic!("Error: {}", err),
+                Err(err) => panic!("{}", err),
             }
         });
         Ok(gfa2.into_inner().unwrap())
