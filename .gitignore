@@ -13,3 +13,4 @@
 tests/output_files/default_path/converted_hashgraph.gfa2
 tests/output_files/default_path/format
 tests/output_files/default_path/prova
+tests/output_files/default_path/converted_hashgraph.gfa
