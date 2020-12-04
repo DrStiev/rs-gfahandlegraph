@@ -6,7 +6,7 @@ pub use self::graph::HashGraph;
 pub use self::node::Node;
 pub use self::path::{Path, PathId, PathStep};
 
-use bstr::BString;
+use bstr::{BString, ByteSlice};
 use rayon::iter::*;
 
 use crate::{
@@ -162,7 +162,10 @@ impl ModdableHandleGraph for HashGraph {
         let node_id: NodeId = node_id.into();
         let seq: BString = BString::from(seq);
         if let Some(n) = self.graph.get_mut(&node_id) {
-            if n.sequence == seq {
+            if seq.trim().is_empty() {
+                // error if the sequence is empty or blank
+                Err(GraphError::EmptySequence)
+            } else if n.sequence == seq {
                 // no need to update
                 Ok(true)
             } else {
@@ -775,8 +778,6 @@ impl PathHandleGraph for HashGraph {
     }
 
     fn remove_step<T: Into<NodeId>>(&mut self, name: &[u8], node: T) -> Result<bool, GraphError> {
-        use bstr::ByteSlice;
-
         if self.has_path(name) {
             let path_handle = self.name_to_path_handle(name).unwrap();
             let node = node.into();
@@ -795,8 +796,6 @@ impl PathHandleGraph for HashGraph {
         old_node: T,
         new_node: Handle,
     ) -> Result<bool, GraphError> {
-        use bstr::ByteSlice;
-
         if self.has_path(name) {
             let path_handle = self.name_to_path_handle(name).unwrap();
             let old_node = old_node.into();
@@ -820,8 +819,6 @@ impl PathHandleGraph for HashGraph {
         path_name: &[u8],
         sequence_of_id: Vec<Handle>,
     ) -> Result<bool, GraphError> {
-        use bstr::ByteSlice;
-
         // update occurrencies in path
         if let Some(path_handle) = self.name_to_path_handle(path_name) {
             self.destroy_path(&path_handle);
