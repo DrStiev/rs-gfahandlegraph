@@ -205,7 +205,7 @@ mod test {
     }
 
     #[test]
-    //#[ignore]
+    #[ignore]
     fn can_convert_big_graph_to_gfa() {
         // Convert graph to GFA2: Duration { seconds: 30, nanoseconds: 357191600 }
         match parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa") {

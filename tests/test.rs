@@ -87,6 +87,7 @@ fn clear_big_graph() {
 fn ditto() {
     let mut graph = read_ditto();
     let node: u64 = 1;
+    println!("{:#?}", graph);
     let start = Instant::now();
     match graph.remove_handle(node) {
         Ok(_) => {
