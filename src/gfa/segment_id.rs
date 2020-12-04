@@ -105,13 +105,13 @@ impl SegmentId for BString {
 ///
 /// ## Example
 /// ```ignore
-/// let a = 'a';
+/// let a = b"a";
 /// let a_: usize = 97;
-/// assert_eq!(a_, get_code_from_char(&a));
+/// assert_eq!(a_, convert_to_usize(&a));
 ///
-/// let number: char = '7';
+/// let number: char = b"7";
 /// let number_: usize = 7;
-/// assert_eq!(number_, get_code_from_char(&number));
+/// assert_eq!(number_, convert_to_usize(&number));
 /// ```
 #[inline]
 pub fn convert_to_usize(input: &[u8]) -> Option<usize> {

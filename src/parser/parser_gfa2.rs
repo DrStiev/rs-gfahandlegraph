@@ -156,16 +156,6 @@ impl GFA2Parser {
     /// let parser: GFA2Parser = GFA2Parser::new();
     /// let gfa2: GFA2 =
     ///     parser.parse_file(&"./tests/gfa2_files/data.gfa").unwrap();
-    ///
-    /// println!("{}", gfa2);
-    ///
-    /// /*
-    /// H       aa:i:15
-    /// H       VN:Z:2.0    TS:i:15
-    /// S       3       21      TGCAACGTATAGACTTGTCAC   RC:i:4  KC:i:485841 LN:i:1329
-    /// E       42       1+      2+      3       8$      0       5       0,2,4  TS:i:2  zz:Z:tag    vo:J:{"labels":false}
-    /// */
-    ///
     /// ```
     pub fn parse_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<GFA2, ParseError> {
         use {

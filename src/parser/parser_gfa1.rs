@@ -156,20 +156,6 @@ impl GFAParser {
     /// let parser: GFAParser = GFAParser::new();
     /// let gfa: GFA =
     ///     parser.parse_file(&"./tests/gfa_files/data.gfa").unwrap();
-    ///
-    /// println!("{}", gfa);
-    ///
-    /// /*
-    /// H	VN:Z:1.0
-    /// S	11	ACCTT
-    /// S	12	TCAAGG
-    /// S	13	CTTGATT
-    /// L	11	+	12	-	4M
-    /// L	12	-	13	+	5M
-    /// L	11	+	13	+	3M
-    /// P	14	11+,12-,13+	4M,5M
-    /// */
-    ///
     /// ```
     pub fn parse_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<GFA, ParseError> {
         use {

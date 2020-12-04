@@ -22,25 +22,6 @@ use crate::hashgraph::HashGraph;
 ///     Ok(g) => g.print_graph(),
 ///     Err(why) => println!("Error {}", why),
 /// }
-///
-/// /*
-/// Graph: {
-///     Nodes: {
-///         13: CTTGATT
-///         12: TCAAGG
-///         11: ACCTT
-///     }
-///     Edges: {
-///         12- -- 13+
-///         11+ -- 12-
-///         11+ -- 13+
-///     }
-///     Paths: {
-///         14: ACCTT -> CTTGATT
-///         15: ACCTT -> CCTTGA -> CTTGATT
-///     }
-/// }
-/// */
 /// ```
 pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(path: P) -> Result<HashGraph, ParseError> {
     use crate::hashgraph::graph::FileType;
@@ -112,18 +93,23 @@ mod test {
         Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa: Duration { seconds: 25, nanoseconds: 99623600 }
         Nodes: 715018	Edges: 985462	Paths: 0
         Create HashGraph: Duration { seconds: 2, nanoseconds: 605987000 }
+
         Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa: Duration { seconds: 20, nanoseconds: 501353900 }
         Nodes: 241419	Edges: 355105	Paths: 0
         Create HashGraph: Duration { seconds: 1, nanoseconds: 741834000 }
+
         Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa: Duration { seconds: 19, nanoseconds: 233540200 }
         Nodes: 148618	Edges: 214995	Paths: 0
         Create HashGraph: Duration { seconds: 1, nanoseconds: 521270900 }
+
         Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa2: Duration { seconds: 25, nanoseconds: 515242300 }
         Nodes: 715018	Edges: 985462	Paths: 0
         Create HashGraph: Duration { seconds: 2, nanoseconds: 966349800 }
+
         Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2: Duration { seconds: 22, nanoseconds: 522741600 }
         Nodes: 241419	Edges: 355105	Paths: 0
         Create HashGraph: Duration { seconds: 1, nanoseconds: 835280800 }
+
         Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa2: Duration { seconds: 20, nanoseconds: 638227800 }
         Nodes: 148618	Edges: 214995	Paths: 0
         Create HashGraph: Duration { seconds: 1, nanoseconds: 573665700 }

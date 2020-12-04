@@ -1,13 +1,11 @@
 /// This file provides the structure to create a GFA2 Object
 use crate::gfa::orientation::*;
 use crate::gfa::segment_id::*;
-
-// see: https://stackoverflow.com/questions/41034635/idiomatic-transformations-for-string-str-vecu8-and-u8
 use bstr::{BString, ByteSlice};
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-// see: https://github.com/GFA-spec/GFA-spec/blob/master/GFA2.md
+/// return a GFA2 object
 #[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GFA2 {
     pub headers: Vec<Header>,
