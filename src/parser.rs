@@ -42,9 +42,7 @@ use crate::hashgraph::HashGraph;
 /// }
 /// */
 /// ```
-pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(
-    path: P,
-) -> Result<HashGraph, ParseError> {
+pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(path: P) -> Result<HashGraph, ParseError> {
     use crate::hashgraph::graph::FileType;
     use std::ffi::OsStr;
 
@@ -56,9 +54,7 @@ pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(
 
             match graph.create_graph(FileType::GFA2(gfa2)) {
                 Ok(g) => Ok(g),
-                Err(why) => {
-                    Err(ParseError::ConversionGFAToGraph(why.to_string()))
-                }
+                Err(why) => Err(ParseError::ConversionGFAToGraph(why.to_string())),
             }
         }
         "gfa" => {
@@ -68,9 +64,7 @@ pub fn parse_file_to_graph<P: AsRef<std::path::Path>>(
 
             match graph.create_graph(FileType::GFA(gfa)) {
                 Ok(g) => Ok(g),
-                Err(why) => {
-                    Err(ParseError::ConversionGFAToGraph(why.to_string()))
-                }
+                Err(why) => Err(ParseError::ConversionGFAToGraph(why.to_string())),
             }
         }
         _ => Err(ParseError::ExtensionError()),
@@ -106,10 +100,7 @@ mod test {
     #[test]
     fn can_create_graph_from_gfa1_file() {
         match parse_file_to_graph("./tests/gfa1_files/lil.gfa") {
-            Ok(g) => {
-                println!("{}", g);
-                println!("{:#?}", g)
-            } //g.print_graph(),
+            Ok(g) => println!("{}", g),
             Err(why) => println!("Error {}", why),
         }
     }
@@ -118,29 +109,24 @@ mod test {
     #[ignore]
     fn big_file() {
         /*
-        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa: Duration { seconds: 59, nanoseconds: 987184300 }
+        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa: Duration { seconds: 25, nanoseconds: 99623600 }
         Nodes: 715018	Edges: 985462	Paths: 0
-        Create HashGraph: Duration { seconds: 5, nanoseconds: 679481900 }
-
-        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa: Duration { seconds: 45, nanoseconds: 815419500 }
+        Create HashGraph: Duration { seconds: 2, nanoseconds: 605987000 }
+        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa: Duration { seconds: 20, nanoseconds: 501353900 }
         Nodes: 241419	Edges: 355105	Paths: 0
-        Create HashGraph: Duration { seconds: 2, nanoseconds: 923615000 }
-
-        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa: Duration { seconds: 42, nanoseconds: 244556300 }
+        Create HashGraph: Duration { seconds: 1, nanoseconds: 741834000 }
+        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa: Duration { seconds: 19, nanoseconds: 233540200 }
         Nodes: 148618	Edges: 214995	Paths: 0
-        Create HashGraph: Duration { seconds: 2, nanoseconds: 211683500 }
-
-        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa2: Duration { seconds: 65, nanoseconds: 819299300 }
+        Create HashGraph: Duration { seconds: 1, nanoseconds: 521270900 }
+        Create GFAObject from ./tests/big_files/ape-4-0.10b.gfa2: Duration { seconds: 25, nanoseconds: 515242300 }
         Nodes: 715018	Edges: 985462	Paths: 0
-        Create HashGraph: Duration { seconds: 7, nanoseconds: 343440900 }
-
-        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2: Duration { seconds: 48, nanoseconds: 158447700 }
+        Create HashGraph: Duration { seconds: 2, nanoseconds: 966349800 }
+        Create GFAObject from ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2: Duration { seconds: 22, nanoseconds: 522741600 }
         Nodes: 241419	Edges: 355105	Paths: 0
-        Create HashGraph: Duration { seconds: 3, nanoseconds: 494897800 }
-
-        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa2: Duration { seconds: 44, nanoseconds: 281001200 }
+        Create HashGraph: Duration { seconds: 1, nanoseconds: 835280800 }
+        Create GFAObject from ./tests/big_files/GRCh38-20-0.10b.gfa2: Duration { seconds: 20, nanoseconds: 638227800 }
         Nodes: 148618	Edges: 214995	Paths: 0
-        Create HashGraph: Duration { seconds: 2, nanoseconds: 568562000 }
+        Create HashGraph: Duration { seconds: 1, nanoseconds: 573665700 }
          */
         const FILES: [&str; 3] = [
             "./tests/big_files/ape-4-0.10b.gfa",
@@ -209,66 +195,31 @@ mod test {
     #[ignore]
     fn read_big_file() {
         /*
-        Create gfa from file: Duration { seconds: 22, nanoseconds: 21791200 }
-        File ./tests/big_files/ape-4-0.10b.gfa, number of lines: 1700480
-
-        Create gfa from file: Duration { seconds: 20, nanoseconds: 230613000 }
-        File ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa, number of lines: 596524
-
-        Create gfa from file: Duration { seconds: 19, nanoseconds: 95918000 }
-        File ./tests/big_files/GRCh38-20-0.10b.gfa, number of lines: 363613
-
-        Create gfa from file: Duration { seconds: 22, nanoseconds: 561371700 }
-        File ./tests/big_files/ape-4-0.10b.gfa2, number of lines: 1700480
-
-        Create gfa from file: Duration { seconds: 20, nanoseconds: 357006500 }
-        File ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2, number of lines: 596524
-
-        Create gfa from file: Duration { seconds: 20, nanoseconds: 185023100 }
-        File ./tests/big_files/GRCh38-20-0.10b.gfa2, number of lines: 363613
-
+        Read file ./tests/big_files/ape-4-0.10b.gfa (has 1700480 lines): Duration { seconds: 20, nanoseconds: 779014300 }
+        Read file ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa (has 596524 lines): Duration { seconds: 20, nanoseconds: 306792000 }
+        Read file ./tests/big_files/GRCh38-20-0.10b.gfa (has 363613 lines): Duration { seconds: 18, nanoseconds: 951543200 }
+        Read file ./tests/big_files/ape-4-0.10b.gfa2 (has 1700480 lines): Duration { seconds: 23, nanoseconds: 392768900 }
+        Read file ./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2 (has 596524 lines): Duration { seconds: 21, nanoseconds: 349775300 }
+        Read file ./tests/big_files/GRCh38-20-0.10b.gfa2 (has 363613 lines): Duration { seconds: 19, nanoseconds: 231613100 }
          */
-        const FILES: [&str; 3] = [
+        const FILES: [&str; 6] = [
             "./tests/big_files/ape-4-0.10b.gfa",
             "./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa",
             "./tests/big_files/GRCh38-20-0.10b.gfa",
-        ];
-        for i in 0..3 {
-            let start = Instant::now();
-            let file = File::open(FILES[i].to_string()).unwrap();
-            let lines = BufReader::new(file).byte_lines();
-            let mut count: usize = 0;
-            lines.for_each(|line| match line {
-                Ok(_) => count += 1,
-                Err(why) => println!("Error: {}", why),
-            });
-            println!("Create gfa from file: {:?}", start.elapsed());
-            println!(
-                "File {}, number of lines: {}",
-                FILES[i].to_string(),
-                count
-            );
-        }
-
-        const FILES2: [&str; 3] = [
             "./tests/big_files/ape-4-0.10b.gfa2",
             "./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa2",
             "./tests/big_files/GRCh38-20-0.10b.gfa2",
         ];
-        for i in 0..3 {
+        for i in 0..6 {
             let start = Instant::now();
-            let file = File::open(FILES2[i].to_string()).unwrap();
-            let lines = BufReader::new(file).byte_lines();
-            let mut count: usize = 0;
-            lines.for_each(|line| match line {
-                Ok(_) => count += 1,
-                Err(why) => println!("Error: {}", why),
-            });
-            println!("Create gfa from file: {:?}", start.elapsed());
+            let lines = BufReader::new(File::open(FILES[i].to_string()).unwrap()).byte_lines();
+            let mut count = 0;
+            lines.for_each(|_l| count += 1);
             println!(
-                "File {}, number of lines: {}",
-                FILES2[i].to_string(),
-                count
+                "Read file {} (has {} lines): {:?}",
+                FILES[i].to_string(),
+                count,
+                start.elapsed()
             );
         }
     }

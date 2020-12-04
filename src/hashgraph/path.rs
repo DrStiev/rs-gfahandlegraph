@@ -54,11 +54,7 @@ pub struct Path {
 }
 
 impl Path {
-    pub fn new<T: Into<BString>>(
-        name: T,
-        path_id: PathId,
-        is_circular: bool,
-    ) -> Self {
+    pub fn new<T: Into<BString>>(name: T, path_id: PathId, is_circular: bool) -> Self {
         Path {
             name: name.into(),
             path_id,
@@ -78,9 +74,7 @@ impl Path {
     pub fn bases_len(&self, graph: &FnvHashMap<NodeId, Node>) -> usize {
         self.nodes
             .iter()
-            .filter_map(|handle| {
-                graph.get(&handle.id()).map(|n| n.sequence.len())
-            })
+            .filter_map(|handle| graph.get(&handle.id()).map(|n| n.sequence.len()))
             .sum()
     }
 
@@ -115,11 +109,7 @@ impl Path {
         }
     }
 
-    pub fn step_at_position(
-        &self,
-        graph: &FnvHashMap<NodeId, Node>,
-        pos: usize,
-    ) -> PathStep {
+    pub fn step_at_position(&self, graph: &FnvHashMap<NodeId, Node>, pos: usize) -> PathStep {
         if pos == 0 {
             return PathStep::Front(self.path_id);
         }

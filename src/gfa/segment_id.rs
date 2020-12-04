@@ -85,9 +85,7 @@ impl SegmentId for BString {
     #[inline]
     fn parse_id(id: IdType, input: &[u8]) -> Option<Self> {
         match id {
-            IdType::ID() => {
-                RE_ID.find(input).map(|s| BString::from(s.as_bytes()))
-            }
+            IdType::ID() => RE_ID.find(input).map(|s| BString::from(s.as_bytes())),
             IdType::OPTIONALID() => RE_OPTIONAL_ID
                 .find(input)
                 .map(|s| BString::from(s.as_bytes())),
@@ -138,25 +136,22 @@ pub fn convert_to_usize(input: &[u8]) -> Option<usize> {
 /// array to perform the conversion from symbols to usize
 const CHARS: [&str; 128] = [
     // unprintable characters, never used but they need to be here
-    "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF",
-    "VT", "FF", "CR", "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK",
-    "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US",
-    // printable characters, the ones that will be used
-    " ", "!", "\"", "#", "$", "%", "&", "\'", "(", ")", "*", "+", ",", "-", ".",
-    "/", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=",
-    ">", "?", "@", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L",
-    "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "[",
-    "\\", "]", "^", "_", "`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
-    "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y",
-    "z", "{", "|", "}", "~",
-    // even if printable, this character it's not used
+    "NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL", "BS", "HT", "LF", "VT", "FF", "CR",
+    "SO", "SI", "DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC",
+    "FS", "GS", "RS", "US", // printable characters, the ones that will be used
+    " ", "!", "\"", "#", "$", "%", "&", "\'", "(", ")", "*", "+", ",", "-", ".", "/", "0", "1",
+    "2", "3", "4", "5", "6", "7", "8", "9", ":", ";", "<", "=", ">", "?", "@", "A", "B", "C", "D",
+    "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W",
+    "X", "Y", "Z", "[", "\\", "]", "^", "_", "`", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
+    "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "{", "|", "}",
+    "~", // even if printable, this character it's not used
     "DEL",
 ];
 
 /// function that performs the conversion from a symbol to the associated ascii code
 /// # Example
 /// ```ignore
-/// let a: &str = "a";
+/// let a: char = 'a';
 /// let a_: usize = 97;
 /// assert_eq!(a_, get_code_from_char(a));
 /// ```

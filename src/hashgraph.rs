@@ -18,10 +18,7 @@ use crate::{
 };
 
 impl<'a> AllHandles for &'a HashGraph {
-    type Handles = NodeIdRefHandles<
-        'a,
-        std::collections::hash_map::Keys<'a, NodeId, Node>,
-    >;
+    type Handles = NodeIdRefHandles<'a, std::collections::hash_map::Keys<'a, NodeId, Node>>;
 
     #[inline]
     fn handles(self) -> Self::Handles {
@@ -43,10 +40,7 @@ impl<'a> AllHandles for &'a HashGraph {
 /// parallel version for AllHandles Iter
 impl<'a> AllHandlesPar for &'a HashGraph {
     type HandlesPar = rayon::iter::IterBridge<
-        NodeIdRefHandles<
-            'a,
-            std::collections::hash_map::Keys<'a, NodeId, Node>,
-        >,
+        NodeIdRefHandles<'a, std::collections::hash_map::Keys<'a, NodeId, Node>>,
     >;
 
     fn handles_par(self) -> Self::HandlesPar {
@@ -100,14 +94,9 @@ impl<'a> HandleNeighbors for &'a HashGraph {
 
 /// parallel version for HandleNeighbors Iter
 impl<'a> HandleNeighborsPar for &'a HashGraph {
-    type NeighborsPar =
-        rayon::iter::IterBridge<NeighborIter<'a, std::slice::Iter<'a, Handle>>>;
+    type NeighborsPar = rayon::iter::IterBridge<NeighborIter<'a, std::slice::Iter<'a, Handle>>>;
 
-    fn neighbors_par(
-        self,
-        handle: Handle,
-        dir: Direction,
-    ) -> Self::NeighborsPar {
+    fn neighbors_par(self, handle: Handle, dir: Direction) -> Self::NeighborsPar {
         self.neighbors(handle, dir).par_bridge()
     }
 }
@@ -117,14 +106,12 @@ impl<'a> HandleSequences for &'a HashGraph {
 
     #[inline]
     fn sequence_iter(self, handle: Handle) -> Self::Sequence {
-        let seq: &[u8] =
-            &self.get_node_unchecked(&handle.id()).sequence.as_ref();
+        let seq: &[u8] = &self.get_node_unchecked(&handle.id()).sequence.as_ref();
         SequenceIter::new(seq.iter().copied(), handle.is_reverse())
     }
 
     fn sequence(self, handle: Handle) -> Vec<u8> {
-        let seq: &[u8] =
-            &self.get_node_unchecked(&handle.id()).sequence.as_ref();
+        let seq: &[u8] = &self.get_node_unchecked(&handle.id()).sequence.as_ref();
         if handle.is_reverse() {
             dna::rev_comp(seq)
         } else {
@@ -140,9 +127,8 @@ impl<'a> HandleSequences for &'a HashGraph {
 
 /// parallel version for HandleSequence Iter
 impl<'a> HandleSequencesPar for &'a HashGraph {
-    type SequencePar = rayon::iter::IterBridge<
-        SequenceIter<std::iter::Copied<std::slice::Iter<'a, u8>>>,
-    >;
+    type SequencePar =
+        rayon::iter::IterBridge<SequenceIter<std::iter::Copied<std::slice::Iter<'a, u8>>>>;
 
     fn sequence_par_iter(self, handle: Handle) -> Self::SequencePar {
         self.sequence_iter(handle).par_bridge()
@@ -211,10 +197,7 @@ impl ModdableHandleGraph for HashGraph {
 }
 
 impl SubtractiveHandleGraph for HashGraph {
-    fn remove_handle<T: Into<NodeId>>(
-        &mut self,
-        node: T,
-    ) -> Result<bool, GraphError> {
+    fn remove_handle<T: Into<NodeId>>(&mut self, node: T) -> Result<bool, GraphError> {
         let node_id: NodeId = node.into();
         if let Some(node) = self.graph.remove(&node_id) {
             // delete all the occurrencies in the edge list of node.id()
@@ -309,12 +292,8 @@ impl SubtractiveHandleGraph for HashGraph {
             }
             for path in self.clone().paths() {
                 let nodes = &self.paths.get_mut(&path).unwrap().nodes;
-                if let Some(l) =
-                    nodes.par_iter().position_any(|x| x.id() == l.id())
-                {
-                    if let Some(r) =
-                        nodes.par_iter().position_any(|x| x.id() == r.id())
-                    {
+                if let Some(l) = nodes.par_iter().position_any(|x| x.id() == l.id()) {
+                    if let Some(r) = nodes.par_iter().position_any(|x| x.id() == r.id()) {
                         if r == l + 1 {
                             self.paths.remove(&path);
                         }
@@ -369,10 +348,7 @@ impl AdditiveHandleGraph for HashGraph {
         }
     }
 
-    fn create_edge(
-        &mut self,
-        Edge(left, right): Edge,
-    ) -> Result<bool, GraphError> {
+    fn create_edge(&mut self, Edge(left, right): Edge) -> Result<bool, GraphError> {
         let add_edge = {
             let left_node = self
                 .graph
@@ -409,11 +385,7 @@ impl AdditiveHandleGraph for HashGraph {
 }
 
 impl MutableHandleGraph for HashGraph {
-    fn divide_handle(
-        &mut self,
-        handle: Handle,
-        mut offsets: Vec<usize>,
-    ) -> Vec<Handle> {
+    fn divide_handle(&mut self, handle: Handle, mut offsets: Vec<usize>) -> Vec<Handle> {
         let mut result = vec![handle];
         let node_len = self.node_len(handle);
         let sequence = self.sequence(handle);
@@ -440,8 +412,7 @@ impl MutableHandleGraph for HashGraph {
         // TODO it should be possible to do this without creating new
         // strings and collecting into a vec
 
-        let subseqs: Vec<BString> =
-            ranges.into_iter().map(|r| sequence[r].into()).collect();
+        let subseqs: Vec<BString> = ranges.into_iter().map(|r| sequence[r].into()).collect();
 
         for seq in subseqs {
             match self.append_handle(&seq) {
@@ -452,9 +423,8 @@ impl MutableHandleGraph for HashGraph {
 
         // move the outgoing edges to the last new segment
         // empty the existing right edges of the original node
-        let mut orig_rights = std::mem::take(
-            &mut self.get_node_mut(&handle.id()).unwrap().right_edges,
-        );
+        let mut orig_rights =
+            std::mem::take(&mut self.get_node_mut(&handle.id()).unwrap().right_edges);
 
         let new_rights = &mut self
             .get_node_mut(&result.last().unwrap().id())
@@ -683,11 +653,7 @@ impl PathHandleGraph for HashGraph {
         }
     }
 
-    fn create_path_handle(
-        &mut self,
-        name: &[u8],
-        is_circular: bool,
-    ) -> Self::PathHandle {
+    fn create_path_handle(&mut self, name: &[u8], is_circular: bool) -> Self::PathHandle {
         let path_id = self.paths.len() as i64;
         let path = Path::new(name, path_id, is_circular);
         self.path_id.insert(name.into(), path_id);
@@ -711,11 +677,7 @@ impl PathHandleGraph for HashGraph {
         Ok(PathStep::Step(*path_id, path.nodes.len() - 1))
     }
 
-    fn prepend_step(
-        &mut self,
-        path_id: &Self::PathHandle,
-        to_prepend: Handle,
-    ) -> Self::StepHandle {
+    fn prepend_step(&mut self, path_id: &Self::PathHandle, to_prepend: Handle) -> Self::StepHandle {
         let path: &mut Path = self.paths.get_mut(path_id).unwrap();
         // update occurrences in nodes already in the graph
         for h in path.nodes.iter() {
@@ -769,17 +731,14 @@ impl PathHandleGraph for HashGraph {
         }
 
         // get a &mut to the path's vector of handles
-        let handles: &mut Vec<Handle> =
-            &mut self.paths.get_mut(&path_id).unwrap().nodes;
+        let handles: &mut Vec<Handle> = &mut self.paths.get_mut(&path_id).unwrap().nodes;
 
         let r = l + new_segment.len();
         // replace the range of the path's handle vector with the new segment
         handles.splice(range, new_segment);
 
         // update occurrences
-        for (ix, handle) in
-            self.paths.get(&path_id).unwrap().nodes.iter().enumerate()
-        {
+        for (ix, handle) in self.paths.get(&path_id).unwrap().nodes.iter().enumerate() {
             let node: &mut Node = self.graph.get_mut(&handle.id()).unwrap();
             node.occurrences.insert(path_id, ix);
         }
@@ -790,9 +749,7 @@ impl PathHandleGraph for HashGraph {
         (PathStep::Step(path_id, l), PathStep::Step(path_id, r))
     }
 
-    fn paths<'a>(
-        &'a self,
-    ) -> Box<dyn Iterator<Item = &'a Self::PathHandle> + 'a> {
+    fn paths<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::PathHandle> + 'a> {
         Box::new(self.paths.keys())
     }
 
@@ -817,11 +774,7 @@ impl PathHandleGraph for HashGraph {
         )
     }
 
-    fn remove_step<T: Into<NodeId>>(
-        &mut self,
-        name: &[u8],
-        node: T,
-    ) -> Result<bool, GraphError> {
+    fn remove_step<T: Into<NodeId>>(&mut self, name: &[u8], node: T) -> Result<bool, GraphError> {
         use bstr::ByteSlice;
 
         if self.has_path(name) {

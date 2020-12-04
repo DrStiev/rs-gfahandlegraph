@@ -54,8 +54,7 @@ impl fmt::Display for HashGraph {
         // get all the nodes
         self.handles_par().for_each(|handle| {
             let node_id: String = handle.id().to_string();
-            let sequence: BString =
-                self.sequence_iter(handle.forward()).collect();
+            let sequence: BString = self.sequence_iter(handle.forward()).collect();
             nodes
                 .lock()
                 .unwrap()
@@ -103,10 +102,9 @@ impl fmt::Display for HashGraph {
                 }
                 // print correct reverse and complement sequence to display the correct path
                 if handle.is_reverse() {
-                    let rev_sequence: String = String::from_utf8(
-                        dna::rev_comp(node.sequence.as_slice()),
-                    )
-                    .expect("Unable to convert from UTF8");
+                    let rev_sequence: String =
+                        String::from_utf8(dna::rev_comp(node.sequence.as_slice()))
+                            .expect("Unable to convert from UTF8");
                     paths.push_str(&format!("{}", rev_sequence));
                 } else {
                     paths.push_str(&format!("{}", node.sequence));
@@ -156,10 +154,7 @@ impl HashGraph {
     ///     Err(why) => println!("{}", why),
     /// }
     /// ```
-    pub fn create_graph(
-        &mut self,
-        file: FileType,
-    ) -> Result<HashGraph, GraphError> {
+    pub fn create_graph(&mut self, file: FileType) -> Result<HashGraph, GraphError> {
         match file {
             FileType::GFA(x) => {
                 x.segments.into_iter().for_each(|s| {
@@ -179,9 +174,7 @@ impl HashGraph {
                 x.paths.into_iter().for_each(|p| {
                     let path_id = self.create_path_handle(&p.path_name, false);
                     for (id, orient) in p.iter() {
-                        match self
-                            .append_step(&path_id, Handle::new(id, orient))
-                        {
+                        match self.append_step(&path_id, Handle::new(id, orient)) {
                             Ok(_) => (),
                             Err(why) => println!("Error: {}", why),
                         };
@@ -190,12 +183,12 @@ impl HashGraph {
                 Ok(self.to_owned())
             }
             FileType::GFA2(x) => {
-                x.segments.into_iter().for_each(|s| {
-                    match self.create_handle(s.id, &s.sequence) {
+                x.segments
+                    .into_iter()
+                    .for_each(|s| match self.create_handle(s.id, &s.sequence) {
                         Ok(_) => (),
                         Err(why) => println!("Error {}", why),
-                    }
-                });
+                    });
                 x.edges.into_iter().for_each(|e| {
                     let orient = |rev: &str| match rev {
                         "43" => Orientation::Forward,
@@ -223,9 +216,7 @@ impl HashGraph {
                 x.groups_o.into_iter().for_each(|o| {
                     let path_id = self.create_path_handle(&o.id, false);
                     for (id, orient) in o.iter() {
-                        match self
-                            .append_step(&path_id, Handle::new(id, orient))
-                        {
+                        match self.append_step(&path_id, Handle::new(id, orient)) {
                             Ok(_) => (),
                             Err(why) => println!("Error: {}", why),
                         };
@@ -255,9 +246,9 @@ impl HashGraph {
     }
 
     pub fn get_node_unchecked(&self, node_id: &NodeId) -> &Node {
-        self.graph.get(node_id).unwrap_or_else(|| {
-            panic!("Tried getting a node that doesn't exist, ID: {:?}", node_id)
-        })
+        self.graph
+            .get(node_id)
+            .unwrap_or_else(|| panic!("Tried getting a node that doesn't exist, ID: {:?}", node_id))
     }
 
     pub fn get_node_mut(&mut self, node_id: &NodeId) -> Option<&mut Node> {

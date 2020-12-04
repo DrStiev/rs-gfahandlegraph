@@ -7,9 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 // see: https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GFA {
     pub headers: Vec<Header>,
     pub segments: Vec<Segment>,
@@ -168,9 +166,7 @@ impl fmt::Display for Header {
     }
 }
 
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Segment {
     pub name: usize,
     pub sequence: BString,
@@ -192,9 +188,7 @@ impl fmt::Display for Segment {
     }
 }
 
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Link {
     pub from_segment: usize,
     pub from_orient: Orientation,
@@ -224,22 +218,15 @@ impl fmt::Display for Link {
         write!(
             f,
             "L\t{}\t{}\t{}\t{}",
-            self.from_segment,
-            self.from_orient,
-            self.to_segment,
-            self.to_orient,
+            self.from_segment, self.from_orient, self.to_segment, self.to_orient,
         )
     }
 }
 
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Containment {}
 
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Path {
     pub path_name: BString,
     pub segment_names: BString,
@@ -272,9 +259,7 @@ impl Path {
     /// Produces an iterator over the usize segments of the given
     /// path.
     #[inline]
-    pub fn iter<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = (usize, Orientation)> + 'a {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
         self.segment_names
             .split_str(b",")
             .filter_map(Self::parse_segment_id)

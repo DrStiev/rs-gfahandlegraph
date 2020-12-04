@@ -205,10 +205,7 @@ impl ParseError {
         use ParserTolerance as Tol;
         match tol {
             Tol::IgnoreAll => true,
-            Tol::Safe => matches!(
-                self,
-                ParseError::EmptyLine | ParseError::UnknownLineType
-            ),
+            Tol::Safe => matches!(self, ParseError::EmptyLine | ParseError::UnknownLineType),
             Tol::Pedantic => false,
         }
     }

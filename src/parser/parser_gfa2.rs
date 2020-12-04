@@ -129,8 +129,7 @@ impl GFA2Parser {
         let mut fields = line.split_str(b"\t");
         let hdr = fields.next().ok_or(ParseError::EmptyLine)?;
 
-        let invalid_line =
-            |e: ParseFieldError| ParseError::invalid_line(e, bytes);
+        let invalid_line = |e: ParseFieldError| ParseError::invalid_line(e, bytes);
 
         let line = match hdr {
             // most common lines and more important ones
@@ -168,10 +167,7 @@ impl GFA2Parser {
     /// */
     ///
     /// ```
-    pub fn parse_file<P: AsRef<std::path::Path>>(
-        &self,
-        path: P,
-    ) -> Result<GFA2, ParseError> {
+    pub fn parse_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<GFA2, ParseError> {
         use {
             bstr::io::BufReadExt,
             std::{fs::File, io::BufReader},
@@ -242,8 +238,7 @@ where
 fn parse_tag(input: &[u8]) -> Option<bool> {
     lazy_static! {
         static ref RE_TAG: Regex =
-            Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*")
-                .unwrap();
+            Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*").unwrap();
     }
     Some(RE_TAG.is_match(input))
 }
@@ -379,8 +374,7 @@ where
 {
     lazy_static! {
         static ref RE_ALIGNMENT: Regex =
-            Regex::new(r"(?-u)\*|([0-9]+[MDIP])+|(\-?[0-9]+(,\-?[0-9]+)*)")
-                .unwrap();
+            Regex::new(r"(?-u)\*|([0-9]+[MDIP])+|(\-?[0-9]+(,\-?[0-9]+)*)").unwrap();
     }
     let next = next_field(input)?;
     if RE_ALIGNMENT.is_match(next.as_ref()) {
@@ -414,8 +408,7 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE_OPTIONAL_ID: Regex =
-            Regex::new(r"(?-u)[!-~]+|\*").unwrap();
+        static ref RE_OPTIONAL_ID: Regex = Regex::new(r"(?-u)[!-~]+|\*").unwrap();
     }
     let next = next_field(input)?;
     if RE_OPTIONAL_ID.is_match(next.as_ref()) {
@@ -432,8 +425,7 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE_REFERENCE_ID: Regex =
-            Regex::new(r"(?-u)[!-~]+[+-]").unwrap();
+        static ref RE_REFERENCE_ID: Regex = Regex::new(r"(?-u)[!-~]+[+-]").unwrap();
     }
     let next = next_field(input)?;
     if RE_REFERENCE_ID.is_match(next.as_ref()) {
@@ -487,8 +479,8 @@ impl Edge {
         I::Item: AsRef<[u8]>,
     {
         parse_opt_id(&mut input)?;
-        let sid1 = usize::parse_next(&mut input, IdType::OPTIONALID())?;
-        let sid2 = usize::parse_next(&mut input, IdType::OPTIONALID())?;
+        let sid1 = usize::parse_next(&mut input, IdType::REFERENCEID())?;
+        let sid2 = usize::parse_next(&mut input, IdType::REFERENCEID())?;
         parse_pos(&mut input)?;
         parse_pos(&mut input)?;
         parse_pos(&mut input)?;
@@ -549,7 +541,7 @@ impl Gap {
 }
 
 /// function that parses the ref tag og the o group element
-/// ```<ref> <- [!-~]+[+-]```
+/// ```<ref> <- [!-~]+[+-]([ ][!-~]+[+-])*```
 #[inline]
 fn parse_group_ref<I>(input: &mut I) -> ParserFieldResult<BString>
 where
@@ -557,8 +549,7 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE_GROUP_REF: Regex =
-            Regex::new(r"(?-u)[!-~]+[+-]([ ][!-~]+[+-])*").unwrap();
+        static ref RE_GROUP_REF: Regex = Regex::new(r"(?-u)[!-~]+[+-]([ ][!-~]+[+-])*").unwrap();
     }
     let next = next_field(input)?;
     RE_GROUP_REF
@@ -568,7 +559,7 @@ where
 }
 
 /// function that parses the id tag og the o group element
-/// ```<id> <- [!-~]+```
+/// ```<id> <- [!-~]+([ ][!-~]+)*```
 #[inline]
 fn parse_group_id<I>(input: &mut I) -> ParserFieldResult<bool>
 where
@@ -576,8 +567,7 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE_GROUP_ID: Regex =
-            Regex::new(r"(?-u)[!-~]+([ ][!-~]+)*").unwrap();
+        static ref RE_GROUP_ID: Regex = Regex::new(r"(?-u)[!-~]+([ ][!-~]+)*").unwrap();
     }
     let next = next_field(input)?;
     if RE_GROUP_ID.is_match(next.as_ref()) {
@@ -610,7 +600,7 @@ impl GroupO {
     }
 }
 
-/// function that parses the GROUPO element
+/// function that parses the GROUPU element
 /// ```<u_group> <- U <uid:opt_id>  <id>([ ]<id>)*  <tag>*```
 impl GroupU {
     #[inline]
@@ -660,8 +650,7 @@ mod tests {
         // Create gfa from file: Duration { seconds: 0, nanoseconds: 487090400 } (with rayon) (with is_match) (PORTABLE PC)
         let parser = GFA2Parser::default();
         let start = Instant::now();
-        let _gfa2: GFA2 =
-            parser.parse_file("./tests/big_files/test.gfa2").unwrap();
+        let _gfa2: GFA2 = parser.parse_file("./tests/big_files/test.gfa2").unwrap();
         println!("Create gfa from file: {:?}", start.elapsed());
     }
 
@@ -748,8 +737,7 @@ mod tests {
 
     #[test]
     fn can_parse_ogroup() {
-        let ogroup =
-            "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-\tAZ:i:87905\tHH:f:BAR";
+        let ogroup = "P1\t36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-\tAZ:i:87905\tHH:f:BAR";
         let ogroup_: GroupO = GroupO {
             id: "P1".into(),
             var_field: "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),

@@ -8,9 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 // see: https://github.com/GFA-spec/GFA-spec/blob/master/GFA2.md
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GFA2 {
     pub headers: Vec<Header>,
     pub segments: Vec<Segment>,
@@ -201,9 +199,7 @@ impl fmt::Display for Header {
     }
 }
 
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Segment {
     pub id: usize,
     pub sequence: BString,
@@ -225,14 +221,10 @@ impl fmt::Display for Segment {
     }
 }
 
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Fragment {}
 
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Edge {
     pub sid1: usize, // orientation as final char (+-)
     pub sid2: usize, // orientation as final char (+-)
@@ -267,18 +259,14 @@ impl fmt::Display for Edge {
     }
 }
 
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct Gap {}
 
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GroupO {
     // O-Group and U-Group are different only for one field
     // this field can implment or not an optional tag (using * char)
-    pub id: BString, // optional id, can be either * or id tag
+    pub id: BString,        // optional id, can be either * or id tag
     pub var_field: BString, // "array" of ref (from 1 to n)
 }
 
@@ -305,9 +293,7 @@ impl GroupO {
 
     /// Produces an iterator over the usize segments of the given group
     #[inline]
-    pub fn iter<'a>(
-        &'a self,
-    ) -> impl Iterator<Item = (usize, Orientation)> + 'a {
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = (usize, Orientation)> + 'a {
         self.var_field
             .split_str(b" ")
             .filter_map(Self::parse_segment_id)
@@ -320,9 +306,7 @@ impl fmt::Display for GroupO {
     }
 }
 
-#[derive(
-    Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash,
-)]
+#[derive(Default, Debug, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Hash)]
 pub struct GroupU {}
 
 #[cfg(test)]
@@ -331,10 +315,7 @@ mod test {
 
     #[test]
     fn o_group_iter() {
-        let ogroup_: GroupO = GroupO::new(
-            "P1".into(),
-            "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into(),
-        );
+        let ogroup_: GroupO = GroupO::new("P1".into(), "36+ 53+ 53_38+ 38_13+ 13+ 14+ 50-".into());
         for (name, orientation) in ogroup_.iter() {
             println!("{}{}", name, orientation);
         }

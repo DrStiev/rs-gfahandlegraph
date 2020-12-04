@@ -131,8 +131,7 @@ impl GFAParser {
         let mut fields = line.split_str(b"\t");
         let hdr = fields.next().ok_or(ParseError::EmptyLine)?;
 
-        let invalid_line =
-            |e: ParseFieldError| ParseError::invalid_line(e, bytes);
+        let invalid_line = |e: ParseFieldError| ParseError::invalid_line(e, bytes);
 
         let line = match hdr {
             // most common lines and more important ones
@@ -172,10 +171,7 @@ impl GFAParser {
     /// */
     ///
     /// ```
-    pub fn parse_file<P: AsRef<std::path::Path>>(
-        &self,
-        path: P,
-    ) -> Result<GFA, ParseError> {
+    pub fn parse_file<P: AsRef<std::path::Path>>(&self, path: P) -> Result<GFA, ParseError> {
         use {
             bstr::io::BufReadExt,
             std::{fs::File, io::BufReader},
@@ -245,8 +241,7 @@ where
 fn parse_tag(input: &[u8]) -> Option<bool> {
     lazy_static! {
         static ref RE_TAG: Regex =
-            Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*")
-                .unwrap();
+            Regex::new(r"(?-u)([A-Za-z0-9][A-Za-z0-9]:[ABHJZif]:[ -~]*)*").unwrap();
     }
     Some(RE_TAG.is_match(input))
 }
@@ -259,13 +254,11 @@ where
     I: Iterator,
     I::Item: AsRef<[u8]>,
 {
-    // see: https://docs.rs/regex/1.4.2/regex/#example-avoid-compiling-the-same-regex-in-a-loop
     lazy_static! {
         static ref RE_HEADER: Regex = Regex::new(r"(?-u)(VN:Z:1\.0)?").unwrap();
     }
     let next = next_field(input)?;
     RE_HEADER
-        // see: https://docs.rs/regex/1.4.2/regex/#pay-for-what-you-use
         .find(next.as_ref())
         .map(|s| BString::from(s.as_bytes()))
         .ok_or(ParseFieldError::InvalidField("Version"))
@@ -300,8 +293,7 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE_OVERLAP: Regex =
-            Regex::new(r"(?-u)\*|([0-9]+[MIDNSHPX=])+").unwrap();
+        static ref RE_OVERLAP: Regex = Regex::new(r"(?-u)\*|([0-9]+[MIDNSHPX=])+").unwrap();
     }
     let next = next_field(input)?;
     if RE_OVERLAP.is_match(next.as_ref()) {
@@ -320,8 +312,7 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE_SEQUENCE: Regex =
-            Regex::new(r"(?-u)\*|[A-Za-z=.]+").unwrap();
+        static ref RE_SEQUENCE: Regex = Regex::new(r"(?-u)\*|[A-Za-z=.]+").unwrap();
     }
     let next = next_field(input)?;
     RE_SEQUENCE
@@ -467,8 +458,7 @@ where
 {
     lazy_static! {
         static ref RE_PATH_OVERLAP: Regex =
-            Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*")
-                .unwrap();
+            Regex::new(r"(?-u)\*|[0-9]+[MIDNSHPX=](,[0-9]+[MIDNSHPX=])*").unwrap();
     }
     let next = next_field(input)?;
     if RE_PATH_OVERLAP.is_match(next.as_ref()) {
@@ -487,8 +477,7 @@ where
     I::Item: AsRef<[u8]>,
 {
     lazy_static! {
-        static ref RE_SEGMENT_NAMES: Regex =
-            Regex::new(r"(?-u)[!-~]+(,[!-~]+)*").unwrap();
+        static ref RE_SEGMENT_NAMES: Regex = Regex::new(r"(?-u)[!-~]+(,[!-~]+)*").unwrap();
     }
     let next = next_field(input)?;
     RE_SEGMENT_NAMES
@@ -557,8 +546,7 @@ mod tests {
         // Create gfa from file: Duration { seconds: 0, nanoseconds: 205899300 } (with rayon) (with is_match) (PORTABLE PC)
         let parser = GFAParser::default();
         let start = Instant::now();
-        let _gfa2: GFA =
-            parser.parse_file("./tests/big_files/test.gfa").unwrap();
+        let _gfa2: GFA = parser.parse_file("./tests/big_files/test.gfa").unwrap();
         println!("Create gfa from file: {:?}", start.elapsed());
     }
 

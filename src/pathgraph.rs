@@ -37,10 +37,7 @@ pub trait PathHandleGraph {
     /// Get the (node) handle that a step handle points to
     fn handle_of_step(&self, step_handle: &Self::StepHandle) -> Option<Handle>;
 
-    fn path_handle_of_step(
-        &self,
-        step_handle: &Self::StepHandle,
-    ) -> Self::PathHandle;
+    fn path_handle_of_step(&self, step_handle: &Self::StepHandle) -> Self::PathHandle;
 
     /// Get the first step of the path
     fn path_begin(&self, path_handle: &Self::PathHandle) -> Self::StepHandle;
@@ -52,10 +49,7 @@ pub trait PathHandleGraph {
     fn path_back(&self, path_handle: &Self::PathHandle) -> Self::StepHandle;
 
     /// Get a step *before* the end of the path
-    fn path_front_end(
-        &self,
-        path_handle: &Self::PathHandle,
-    ) -> Self::StepHandle;
+    fn path_front_end(&self, path_handle: &Self::PathHandle) -> Self::StepHandle;
 
     fn has_next_step(&self, step_handle: &Self::StepHandle) -> bool;
 
@@ -63,8 +57,7 @@ pub trait PathHandleGraph {
 
     fn path_bases_len(&self, path_handle: &Self::PathHandle) -> Option<usize>;
 
-    fn position_of_step(&self, step_handle: &Self::StepHandle)
-        -> Option<usize>;
+    fn position_of_step(&self, step_handle: &Self::StepHandle) -> Option<usize>;
 
     fn step_at_position(
         &self,
@@ -76,14 +69,9 @@ pub trait PathHandleGraph {
 
     fn next_step(&self, step_handle: &Self::StepHandle) -> Self::StepHandle;
 
-    fn previous_step(&self, step_handle: &Self::StepHandle)
-        -> Self::StepHandle;
+    fn previous_step(&self, step_handle: &Self::StepHandle) -> Self::StepHandle;
 
-    fn create_path_handle(
-        &mut self,
-        name: &[u8],
-        is_circular: bool,
-    ) -> Self::PathHandle;
+    fn create_path_handle(&mut self, name: &[u8], is_circular: bool) -> Self::PathHandle;
 
     fn append_step(
         &mut self,
@@ -91,11 +79,7 @@ pub trait PathHandleGraph {
         to_append: Handle,
     ) -> Result<Self::StepHandle, GraphError>;
 
-    fn prepend_step(
-        &mut self,
-        path: &Self::PathHandle,
-        to_prepend: Handle,
-    ) -> Self::StepHandle;
+    fn prepend_step(&mut self, path: &Self::PathHandle, to_prepend: Handle) -> Self::StepHandle;
 
     fn rewrite_segment(
         &mut self,
@@ -105,17 +89,13 @@ pub trait PathHandleGraph {
     ) -> (Self::StepHandle, Self::StepHandle);
 
     /// Returns an iterator over all path identifiers in the graph
-    fn paths<'a>(
-        &'a self,
-    ) -> Box<dyn Iterator<Item = &'a Self::PathHandle> + 'a>;
+    fn paths<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Self::PathHandle> + 'a>;
 
     /// Returns an iterator over all the steps that
     /// cross through the given node handle, across all the paths in
     /// the graph
-    fn occurrences<'a>(
-        &'a self,
-        handle: Handle,
-    ) -> Box<dyn Iterator<Item = Self::StepHandle> + 'a>;
+    fn occurrences<'a>(&'a self, handle: Handle)
+        -> Box<dyn Iterator<Item = Self::StepHandle> + 'a>;
 
     /// Returns an iterator over all the steps in a path
     fn steps<'a>(
@@ -138,11 +118,7 @@ pub trait PathHandleGraph {
     ///     Err(why) => println!("Error: {}", why),
     /// }
     /// ```
-    fn remove_step<T: Into<NodeId>>(
-        &mut self,
-        name: &[u8],
-        node: T,
-    ) -> Result<bool, GraphError>;
+    fn remove_step<T: Into<NodeId>>(&mut self, name: &[u8], node: T) -> Result<bool, GraphError>;
 
     /// Function that modifies a
     /// [`Node`](file:///D:/GitHub/rs-gfahandlegraph/target/doc/gfahandlegraph/hashgraph/node/struct.Node.html)
