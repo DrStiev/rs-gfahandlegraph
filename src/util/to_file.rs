@@ -1,7 +1,4 @@
-use crate::{
-    handle::Edge, handlegraph::*, hashgraph::HashGraph,
-    pathgraph::PathHandleGraph,
-};
+use crate::{handle::Edge, handlegraph::*, hashgraph::HashGraph, pathgraph::PathHandleGraph};
 
 use bstr::BString;
 use rayon::iter::ParallelIterator;
@@ -11,37 +8,24 @@ use std::sync::Mutex;
 
 /// take an HashGraph and create a GFA1 or GFA2 file from it and save that file on a specific
 /// location or on a default one
-pub fn to_gfa(
-    graph: &HashGraph,
-    format: String,
-    path: Option<String>,
-) -> std::io::Result<()> {
+pub fn to_gfa(graph: &HashGraph, format: String, path: Option<String>) -> std::io::Result<()> {
     match format.to_uppercase().as_str() {
         "GFA2" => {
             let path = path.unwrap_or_else(|| {
-                String::from(
-                    "./tests/output_files/default_path/converted_hashgraph.gfa",
-                )
+                String::from("./tests/output_files/default_path/converted_hashgraph.gfa2")
             });
-            let file = Mutex::new(File::create(path)?);
-            file.lock()
-                .unwrap()
-                .write(b"H\tVN:Z:2.0\n")
-                .expect("Unable to write File");
+            let mut file = File::create(&path)?;
+            let res = Mutex::new(String::new());
+            res.lock().unwrap().push_str("H\tVN:Z:2.0\n");
 
             graph.handles_par().for_each(|h| {
                 let id = usize::from(h.id());
-                let sequence: BString =
-                    graph.sequence_iter(h.forward()).collect();
+                let sequence: BString = graph.sequence_iter(h.forward()).collect();
                 let len: BString = BString::from(sequence.len().to_string());
 
-                file.lock()
+                res.lock()
                     .unwrap()
-                    .write(
-                        format!("S\t{}\t{}\t{}\n", id, len, sequence)
-                            .as_bytes(),
-                    )
-                    .expect("Unable to write File");
+                    .push_str(&*format!("S\t{}\t{}\t{}\n", id, len, sequence));
             });
 
             let orient = |rev: bool| {
@@ -63,16 +47,10 @@ pub fn to_gfa(
                 let sid2_orient = orient(right.is_reverse());
                 let sid2 = format!("{}{}", sid2_id, sid2_orient);
 
-                file.lock()
-                    .unwrap()
-                    .write(
-                        format!(
-                            "E\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
-                            "*", sid1, sid2, "0", "0$", "0", "0$", "0M"
-                        )
-                        .as_bytes(),
-                    )
-                    .expect("Unable to write File");
+                res.lock().unwrap().push_str(&*format!(
+                    "E\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+                    "*", sid1, sid2, "0", "0$", "0", "0$", "0M"
+                ));
             });
 
             graph.paths().for_each(|p| {
@@ -95,31 +73,29 @@ pub fn to_gfa(
 
                 // remove the last whitespace " "
                 segment_names.pop();
-                file.lock()
+                res.lock()
                     .unwrap()
-                    .write(format!("O\t{}\t{}\n", id, segment_names).as_bytes())
-                    .expect("Unable to write File");
+                    .push_str(&*format!("O\t{}\t{}\n", id, segment_names));
             });
-            file.lock().unwrap().sync_all()?;
+            file.write_all(res.into_inner().unwrap().as_bytes())?;
+            file.sync_all()?;
             Ok(())
         }
         "GFA" => {
-            let path = path.unwrap_or_else(|| String::from("./tests/output_files/default_path/converted_hashgraph.gfa2"));
-            let file = Mutex::new(File::create(path)?);
-            file.lock()
-                .unwrap()
-                .write(b"H\tVN:Z:1.0\n")
-                .expect("Unable to write File");
+            let path = path.unwrap_or_else(|| {
+                String::from("./tests/output_files/default_path/converted_hashgraph.gfa")
+            });
+            let mut file = File::create(&path)?;
+            let res = Mutex::new(String::new());
+            res.lock().unwrap().push_str("H\tVN:Z:1.0\n");
 
             graph.handles_par().for_each(|h| {
                 let id = usize::from(h.id());
-                let sequence: BString =
-                    graph.sequence_iter(h.forward()).collect();
+                let sequence: BString = graph.sequence_iter(h.forward()).collect();
 
-                file.lock()
+                res.lock()
                     .unwrap()
-                    .write(format!("S\t{}\t{}\n", id, sequence).as_bytes())
-                    .expect("Unable to write File");
+                    .push_str(&*format!("S\t{}\t{}\n", id, sequence));
             });
 
             let orient = |rev: bool| {
@@ -139,16 +115,10 @@ pub fn to_gfa(
                 let sid2_id: String = right.id().to_string();
                 let sid2_orient = orient(right.is_reverse());
 
-                file.lock()
-                    .unwrap()
-                    .write(
-                        format!(
-                            "L\t{}\t{}\t{}\t{}\t{}\n",
-                            sid1_id, sid1_orient, sid2_id, sid2_orient, "0M"
-                        )
-                        .as_bytes(),
-                    )
-                    .expect("Unable to write File");
+                res.lock().unwrap().push_str(&*format!(
+                    "L\t{}\t{}\t{}\t{}\t{}\n",
+                    sid1_id, sid1_orient, sid2_id, sid2_orient, "0M"
+                ));
             });
 
             graph.paths().for_each(|p| {
@@ -171,15 +141,12 @@ pub fn to_gfa(
                 // remove the last whitespace " "
                 segment_names.pop();
 
-                file.lock()
+                res.lock()
                     .unwrap()
-                    .write(
-                        format!("P\t{}\t{}\t{}\n", id, segment_names, "0M")
-                            .as_bytes(),
-                    )
-                    .expect("Unable to write File");
+                    .push_str(&*format!("P\t{}\t{}\t{}\n", id, segment_names, "0M"));
             });
-            file.lock().unwrap().sync_all()?;
+            file.write_all(res.into_inner().unwrap().as_bytes())?;
+            file.sync_all()?;
             Ok(())
         }
         _ => panic!("Error the format it's not correct!"),
@@ -222,7 +189,7 @@ mod test {
 
     #[test]
     fn can_convert_medium_graph_to_gfa2() {
-        // Convert graph to GFA2: Duration { seconds: 0, nanoseconds: 299785900 }
+        // Convert graph to GFA2: Duration { seconds: 0, nanoseconds: 115375400 }
         match parse_file_to_graph("./tests/big_files/test.gfa2") {
             Ok(g) => {
                 let start = Instant::now();
@@ -238,9 +205,9 @@ mod test {
     }
 
     #[test]
-    #[ignore]
+    //#[ignore]
     fn can_convert_big_graph_to_gfa() {
-        // Convert graph to GFA2: Duration { seconds: 28, nanoseconds: 111079100 }
+        // Convert graph to GFA2: Duration { seconds: 30, nanoseconds: 357191600 }
         match parse_file_to_graph("./tests/big_files/ape-4-0.10b.gfa") {
             Ok(g) => {
                 let start = Instant::now();

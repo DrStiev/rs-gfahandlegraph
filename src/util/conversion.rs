@@ -12,9 +12,9 @@ use std::sync::Mutex;
 /// For now it consider only S-, L- and P- lines,
 /// ignoring all the others.
 pub fn gfa_file_to_gfa2(path: String) -> std::io::Result<()> {
-    let res = Mutex::new(File::create(format!("{}{}", path, 2))?);
-    let file = File::open(path)?;
-    let reader = BufReader::new(file).lines();
+    let mut file = File::create(format!("{}{}", &path, 2))?;
+    let res = Mutex::new(String::new());
+    let reader = BufReader::new(File::open(&path)?).lines();
 
     reader.par_bridge().for_each(|line| {
         let line = line.unwrap();
@@ -36,18 +36,13 @@ pub fn gfa_file_to_gfa2(path: String) -> std::io::Result<()> {
                 }
                 let mut tag = opt_fields
                     .into_iter()
-                    .map(|x| {
-                        BString::from(
-                            str::from_utf8(x).unwrap().to_owned() + "\t",
-                        )
-                    })
+                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
                     .collect::<BString>();
                 tag.pop();
 
                 res.lock()
                     .unwrap()
-                    .write(format!("H\t{}\t{}\n", version, tag).as_bytes())
-                    .expect("unable to write file");
+                    .push_str(&*format!("H\t{}\t{}\n", version, tag));
             }
             "S" => {
                 let id = line_split.next().unwrap().to_string();
@@ -62,21 +57,13 @@ pub fn gfa_file_to_gfa2(path: String) -> std::io::Result<()> {
                 }
                 let mut tag = opt_fields
                     .into_iter()
-                    .map(|x| {
-                        BString::from(
-                            str::from_utf8(x).unwrap().to_owned() + "\t",
-                        )
-                    })
+                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
                     .collect::<BString>();
                 tag.pop();
 
                 res.lock()
                     .unwrap()
-                    .write(
-                        format!("S\t{}\t{}\t{}\t{}\n", id, len, sequence, tag)
-                            .as_bytes(),
-                    )
-                    .expect("unable to write file");
+                    .push_str(&*format!("S\t{}\t{}\t{}\t{}\n", id, len, sequence, tag));
             }
             "L" => {
                 // placeholder value
@@ -96,11 +83,7 @@ pub fn gfa_file_to_gfa2(path: String) -> std::io::Result<()> {
 
                 if alignment != "*" {
                     let len = alignment.len() - 1;
-                    let dist = alignment[..len]
-                        .to_str()
-                        .unwrap()
-                        .parse::<i64>()
-                        .unwrap();
+                    let dist = alignment[..len].to_str().unwrap().parse::<i64>().unwrap();
 
                     if from_node_orient == "+" && to_node_orient == "+" {
                         let x = (100 - dist).abs();
@@ -132,34 +115,24 @@ pub fn gfa_file_to_gfa2(path: String) -> std::io::Result<()> {
                 }
                 let mut tag = opt_fields
                     .into_iter()
-                    .map(|x| {
-                        BString::from(
-                            str::from_utf8(x).unwrap().to_owned() + "\t",
-                        )
-                    })
+                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
                     .collect::<BString>();
                 tag.pop();
 
-                res.lock()
-                    .unwrap()
-                    .write(
-                        format!(
-                            "E\t{}\t{}{}\t{}{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
-                            id,
-                            from_node,
-                            from_node_orient,
-                            to_node,
-                            to_node_orient,
-                            beg1,
-                            end1,
-                            beg2,
-                            end2,
-                            alignment,
-                            tag
-                        )
-                        .as_bytes(),
-                    )
-                    .expect("unable to write file");
+                res.lock().unwrap().push_str(&*format!(
+                    "E\t{}\t{}{}\t{}{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+                    id,
+                    from_node,
+                    from_node_orient,
+                    to_node,
+                    to_node_orient,
+                    beg1,
+                    end1,
+                    beg2,
+                    end2,
+                    alignment,
+                    tag
+                ));
             }
             "P" => {
                 let id = BString::from(line_split.next().unwrap());
@@ -174,26 +147,20 @@ pub fn gfa_file_to_gfa2(path: String) -> std::io::Result<()> {
                 }
                 let mut tag = opt_fields
                     .into_iter()
-                    .map(|x| {
-                        BString::from(
-                            str::from_utf8(x).unwrap().to_owned() + "\t",
-                        )
-                    })
+                    .map(|x| BString::from(str::from_utf8(x).unwrap().to_owned() + "\t"))
                     .collect::<BString>();
                 tag.pop();
 
                 res.lock()
                     .unwrap()
-                    .write(
-                        format!("P\t{}\t{}\t{}\n", id, var_field, tag)
-                            .as_bytes(),
-                    )
-                    .expect("unable to write file");
+                    .push_str(&*format!("P\t{}\t{}\t{}\n", id, var_field, tag));
             }
             // ignore all the other lines (typically C- and comment-lines)
             _ => (),
         }
     });
+    file.write_all(res.into_inner().unwrap().as_bytes())?;
+    file.sync_all()?;
     Ok(())
 }
 
@@ -205,11 +172,6 @@ mod test {
     #[test]
     #[ignore]
     fn can_parse_and_write_big_file() {
-        /*
-        Convert file from GFA to GFA2 Duration { seconds: 55, nanoseconds: 894165300 }
-        Convert file from GFA to GFA2 Duration { seconds: 49, nanoseconds: 224287200 }
-        Convert file from GFA to GFA2 Duration { seconds: 46, nanoseconds: 612642400 }
-        */
         const FILES: [&str; 3] = [
             "./tests/big_files/ape-4-0.10b.gfa",
             "./tests/big_files/CHM13v1Y-GRCh38-HPP58-0.12.gfa",
@@ -220,10 +182,7 @@ mod test {
             let path: String = FILES[i].to_string();
             match gfa_file_to_gfa2(path.clone()) {
                 Err(why) => println!("Error: {}", why),
-                _ => println!(
-                    "Convert file from GFA to GFA2 {:?}",
-                    start.elapsed()
-                ),
+                _ => println!("Convert file from GFA to GFA2 {:?}", start.elapsed()),
             }
         }
     }
@@ -244,7 +203,7 @@ mod test {
     #[test]
     #[ignore]
     fn can_parse_and_write_single_big_file() {
-        // Convert file from GFA to GFA2 Duration { seconds: 0, nanoseconds: 149387100 }
+        // Convert file from GFA to GFA2 Duration { seconds: 44, nanoseconds: 913917000 }
         let start = Instant::now();
         let path: String = "./tests/big_files/ape-4-0.10b.gfa".to_string();
         match gfa_file_to_gfa2(path.clone()) {
