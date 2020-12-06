@@ -125,7 +125,7 @@ impl GFAParser {
     }
 
     #[inline]
-    pub fn parse_gfa_line(&self, bytes: &[u8]) -> ParserResult<Line> {
+    fn parse_gfa_line(&self, bytes: &[u8]) -> ParserResult<Line> {
         let line: &BStr = bytes.trim().as_ref();
 
         let mut fields = line.split_str(b"\t");

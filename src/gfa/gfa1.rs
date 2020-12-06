@@ -153,6 +153,7 @@ pub struct Header {
 }
 
 impl Header {
+    #[inline]
     pub fn new(version: &[u8]) -> Self {
         Header {
             version: version.into(),
