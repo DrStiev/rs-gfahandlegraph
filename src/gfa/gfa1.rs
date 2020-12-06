@@ -218,7 +218,7 @@ impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "L\t{}\t{}\t{}\t{}",
+            "L\t{}\t{}\t{}\t{}\t*",
             self.from_segment, self.from_orient, self.to_segment, self.to_orient,
         )
     }
@@ -269,6 +269,6 @@ impl Path {
 
 impl fmt::Display for Path {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "P\t{}\t{}", self.path_name, self.segment_names)
+        write!(f, "P\t{}\t{}\t*", self.path_name, self.segment_names)
     }
 }

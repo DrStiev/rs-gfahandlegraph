@@ -216,7 +216,8 @@ impl Segment {
 
 impl fmt::Display for Segment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "S\t{}\t{}", self.id, self.sequence)
+        let len = self.sequence.len();
+        write!(f, "S\t{}\t{}\t{}", self.id, len, self.sequence)
     }
 }
 
@@ -254,7 +255,11 @@ impl fmt::Display for Edge {
             _ => panic!("Orientation not found!"),
         };
 
-        write!(f, "E\t{}{}\t{}{}", sid1, sgn1, sid2, sgn2)
+        write!(
+            f,
+            "E\t*\t{}{}\t{}{}\t0\t0$\t0\t0$\t*",
+            sid1, sgn1, sid2, sgn2
+        )
     }
 }
 
