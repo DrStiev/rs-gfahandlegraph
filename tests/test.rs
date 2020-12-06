@@ -179,9 +179,9 @@ fn create_big_graph() {
 #[ignore]
 fn mod_graph_from_big_gfa2() {
     /*
-    Create graph from file: Duration { seconds: 28, nanoseconds: 309481600 }
-    remove node 11515 from graph: Duration { seconds: 3, nanoseconds: 795918100 }
-    remove edge Edge(Handle(231429904), Handle(230880913)) from graph: Duration { seconds: 3, nanoseconds: 672832400 }
+    Create graph from file: Duration { seconds: 32, nanoseconds: 822503100 }
+    remove node 15 from graph: Duration { seconds: 3, nanoseconds: 822455400 }
+    remove edge Edge(714952+, 440456-) from graph: Duration { seconds: 3, nanoseconds: 631893300 }
      */
     let mut graph = read_big_gfa2();
     let random_node = 11515_usize;

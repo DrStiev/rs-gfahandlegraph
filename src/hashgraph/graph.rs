@@ -15,7 +15,6 @@ use rayon::prelude::*;
 use std::fmt;
 use std::sync::Mutex;
 
-// see: https://github.com/vgteam/libhandlegraph
 /// New type
 /// # Example
 /// ```ignore
@@ -148,7 +147,7 @@ impl HashGraph {
     /// ## Examples
     /// ```ignore
     /// let graph = HashGraph::new();
-    /// let mut file: GFA2<usize> = GFA2::new();
+    /// let mut file = GFA2::new();
     /// match graph.create_graph(FileType::GFA2(file)) {
     ///     Ok(g) => Ok(g),
     ///     Err(why) => println!("{}", why),
