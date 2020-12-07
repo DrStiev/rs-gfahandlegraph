@@ -206,6 +206,7 @@ impl SubtractiveHandleGraph for HashGraph {
             // delete all the occurrencies in the edge list of node.id()
             let l = node.left_edges;
             let r = node.right_edges;
+            //println!("l: {} r: {}", l.len(), r.len());
             l.iter().for_each(|i| {
                 if let Some(left) = self.graph.get_mut(&i.id()) {
                     if i.is_reverse() {
@@ -214,14 +215,14 @@ impl SubtractiveHandleGraph for HashGraph {
                             .par_iter()
                             .position_any(|x| x.id() == node_id)
                         {
-                            left.left_edges.remove(ll);
+                            left.left_edges.swap_remove(ll);
                         }
                     } else if let Some(lr) = left
                         .right_edges
                         .par_iter()
                         .position_any(|x| x.id() == node_id)
                     {
-                        left.right_edges.remove(lr);
+                        left.right_edges.swap_remove(lr);
                     }
                 }
             });
@@ -233,14 +234,14 @@ impl SubtractiveHandleGraph for HashGraph {
                             .par_iter()
                             .position_any(|x| x.id() == node_id)
                         {
-                            right.right_edges.remove(rr);
+                            right.right_edges.swap_remove(rr);
                         }
                     } else if let Some(rl) = right
                         .left_edges
                         .par_iter()
                         .position_any(|x| x.id() == node_id)
                     {
-                        right.left_edges.remove(rl);
+                        right.left_edges.swap_remove(rl);
                     }
                 }
             });
@@ -258,58 +259,61 @@ impl SubtractiveHandleGraph for HashGraph {
 
     fn remove_edge(&mut self, Edge(l, r): Edge) -> Result<bool, GraphError> {
         // delete all the occurrencies of edge found in graph
-        if self.has_edge(l, r) {
-            if let Some(left) = self.graph.get_mut(&l.id()) {
-                if l.is_reverse() {
-                    if let Some(ll) = left
-                        .left_edges
-                        .par_iter()
-                        .position_any(|x| x.id() == r.id())
-                    {
-                        left.left_edges.remove(ll);
-                    }
-                } else if let Some(lr) = left
-                    .right_edges
+        if let Some(left) = self.graph.get_mut(&l.id()) {
+            if l.is_reverse() {
+                if let Some(ll) = left
+                    .left_edges
                     .par_iter()
                     .position_any(|x| x.id() == r.id())
                 {
-                    left.right_edges.remove(lr);
+                    left.left_edges.swap_remove(ll);
                 }
+            } else if let Some(lr) = left
+                .right_edges
+                .par_iter()
+                .position_any(|x| x.id() == r.id())
+            {
+                left.right_edges.swap_remove(lr);
             }
-            if let Some(right) = self.graph.get_mut(&r.id()) {
-                if r.is_reverse() {
-                    if let Some(rr) = right
-                        .right_edges
-                        .par_iter()
-                        .position_any(|x| x.id() == l.id())
-                    {
-                        right.right_edges.remove(rr);
-                    }
-                } else if let Some(rl) = right
-                    .left_edges
+        } else {
+            return Err(GraphError::EdgeNotExist(
+                l.id().to_string(),
+                r.id().to_string(),
+            ));
+        }
+        if let Some(right) = self.graph.get_mut(&r.id()) {
+            if r.is_reverse() {
+                if let Some(rr) = right
+                    .right_edges
                     .par_iter()
                     .position_any(|x| x.id() == l.id())
                 {
-                    right.left_edges.remove(rl);
+                    right.right_edges.swap_remove(rr);
                 }
+            } else if let Some(rl) = right
+                .left_edges
+                .par_iter()
+                .position_any(|x| x.id() == l.id())
+            {
+                right.left_edges.swap_remove(rl);
             }
-            for path in self.clone().paths() {
-                let nodes = &self.paths.get_mut(&path).unwrap().nodes;
-                if let Some(l) = nodes.par_iter().position_any(|x| x.id() == l.id()) {
-                    if let Some(r) = nodes.par_iter().position_any(|x| x.id() == r.id()) {
-                        if r == l + 1 {
-                            self.paths.remove(&path);
-                        }
+        } else {
+            return Err(GraphError::EdgeNotExist(
+                l.id().to_string(),
+                r.id().to_string(),
+            ));
+        }
+        for path in self.clone().paths() {
+            let nodes = &self.paths.get_mut(&path).unwrap().nodes;
+            if let Some(l) = nodes.par_iter().position_any(|x| x.id() == l.id()) {
+                if let Some(r) = nodes.par_iter().position_any(|x| x.id() == r.id()) {
+                    if r == l + 1 {
+                        self.paths.remove(&path);
                     }
                 }
             }
-            Ok(true)
-        } else {
-            Err(GraphError::EdgeNotExist(
-                l.id().to_string(),
-                r.id().to_string(),
-            ))
         }
+        Ok(true)
     }
 
     fn clear_graph(&mut self) {
