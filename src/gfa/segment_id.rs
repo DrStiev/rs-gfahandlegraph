@@ -115,19 +115,20 @@ impl SegmentId for BString {
 /// ```
 #[inline]
 pub fn convert_to_usize(input: &[u8]) -> Option<usize> {
-    let len = input.len();
     let my_vec: Vec<char> = input.to_str().unwrap().chars().collect();
-    let mut x = 0;
     let mut res: String = "".to_string();
-    while x < len {
-        res = format!("{}{}", res, &get_code_from_char(&my_vec[x]).to_string());
-        x += 1;
-    }
+    my_vec.iter().for_each(|c| {
+        res = format!("{}{}", res, &get_code_from_char(c).to_string());
+    });
     match res.len() {
         1..=20 => Some(res.parse::<usize>().unwrap()),
         _ => panic!(
-            "Error! the conversion of the string: {} (length: {}) into usize: {} (lenght {}) exceeds {} ",
-            input.to_str().unwrap(), input.len(), res, res.len(), "the maximum length (20 digits)"
+            "Error! the conversion of the string: {} (length: {}) into usize: {} \
+            (length {}) exceeds the maximum length (20 digits) ",
+            input.to_str().unwrap(),
+            input.len(),
+            res,
+            res.len(),
         ),
     }
 }

@@ -87,26 +87,18 @@ fn clear_big_graph() {
 fn ditto() {
     let mut graph = read_ditto();
     let node: u64 = 1;
-    println!("{:#?}", graph);
-    let start = Instant::now();
+    println!("{}", graph);
     match graph.remove_handle(node) {
-        Ok(_) => {
-            println!("{:?}", start.elapsed());
-            println!("{}", graph);
-        }
         Err(why) => println!("Error: {}", why),
+        _ => println!("{}", graph),
     }
 
     let left = Handle::new(7, Orientation::Forward);
     let right = Handle::new(8, Orientation::Forward);
     let edge = Edge(left, right);
-    let start = Instant::now();
     match graph.remove_edge(edge) {
-        Ok(_) => {
-            //graph.print_graph();
-            println!("{:?}", start.elapsed());
-        }
         Err(why) => println!("Error: {}", why),
+        _ => println!("{}", graph),
     }
 }
 
