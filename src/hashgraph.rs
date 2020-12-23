@@ -206,43 +206,40 @@ impl SubtractiveHandleGraph for HashGraph {
             // delete all the occurrencies in the edge list of node.id()
             let l = node.left_edges;
             let r = node.right_edges;
-            //println!("l: {} r: {}", l.len(), r.len());
             l.iter().for_each(|i| {
-                if let Some(left) = self.graph.get_mut(&i.id()) {
-                    if i.is_reverse() {
-                        if let Some(ll) = left
-                            .left_edges
-                            .par_iter()
-                            .position_any(|x| x.id() == node_id)
-                        {
-                            left.left_edges.swap_remove(ll);
-                        }
-                    } else if let Some(lr) = left
-                        .right_edges
-                        .par_iter()
-                        .position_any(|x| x.id() == node_id)
-                    {
-                        left.right_edges.swap_remove(lr);
-                    }
-                }
-            });
-            r.iter().for_each(|i| {
-                if let Some(right) = self.graph.get_mut(&i.id()) {
-                    if i.is_reverse() {
-                        if let Some(rr) = right
-                            .right_edges
-                            .par_iter()
-                            .position_any(|x| x.id() == node_id)
-                        {
-                            right.right_edges.swap_remove(rr);
-                        }
-                    } else if let Some(rl) = right
+                let left = self.graph.get_mut(&i.id()).unwrap();
+                if i.is_reverse() {
+                    if let Some(ll) = left
                         .left_edges
                         .par_iter()
                         .position_any(|x| x.id() == node_id)
                     {
-                        right.left_edges.swap_remove(rl);
+                        left.left_edges.swap_remove(ll);
                     }
+                } else if let Some(lr) = left
+                    .right_edges
+                    .par_iter()
+                    .position_any(|x| x.id() == node_id)
+                {
+                    left.right_edges.swap_remove(lr);
+                }
+            });
+            r.iter().for_each(|i| {
+                let right = self.graph.get_mut(&i.id()).unwrap();
+                if i.is_reverse() {
+                    if let Some(rr) = right
+                        .right_edges
+                        .par_iter()
+                        .position_any(|x| x.id() == node_id)
+                    {
+                        right.right_edges.swap_remove(rr);
+                    }
+                } else if let Some(rl) = right
+                    .left_edges
+                    .par_iter()
+                    .position_any(|x| x.id() == node_id)
+                {
+                    right.left_edges.swap_remove(rl);
                 }
             });
             self.clone().paths().for_each(|path| {
@@ -303,7 +300,7 @@ impl SubtractiveHandleGraph for HashGraph {
                 r.id().to_string(),
             ));
         }
-        for path in self.clone().paths() {
+        self.clone().paths().for_each(|path| {
             let nodes = &self.paths.get_mut(&path).unwrap().nodes;
             if let Some(l) = nodes.par_iter().position_any(|x| x.id() == l.id()) {
                 if let Some(r) = nodes.par_iter().position_any(|x| x.id() == r.id()) {
@@ -312,7 +309,7 @@ impl SubtractiveHandleGraph for HashGraph {
                     }
                 }
             }
-        }
+        });
         Ok(true)
     }
 
