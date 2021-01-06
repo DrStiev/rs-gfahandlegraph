@@ -174,22 +174,8 @@ mod test {
     }
 
     #[test]
-    fn can_convert_graph_to_gfa2() {
-        match parse_file_to_graph("./tests/gfa2_files/spec_q7.gfa2") {
-            Ok(g) => {
-                println!("{}", g); //g.print_graph(),
-                match to_gfa(&g, "gfa2".to_string(), None) {
-                    Err(why) => println!("Error: {}", why),
-                    _ => (),
-                }
-            }
-            Err(why) => println!("Error {}", why),
-        }
-    }
-
-    #[test]
     fn can_convert_medium_graph_to_gfa2() {
-        // Convert graph to GFA2: Duration { seconds: 0, nanoseconds: 115375400 }
+        // Convert graph to GFA2: Duration { seconds: 0, nanoseconds: 47466800 }
         match parse_file_to_graph("./tests/big_files/test.gfa2") {
             Ok(g) => {
                 let start = Instant::now();

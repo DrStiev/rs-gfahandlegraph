@@ -170,13 +170,6 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn arbitrary_comp_isomorphic() {
-    //     QuickCheck::new()
-    //         .tests(10000)
-    //         .quickcheck(arbitrary_bytes_iso as fn(u8) -> bool);
-    // }
-
     #[test]
     fn print_table() {
         for x in 0..256 {
@@ -184,8 +177,4 @@ mod tests {
             println!("{:3} -> {:3}", x, val);
         }
     }
-
-    // fn arbitrary_rev_comp_iso(seq: Vec<Base>) -> bool {
-
-    // }
 }
