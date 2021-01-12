@@ -158,24 +158,24 @@ impl HashGraph {
             FileType::GFA(x) => {
                 x.segments.into_iter().for_each(|s| {
                     match self.create_handle(s.name, &s.sequence) {
-                        Ok(_) => (),
                         Err(why) => println!("Error {}", why),
+                        _ => (),
                     }
                 });
                 x.links.into_iter().for_each(|l| {
                     let left = Handle::new(l.from_segment, l.from_orient);
                     let right = Handle::new(l.to_segment, l.to_orient);
                     match self.create_edge(GraphEdge(left, right)) {
-                        Ok(_) => (),
                         Err(why) => println!("Error {}", why),
+                        _ => (),
                     }
                 });
                 x.paths.into_iter().for_each(|p| {
                     let path_id = self.create_path_handle(&p.path_name, false);
                     for (id, orient) in p.iter() {
                         match self.append_step(&path_id, Handle::new(id, orient)) {
-                            Ok(_) => (),
                             Err(why) => println!("Error: {}", why),
+                            _ => (),
                         };
                     }
                 });
@@ -185,8 +185,8 @@ impl HashGraph {
                 x.segments
                     .into_iter()
                     .for_each(|s| match self.create_handle(s.id, &s.sequence) {
-                        Ok(_) => (),
                         Err(why) => println!("Error {}", why),
+                        _ => (),
                     });
                 x.edges.into_iter().for_each(|e| {
                     let orient = |rev: &str| match rev {
@@ -208,16 +208,16 @@ impl HashGraph {
                     let left = Handle::new(l, l_orient);
                     let right = Handle::new(r, r_orient);
                     match self.create_edge(GraphEdge(left, right)) {
-                        Ok(_) => (),
                         Err(why) => println!("Error {}", why),
+                        _ => (),
                     }
                 });
                 x.groups_o.into_iter().for_each(|o| {
                     let path_id = self.create_path_handle(&o.id, false);
                     for (id, orient) in o.iter() {
                         match self.append_step(&path_id, Handle::new(id, orient)) {
-                            Ok(_) => (),
                             Err(why) => println!("Error: {}", why),
+                            _ => (),
                         };
                     }
                 });
